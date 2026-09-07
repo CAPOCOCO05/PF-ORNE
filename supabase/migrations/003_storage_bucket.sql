@@ -1,0 +1,3 @@
+-- Bucket creado manualmente en Supabase
+-- nombre: referencias-pasteles
+-- para almacnar fotos de referencia de los pasteles (subidas por los usuarios)
