@@ -1,12 +1,15 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+import { AuthProvider } from './src/context/AuthContext';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Trbajando en ORNE para agilizar tus pedidos pasteleros!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <AuthProvider>
+      <View style={styles.container}>
+        <Text>Trbajando en ORNE para agilizar tus pedidos pasteleros!</Text>
+        <StatusBar style="auto" />
+      </View>
+    </AuthProvider>
   );
 }
 
