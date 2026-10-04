@@ -13,9 +13,9 @@ interface AuthContextType {
     singOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined); // se mantiene undefined para que no se pueda usar fuera del provider
 
-export function AuthProvider({children}: {children: React.ReactNode}){
+export function AuthProvider({children}: {children: React.ReactNode}){ // proveer el contexto de autenticacion
     const [user, setUser] = useState<User | null>(null);
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -28,6 +28,7 @@ export function AuthProvider({children}: {children: React.ReactNode}){
             setLoading(false);
         });
 
+        // cambios en el estado de autenticacion
         const {data: {subscription}} = supabase.auth.onAuthStateChange((event, sesion) => {
         setSession(sesion);
         setUser(sesion?.user ?? null);
@@ -58,7 +59,7 @@ export function AuthProvider({children}: {children: React.ReactNode}){
 
     return(
         <AuthContext.Provider value={{user, session, loading, singUp, singIn, singOut}}>
-            {children}
+            {children} 
         </AuthContext.Provider>
     );
     
