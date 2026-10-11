@@ -1,7 +1,7 @@
 import { Session, User } from "@supabase/supabase-js";
 import { SingInData, SingUpData } from "../types/auth.types";
 import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "../services/supabase";
+import * as authService from "../services/authService";
 
 
 interface AuthContextType {
@@ -22,47 +22,31 @@ export function AuthProvider({children}: {children: React.ReactNode}){ // provee
 
     useEffect(() => {
         // hay sesion activa
-        supabase.auth.getSession().then(({data: {session}}) => {
+        authService.getSession().then((session) => {
             setSession(session);
             setUser(session?.user ?? null);
             setLoading(false);
         });
 
         // cambios en el estado de autenticacion
-        const {data: {subscription}} = supabase.auth.onAuthStateChange((event, sesion) => {
-        setSession(sesion);
-        setUser(sesion?.user ?? null);
+        return authService.onAuthChange((sesion) => {
+            setSession(sesion);
+            setUser(sesion?.user ?? null);
         });
-
-        return () => subscription.unsubscribe();
     }, []);
 
-    const singUp = async({email, password, nombre}: SingUpData) => {
-        const {error} = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {nombre}
-            },
-        });
-        return {error: error?.message ?? null};
-    };
+    const singUp = (data: SingUpData) => authService.signUp(data);
 
-    const singIn = async({email, password}: SingInData) => {
-        const {error} = await supabase.auth.signInWithPassword({email, password});
-        return {error: error?.message ?? null};
-    };
+    const singIn = (data: SingInData) => authService.signIn(data);
 
-    const singOut = async() => {
-        await supabase.auth.signOut();
-    };
+    const singOut = () => authService.signOut();
 
     return(
         <AuthContext.Provider value={{user, session, loading, singUp, singIn, singOut}}>
-            {children} 
+            {children}
         </AuthContext.Provider>
     );
-    
+
 }
 
 export function useAuth() {

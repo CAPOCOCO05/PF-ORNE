@@ -19,8 +19,9 @@ Administrador/Cajero y Repartidor (ver sección "Fuera de alcance").
 App móvil (Expo + React Native) donde el cliente arma su pastel paso a paso
 (tamaño, niveles, sabor, relleno, decoración), programa la entrega (domicilio con
 mapa o recolección en sucursal) y confirma el pedido, recibiendo un ID único de
-seguimiento. Backend gestionado con Supabase (Postgres + Auth + Storage), **en
-repositorio separado** del proyecto móvil (ver `specs/03-backend.md`).
+seguimiento. Backend gestionado con Supabase (Postgres + Auth + Storage), **separado
+del proyecto móvil** dentro del mismo repositorio: `frontend/` (app) y `backend/`
+(migraciones SQL). Ver `backend/README.md`.
 
 ## MVP (features)
 | Feature | Descripción | Estado |
