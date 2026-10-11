@@ -9,19 +9,26 @@ versionados como migraciones SQL en esta carpeta.
 | Servicio | Uso en ORNE |
 |---|---|
 | Auth | Registro e inicio de sesión con correo y contraseña (F00) |
-| Postgres | Tablas `pedidos`, `pedido_detalle`, `pagos` |
-| RLS | Cada usuario solo ve y crea sus propios pedidos, detalles y pagos |
-| Storage | Bucket `referencias-pasteles` para imágenes de referencia |
+| Postgres | Tablas `perfiles`, `catalogo_pasteles`, `pedidos`, `pedido_detalle`, `pagos` |
+| RLS + triggers | Permisos por rol (cliente, admin, repartidor) y validación del ciclo de estados |
+| Storage | Bucket privado `referencias-pasteles` (imágenes del cliente) y público `catalogo` |
 
 ## Migraciones
 
 Se aplican **en orden**:
 
-| Archivo | Contenido |
-|---|---|
-| `supabase/migrations/001_tablas_iniciales.sql` | Tablas `pedidos`, `pedido_detalle`, `pagos` |
-| `supabase/migrations/002_rls_policies.sql` | Activa RLS y crea políticas por usuario |
-| `supabase/migrations/003_storage_bucket.sql` | Bucket `referencias-pasteles` (por ahora creado a mano desde el Dashboard) |
+| Archivo | Contenido | Feature |
+|---|---|---|
+| `001_tablas_iniciales.sql` | Tablas `pedidos`, `pedido_detalle`, `pagos` | — |
+| `002_rls_policies.sql` | Activa RLS y crea políticas por usuario | — |
+| `003_storage_bucket.sql` | Nota del bucket creado a mano (lo formaliza `006`) | — |
+| `004_perfiles_roles.sql` | Tabla `perfiles`, trigger que crea el perfil `cliente` al registrarse, función `mi_rol()` | F00 |
+| `005_catalogo.sql` | Tabla `catalogo_pasteles`, 12 pasteles de prueba, bucket público `catalogo` | F01 |
+| `006_ajustes_borrador.sql` | Columnas nullable para borradores, `paso_actual`, `tamanio`, RLS de edición de borradores, bucket `referencias-pasteles` con políticas | F01 |
+| `007_estados_y_roles.sql` | `repartidor_id`, `check` de estados, RLS de admin y repartidor, trigger que valida las transiciones de estado | F04, F06 |
+
+El modelo completo, el ciclo de estados y los permisos por rol están en
+[`../specs/02-data-model.md`](../specs/02-data-model.md).
 
 ## Cómo montar el backend
 
@@ -29,9 +36,26 @@ Se aplican **en orden**:
 2. Abre **SQL Editor** y ejecuta cada migración en el orden de la tabla.
    - Alternativa con la CLI: `supabase link --project-ref <ref>` y luego
      `supabase db push`.
-3. En **Storage**, crea el bucket `referencias-pasteles` (ver `003`).
+3. En **Authentication → Sign In / Providers → Email**, desactiva *Confirm email*
+   mientras desarrollas (así el registro inicia sesión de inmediato).
 4. En **Project Settings → API**, copia la URL y la llave `anon` al `.env` del
    frontend (ver [`../frontend/.env.example`](../frontend/.env.example)).
+
+## Asignar roles
+
+Todo usuario que se registra desde la app es `cliente`. Para crear un admin o un
+repartidor, regístralo normalmente y luego, en el **SQL Editor**:
+
+```sql
+update perfiles set rol = 'admin'
+where id = (select id from auth.users where email = 'admin@ejemplo.com');
+
+update perfiles set rol = 'repartidor'
+where id = (select id from auth.users where email = 'repartidor@ejemplo.com');
+```
+
+Desde la app nadie puede cambiar su propio rol (la columna `rol` no tiene permiso de
+escritura para los usuarios).
 
 ## Variables que necesita el frontend
 
@@ -41,6 +65,3 @@ Se aplican **en orden**:
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API → `anon` public key |
 
 Nunca subas la llave `service_role` al repositorio ni a la app.
-
-## Documentación relacionada
-- Modelo de datos: [`../specs/02-data-model.md`](../specs/02-data-model.md)
