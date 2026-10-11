@@ -14,24 +14,29 @@ Usuario autenticado.
 ## Datos de entrada
 - tamaño (obligatorio — 10, 15, 20, 30 personas)
 - niveles (obligatorio — 1, 2, 3, 4 pisos)
-- sabor_pan (obligatorio — Vainilla, Chocolate, Red Velvet, Café, Tres leches,
-  Fresa, Zanahoria)
-- sabor_relleno (obligatorio — Cajeta, Fresa, Chocolate, Crema pastelera,
-  Mantequilla de maní)
+- sabor_pan (obligatorio — Vainilla, Chocolate, Red Velvet, Tres leches, Fresa,
+  Zanahoria)
+- sabor_relleno (obligatorio — Cajeta, Mermelada / Fresa, Chocolate, Crema
+  pastelera, Mantequilla de maní)
+
+Solo existen los sabores con imagen en `frontend/assets/sabores/` (ver
+`02-data-model.md`, "Catálogo de sabores").
 - mensaje_decoracion (opcional — texto libre, máx. 500 caracteres)
 - imagen_decoracion (opcional — solo formato imagen: jpg, png, heic)
 
 ## Flujo principal
-1. El usuario ve el catálogo paginado (`(tabs)/home.tsx`) o presiona "Crear pedido".
-2. Se crea un pedido con `estado = 'borrador'`.
-3. Paso 1 — selecciona tamaño y niveles.
-4. Paso 2 — selecciona sabor de pan y relleno (cada opción se muestra resaltada al
+1. El usuario ve el catálogo paginado (`(cliente)/home.tsx`, ver
+   `design/pantalla_principal_catalogo.png`) y presiona "Pedir" en un pastel, o
+   presiona "Crear pedido".
+2. Paso 1 — selecciona tamaño y niveles. Al presionar "Siguiente" se crea el pedido
+   con `estado = 'borrador'` (ver D2).
+3. Paso 2 — selecciona sabor de pan y relleno (cada opción se muestra resaltada al
    seleccionarse).
-5. Paso 3 — escribe mensaje de decoración y/o adjunta imagen de referencia.
-6. En cualquier paso puede regresar al anterior sin perder lo ya capturado.
-7. En cualquier paso puede salir; el borrador queda guardado y aparece en
+4. Paso 3 — escribe mensaje de decoración y/o adjunta imagen de referencia.
+5. En cualquier paso puede regresar al anterior sin perder lo ya capturado.
+6. En cualquier paso puede salir; el borrador queda guardado y aparece en
    "Mis pedidos" para retomarlo.
-8. Al terminar el paso 3, continúa a F02 (logística de entrega).
+7. Al terminar el paso 3, continúa a F02 (logística de entrega).
 
 ## Validaciones
 - No se puede avanzar de paso sin completar los campos obligatorios de ese paso.
@@ -44,7 +49,7 @@ Usuario autenticado.
   distinto) para confirmar la elección al usuario.
 - Las imágenes de sabores provienen de assets locales (ver `02-data-model.md`,
   sección "Catálogo de sabores"), no de Storage.
-- El catálogo base (`(tabs)/home.tsx`) se consulta con paginación (ej. 10 items
+- El catálogo base (`(cliente)/home.tsx`) se consulta con paginación (ej. 10 items
   por página, scroll infinito o botón "Cargar más").
 
 ## Casos de error
@@ -71,20 +76,20 @@ especificaciones del pastel, listo para pasar a logística de entrega.
 > **⚠️ Confirmar** son supuestos provisionales que debe validar el cliente/profesor;
 > el resto son decisiones técnicas.
 
-### D1. Ajustes al esquema (migración `004_ajustes_borrador.sql`)
+### D1. Ajustes al esquema (migración `006_ajustes_borrador.sql`)
 El esquema actual no permite guardar un borrador. Se ajusta así:
 
 | Cambio | Motivo |
 |---|---|
 | `pedidos.fecha_entrega`, `hora_entrega`, `tipo_entrega` → nullable | Se capturan en F02, después del borrador |
 | `pedidos.folio` → nullable (sigue `unique`) | El folio se genera al confirmar (F03), no en el borrador |
-| `pedidos.estado` → default `'borrador'` + `check` con los 6 estados de `02-data-model.md` | Hoy no hay restricción y el default es `'pendiente'` |
+| `pedidos.estado` → default `'borrador'` (el `check` de estados va en `007`, ver `02-data-model.md`) | Hoy no hay restricción y el default es `'pendiente'` |
 | `pedidos.paso_actual int` (1–3, default 1) | Saber en qué paso retomar el borrador |
 | `pedido_detalle.tipo_pan`, `relleno` → nullable | Se capturan en el paso 2, después de crear el detalle |
 | `pedido_detalle.tamanio` (`'10'`,`'15'`,`'20'`,`'30'`) | Faltaba (ya previsto en `02-data-model.md`) |
 | `check (niveles between 1 and 4)` y `check (char_length(decoracion_texto) <= 500)` | La validación no debe vivir solo en la app |
 | Políticas RLS `update` y `delete` en `pedidos` y `pedido_detalle`, solo si `estado = 'borrador'` y es dueño | Hoy solo hay `select`/`insert`: no se puede actualizar ni borrar un borrador |
-| Crear tabla `catalogo_pasteles` (ver D6) con RLS de solo lectura | F01 la usa en el paso 1 del flujo |
+| Tabla `catalogo_pasteles` (ver D6) — va en `005_catalogo.sql` | F01 la usa en el paso 1 del flujo |
 | Crear bucket `referencias-pasteles` (privado) con políticas por carpeta `auth.uid()` | Hoy solo existe como comentario |
 
 Las validaciones de "pedido completo" (pan, relleno, entrega, folio no nulos) se
@@ -144,12 +149,12 @@ avanza.
   | `chocolate` → Chocolate | `chocolate` → Chocolate |
   | `redvelvet` → Red Velvet | `cremapastelera` → Crema pastelera |
   | `tresleches` → Tres leches | `mantequillademani` → Mantequilla de maní |
-  | `fresa` → Fresa | `mermeladafresa` → Mermelada de fresa |
+  | `fresa` → Fresa | `mermeladafresa` → Mermelada / Fresa |
   | `zanahoria` → Zanahoria | |
 
-  *Café* (pan) y *Nutella* (relleno) se omiten hasta tener su imagen; *Chocolate*
-  (relleno) se agrega porque ya existe su asset. Rutas reales:
-  `assets/sabores/pan/<id>.png` y `assets/sabores/relleno/<id>.png`.
+  **Solo existen los sabores con imagen en los assets** (no hay Café ni Nutella).
+  Rutas: `frontend/assets/sabores/pan/<id>.png` y
+  `frontend/assets/sabores/relleno/<id>.png`.
 
 ### D6. Catálogo base
 - `catalogo_pasteles` incluye, además de lo definido en `02-data-model.md`:
@@ -203,11 +208,11 @@ avanza.
   `imagen_referencia_url`; se muestra con URL firmada.
 
 ## Tareas
-- [ ] Migración `004_ajustes_borrador.sql` (D1) — en el repo backend.
+- [ ] Migración `006_ajustes_borrador.sql` (D1) en `backend/supabase/migrations/`.
 - [ ] `src/constants/catalogoSabores.ts` (assets locales de sabores).
 - [ ] `src/constants/precios.ts` y función `calcularPrecio()` (D7).
 - [ ] `PedidoContext` para mantener el estado del wizard entre pasos.
-- [ ] `(tabs)/home.tsx` con catálogo paginado.
+- [ ] `(cliente)/home.tsx` con catálogo paginado (tarjetas en 2 columnas según el diseño).
 - [ ] `pedido/nuevo/index.tsx` (tamaño + niveles).
 - [ ] `pedido/nuevo/sabor.tsx` (selector con resaltado visual).
 - [ ] `pedido/nuevo/decoracion.tsx` (texto + `expo-image-picker`).

@@ -1,16 +1,24 @@
 # Modelo de datos
 
 > Las tablas `pedidos`, `pedido_detalle` y `pagos` ya existen en
-> `supabase/migrations/001_tablas_iniciales.sql`. Aquí se documentan como entidades
-> de spec y se agregan los ajustes necesarios para F01-F03.
+> `backend/supabase/migrations/001_tablas_iniciales.sql`. Aquí se documentan como
+> entidades de spec y se agregan los ajustes necesarios para F00-F06.
 
 ## Entidades
 
 ```ts
+Perfil {                     // NUEVO — un registro por usuario de auth.users
+  id: uuid                   // = auth.users.id
+  nombre: string
+  rol: 'cliente' | 'admin' | 'repartidor'   // default 'cliente'
+  created_at: timestamp
+}
+
 Pedido {
   id: uuid
   usuario_id: uuid          // FK a auth.users — permite múltiples pedidos por usuario
-  estado: 'borrador' | 'pendiente' | 'confirmado' | 'en_preparacion' | 'entregado' | 'cancelado'
+  repartidor_id: uuid | null // NUEVO — FK a perfiles; lo asigna el admin (solo domicilio)
+  estado: EstadoPedido       // ver "Estados del pedido"
   fecha_entrega: date
   hora_entrega: time
   tipo_entrega: 'domicilio' | 'recoleccion'
@@ -19,15 +27,15 @@ Pedido {
   direccion_lng: number | null
   direccion_referencia: string | null
   total: number
-  folio: string              // ID único de seguimiento (F3.2)
+  folio: string              // ID único de seguimiento (F03)
 }
 
 PedidoDetalle {
   id: uuid
   pedido_id: uuid
   tamanio: '10' | '15' | '20' | '30'   // personas — NUEVO, faltaba en la tabla original
-  tipo_pan: string                       // Vainilla, Chocolate, Red Velvet, Café, Tres leches, Fresa, Zanahoria
-  relleno: string                        // Cajeta, Fresa, Nutella, Crema pastelera, Mantequilla de maní
+  tipo_pan: string                       // id de SABORES_PAN (ver "Catálogo de sabores")
+  relleno: string                        // id de SABORES_RELLENO
   niveles: 1 | 2 | 3 | 4
   decoracion_texto: string | null        // máx. 500 caracteres
   imagen_referencia_url: string | null   // solo formato imagen (validar MIME antes de subir)
@@ -43,26 +51,80 @@ Pago {
 }
 ```
 
-## Ajuste pendiente a la migración
+## Estados del pedido
 
-Falta la columna `tamanio` en `pedido_detalle` (no estaba contemplada originalmente).
-Crear `supabase/migrations/004_ajustes_pedido_detalle.sql`:
-
-```sql
-alter table pedido_detalle
-  add column tamanio text not null default '10'
-  check (tamanio in ('10', '15', '20', '30'));
+```
+borrador → pendiente → confirmado → en_preparacion → listo ─┬─ (domicilio)   → en_camino → entregado
+                │            │                              └─ (recolección) ─────────────→ entregado
+                └────────────┴──→ cancelado
 ```
 
-## Catálogo de sabores e imágenes (F1.2, requisito "RecursosImg")
+| Estado | Significado | Quién lo pone |
+|---|---|---|
+| `borrador` | El cliente está armando el pedido | Cliente (F01) |
+| `pendiente` | El cliente confirmó; espera revisión de la pastelería | Cliente (F03) |
+| `confirmado` | La pastelería aceptó el pedido | Admin |
+| `en_preparacion` | Se está elaborando | Admin |
+| `listo` | Terminado; espera recolección o salida a reparto | Admin |
+| `en_camino` | Asignado a un repartidor y en ruta (solo domicilio) | Admin (al asignar repartidor) |
+| `entregado` | Recibido por el cliente | Repartidor (domicilio) · Admin (recolección) |
+| `cancelado` | Cancelado (solo desde `pendiente` o `confirmado`) | Admin |
+
+Reglas:
+- Solo se avanza a un estado de la flecha; no se puede regresar ni saltar estados.
+- `en_camino` exige `repartidor_id` y `tipo_entrega = 'domicilio'`.
+- El repartidor solo puede cambiar `en_camino → entregado`, y solo en los pedidos
+  que tiene asignados.
+- Las transiciones se validan en la base de datos (no solo en la app).
+
+## Permisos por rol (RLS)
+
+| Tabla | Cliente | Admin | Repartidor |
+|---|---|---|---|
+| `perfiles` | Ver y editar su `nombre` (no su `rol`) | Ver todos | Ver el suyo |
+| `pedidos` | Ver/crear los suyos; editar solo borradores; pasar a `pendiente` | Ver todos; cambiar `estado` y `repartidor_id` | Ver los asignados a él; cambiar a `entregado` |
+| `pedido_detalle` | Ver/crear/editar el de sus borradores | Ver todos | Ver el de sus entregas |
+| `pagos` | Ver/crear los suyos | Ver todos | — |
+| `catalogo_pasteles` | Ver activos | Ver todos | — |
+| Storage `referencias-pasteles` | Subir/ver en su carpeta | Ver todo | — |
+
+Las políticas usan una función `mi_rol()` (`security definer`) que lee el rol del
+usuario actual desde `perfiles`, para no repetir la consulta en cada política.
+
+## Plan de migraciones
+
+En `backend/supabase/migrations/`, en este orden:
+
+| Migración | Contenido | Feature |
+|---|---|---|
+| `004_perfiles_roles.sql` | Tabla `perfiles`, trigger que crea el perfil `cliente` al registrarse, función `mi_rol()` | F00 |
+| `005_catalogo.sql` | Tabla `catalogo_pasteles` + datos de prueba + bucket público de imágenes | F01 |
+| `006_ajustes_borrador.sql` | Ajustes para guardar borradores (ver F01, D1) | F01 |
+| `007_estados_y_roles.sql` | `check` de estados, `repartidor_id`, políticas RLS de admin y repartidor, validación de transiciones | F04, F06 |
+
+## Catálogo de sabores e imágenes
 
 Las imágenes de sabor de pan/relleno **no van en la base de datos**: son assets
-estáticos del proyecto. Se define una constante local:
+estáticos del proyecto. **Solo existen los sabores que tienen imagen en
+`frontend/assets/sabores/`**. En la BD se guarda el `id`; en pantalla, el `nombre`.
+
+| Pan (`id` → nombre) | Relleno (`id` → nombre) |
+|---|---|
+| `vainilla` → Vainilla | `cajeta` → Cajeta |
+| `chocolate` → Chocolate | `chocolate` → Chocolate |
+| `redvelvet` → Red Velvet | `cremapastelera` → Crema pastelera |
+| `tresleches` → Tres leches | `mantequillademani` → Mantequilla de maní |
+| `fresa` → Fresa | `mermeladafresa` → Mermelada / Fresa |
+| `zanahoria` → Zanahoria | |
 
 ```ts
-// src/constants/catalogoSabores.ts
+// frontend/src/constants/catalogoSabores.ts
 export const SABORES_PAN = [
-  { id: 'vainilla', nombre: 'Vainilla', imagen: require('../../assets/sabores/vainilla.png') },
+  { id: 'vainilla', nombre: 'Vainilla', imagen: require('../../assets/sabores/pan/vainilla.png') },
+  // ...
+];
+export const SABORES_RELLENO = [
+  { id: 'cajeta', nombre: 'Cajeta', imagen: require('../../assets/sabores/relleno/cajeta.png') },
   // ...
 ];
 ```
@@ -70,10 +132,11 @@ export const SABORES_PAN = [
 Esto evita depender de Storage para algo que no cambia por pedido, y es más rápido
 de renderizar.
 
-## Catálogo base de pasteles predefinidos (F1.1)
+## Catálogo base de pasteles predefinidos (pantalla de inicio)
 
-Si se requiere mostrar pasteles prediseñados con precio base (no solo construir desde
-cero), se necesita una tabla adicional:
+Pasteles prediseñados que se muestran en `home.tsx` (ver
+`design/pantalla_principal_catalogo.png`). Cada tarjeta muestra imagen, precio,
+descripción y el botón "Pedir".
 
 ```sql
 create table catalogo_pasteles (
@@ -86,5 +149,6 @@ create table catalogo_pasteles (
 );
 ```
 
-Esta tabla **sí** necesita RLS de solo lectura pública (cualquiera puede ver el
-catálogo, nadie más que un admin lo edita).
+Esta tabla **sí** necesita RLS de solo lectura (cualquier usuario con sesión ve el
+catálogo activo; nadie más que un admin lo edita, y por ahora se edita desde el
+Dashboard de Supabase).
