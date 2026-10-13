@@ -6,13 +6,21 @@ export interface AuthUser {
     loading: boolean;
 }
 
-export interface SingUpData {
+export interface SignUpData {
     email: string;
     password: string;
     nombre: string;
 }
 
-export interface SingInData {
+export interface SignInData {
     email: string;
     password: string;
+}
+
+export type Rol = 'cliente' | 'admin' | 'repartidor';
+
+export interface Perfil {
+    id: string;
+    nombre: string;
+    rol: Rol;
 }

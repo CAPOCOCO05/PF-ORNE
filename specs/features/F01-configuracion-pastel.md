@@ -208,7 +208,7 @@ avanza.
   `imagen_referencia_url`; se muestra con URL firmada.
 
 ## Tareas
-- [ ] Migración `006_ajustes_borrador.sql` (D1) en `backend/supabase/migrations/`.
+- [x] Migración `006_ajustes_borrador.sql` (D1) en `backend/supabase/migrations/`.
 - [ ] `src/constants/catalogoSabores.ts` (assets locales de sabores).
 - [ ] `src/constants/precios.ts` y función `calcularPrecio()` (D7).
 - [ ] `PedidoContext` para mantener el estado del wizard entre pasos.

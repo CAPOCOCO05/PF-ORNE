@@ -92,20 +92,20 @@ que abre la app y siempre llega a la sección de su rol.
 - [ ] El registro está conectado a una pantalla funcional y crea un perfil `cliente`.
 - [ ] Cada rol llega a su sección al iniciar sesión.
 - [ ] Un usuario no puede abrir la sección de otro rol.
-- [ ] Los mensajes de error se muestran en pantalla junto al campo o en un aviso
+- [x] Los mensajes de error se muestran en pantalla junto al campo o en un aviso
       claro (no solo `Alert.alert` genérico).
 
 ## Tareas
 - [x] Cliente de Supabase (`src/services/supabase.ts`).
-- [x] `authService` + `AuthContext` con `singIn`, `singUp`, `singOut`.
+- [x] `authService` + `AuthContext` con `signIn`, `signUp`, `signOut`.
 - [x] `app/_layout.tsx` con `AuthProvider`.
-- [ ] Migración `004_perfiles_roles.sql` (ver `02-data-model.md`).
-- [ ] Tipo `Perfil` y `getPerfil()` en `authService`; `AuthContext` expone `perfil`.
-- [ ] `src/theme/colors.ts` con la paleta.
-- [ ] Componentes `Boton`, `Input`, `FondoOndas` en `src/components/`.
-- [ ] `login.tsx` según el diseño.
-- [ ] `register.tsx` funcional.
+- [x] Migración `004_perfiles_roles.sql` (ver `02-data-model.md`).
+- [x] Tipo `Perfil` y `getPerfil()` en `authService`; `AuthContext` expone `perfil`.
+- [x] `src/theme/colors.ts` con la paleta.
+- [x] Componentes `Boton`, `Input`, `FondoOndas` en `src/components/`.
+- [x] `login.tsx` según el diseño.
+- [x] `register.tsx` funcional.
 - [ ] `app/index.tsx` con redirección por rol.
 - [ ] `_layout.tsx` de `(cliente)`, `admin` y `repartidor` con guardia de rol.
-- [ ] Traducir los errores de Supabase a los mensajes de esta spec.
+- [x] Traducir los errores de Supabase a los mensajes de esta spec.
 - [ ] Probar con un usuario de cada rol.
