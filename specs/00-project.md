@@ -47,7 +47,7 @@ debe seguir la paleta:
 ## MVP (features)
 | Feature | Descripción | Rol | Estado |
 |---|---|---|---|
-| F00 | Autenticación (login / registro) y redirección por rol | Todos | 🟡 Login parcial |
+| F00 | Autenticación (login / registro) y redirección por rol | Todos | ✅ Completa |
 | F01 | Catálogo y configuración del pastel | Cliente | 🔲 Especificado |
 | F02 | Logística de entrega | Cliente | 🔲 Pendiente |
 | F03 | Checkout y generación de ID de pedido | Cliente | 🔲 Pendiente |

@@ -85,7 +85,10 @@ export function AuthProvider({children}: {children: React.ReactNode}){ // provee
         return authService.signIn(data);
     };
 
-    const signOut = () => authService.signOut();
+    const signOut = () => {
+        setAuthError(null); // que el login no muestre un aviso viejo (p. ej. de conexion)
+        return authService.signOut();
+    };
 
     const reintentarPerfil = () => {
         setPerfilCargadoPara(null);

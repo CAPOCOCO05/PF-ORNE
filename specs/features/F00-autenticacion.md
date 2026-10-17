@@ -88,10 +88,10 @@ que abre la app y siempre llega a la sección de su rol.
 ## Criterios de aceptación
 - [x] El usuario puede iniciar sesión con credenciales válidas.
 - [x] La sesión persiste al cerrar y reabrir la app.
-- [ ] La pantalla de login coincide con `design/pantalla_login.png`.
-- [ ] El registro está conectado a una pantalla funcional y crea un perfil `cliente`.
-- [ ] Cada rol llega a su sección al iniciar sesión.
-- [ ] Un usuario no puede abrir la sección de otro rol.
+- [x] La pantalla de login coincide con `design/pantalla_login.png`.
+- [x] El registro está conectado a una pantalla funcional y crea un perfil `cliente`.
+- [x] Cada rol llega a su sección al iniciar sesión.
+- [x] Un usuario no puede abrir la sección de otro rol.
 - [x] Los mensajes de error se muestran en pantalla junto al campo o en un aviso
       claro (no solo `Alert.alert` genérico).
 
@@ -105,7 +105,8 @@ que abre la app y siempre llega a la sección de su rol.
 - [x] Componentes `Boton`, `Input`, `FondoOndas` en `src/components/`.
 - [x] `login.tsx` según el diseño.
 - [x] `register.tsx` funcional.
-- [ ] `app/index.tsx` con redirección por rol.
-- [ ] `_layout.tsx` de `(cliente)`, `admin` y `repartidor` con guardia de rol.
+- [x] `app/index.tsx` con redirección por rol.
+- [x] `_layout.tsx` de `(cliente)`, `admin` y `repartidor` con guardia de rol (`GuardiaRol`).
+- [x] Pantallas de inicio provisionales con "Cerrar sesión" (el menú lateral pasa a F01).
 - [x] Traducir los errores de Supabase a los mensajes de esta spec.
-- [ ] Probar con un usuario de cada rol.
+- [x] Probar con un usuario de cada rol.

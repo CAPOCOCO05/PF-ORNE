@@ -209,6 +209,7 @@ avanza.
 
 ## Tareas
 - [x] Migración `006_ajustes_borrador.sql` (D1) en `backend/supabase/migrations/`.
+- [ ] Menú lateral (Drawer) en los `_layout.tsx` de cada rol según `01-navigation.md` (pendiente de F00; requiere `@react-navigation/drawer`, `react-native-gesture-handler` y `react-native-reanimated`).
 - [ ] `src/constants/catalogoSabores.ts` (assets locales de sabores).
 - [ ] `src/constants/precios.ts` y función `calcularPrecio()` (D7).
 - [ ] `PedidoContext` para mantener el estado del wizard entre pasos.
