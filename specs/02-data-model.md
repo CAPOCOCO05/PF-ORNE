@@ -20,14 +20,20 @@ Pedido {
   repartidor_id: uuid | null // NUEVO — FK a perfiles; lo asigna el admin (solo domicilio)
   estado: EstadoPedido       // ver "Estados del pedido"
   fecha_entrega: date
-  hora_entrega: time
+  hora_entrega: time         // inicio del bloque de 2 h: 10:00 | 12:00 | 14:00 | 16:00 (F02 D2)
   tipo_entrega: 'domicilio' | 'recoleccion'
-  direccion: string | null
+  calle: string | null       // NUEVO (F02) — solo domicilio
+  numero_exterior: string | null    // NUEVO (F02)
+  numero_interior: string | null    // NUEVO (F02)
+  colonia: string | null     // NUEVO (F02)
+  telefono_contacto: string | null  // NUEVO (F02) — 10 dígitos
+  direccion: string | null   // texto legible armado con los campos anteriores
   direccion_lat: number | null
   direccion_lng: number | null
   direccion_referencia: string | null
   total: number
-  folio: string              // ID único de seguimiento (F03)
+  folio: string              // ID único de seguimiento (F03): ORN-XXXXXX
+  paso_actual: 1 | 2 | 3 | 4 | 5     // paso donde se retoma el borrador
 }
 
 PedidoDetalle {
@@ -101,6 +107,7 @@ En `backend/supabase/migrations/`, en este orden:
 | `005_catalogo.sql` | Tabla `catalogo_pasteles` + datos de prueba + bucket público de imágenes | F01 |
 | `006_ajustes_borrador.sql` | Ajustes para guardar borradores (ver F01, D1) | F01 |
 | `007_estados_y_roles.sql` | `check` de estados, `repartidor_id`, políticas RLS de admin y repartidor, validación de transiciones | F04, F06 |
+| `008_entrega_y_confirmacion.sql` | Campos de dirección y teléfono, bloques de horario, `paso_actual` 1–5, `fecha_minima_entrega`, `calcular_precio`, `confirmar_pedido` (folio + pago) | F02, F03 |
 
 ## Catálogo de sabores e imágenes
 

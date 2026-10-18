@@ -49,8 +49,8 @@ debe seguir la paleta:
 |---|---|---|---|
 | F00 | Autenticación (login / registro) y redirección por rol | Todos | ✅ Completa |
 | F01 | Catálogo y configuración del pastel | Cliente | ✅ Completa |
-| F02 | Logística de entrega | Cliente | 🔲 Pendiente |
-| F03 | Checkout y generación de ID de pedido | Cliente | 🔲 Pendiente |
+| F02 | Logística de entrega | Cliente | 🔲 Especificado |
+| F03 | Checkout y generación de ID de pedido | Cliente | 🔲 Especificado |
 | F04 | Panel administrativo (consulta y cambio de estado) | Admin | 🔲 Especificado |
 | F05 | Manejo de errores y validaciones (transversal) | Todos | 🔲 Pendiente |
 | F06 | Entregas del repartidor | Repartidor | 🔲 Especificado |
@@ -59,8 +59,10 @@ debe seguir la paleta:
 F01 → F02 → F03 → F04 → F06. F05 se aplica en cada una.
 
 ## Reglas de negocio clave
-- Fecha mínima de entrega: hoy + 48h (1 nivel). +7 días si tiene 2 niveles.
-  3-4 niveles: evaluar caso por caso (tiempo de producción mayor).
+- Fecha mínima de entrega: hoy + 2 días (1 nivel), +7 días (2 niveles), +10 días
+  (3-4 niveles), en hora de Ensenada (`America/Tijuana`). Ver F02, D3.
+- Sucursal única: Calle Primera, C.P. 22785, Ensenada, B.C. Entrega a domicilio en
+  un radio de 15 km, gratis.
 - Precio = PrecioBase(tamaño + niveles) + CostoAdicionalRelleno (+ costo decoración
   si se integra IA de estimación; por ahora precio fijo por complejidad).
 - ID de pedido: alfanumérico único (columna `folio` en tabla `pedidos`).
