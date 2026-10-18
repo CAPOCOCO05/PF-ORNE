@@ -1,11 +1,17 @@
-import { Stack } from "expo-router";
 import GuardiaRol from "../../src/components/GuardiaRol";
+import MenuLateral from "../../src/components/MenuLateral";
 
-// seccion del rol repartidor (el menu lateral se agrega en F01)
+// seccion del rol repartidor
 export default function Layout() {
     return (
         <GuardiaRol rol="repartidor">
-            <Stack screenOptions={{ headerShown: false }} />
+            <MenuLateral
+                opciones={[
+                    {ruta: 'index', titulo: 'Mis entregas'},
+                    {ruta: 'perfil', titulo: 'Perfil'},
+                ]}
+                rutaPerfil="perfil"
+            />
         </GuardiaRol>
     );
 }

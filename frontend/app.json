@@ -28,7 +28,15 @@
     },
     "plugins": [
       "expo-status-bar",
-      "expo-router"
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ORNE necesita acceso a tu galería para adjuntar la imagen de referencia de tu pastel.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ]
   }
 }

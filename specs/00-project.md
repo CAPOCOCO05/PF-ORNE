@@ -48,7 +48,7 @@ debe seguir la paleta:
 | Feature | Descripción | Rol | Estado |
 |---|---|---|---|
 | F00 | Autenticación (login / registro) y redirección por rol | Todos | ✅ Completa |
-| F01 | Catálogo y configuración del pastel | Cliente | 🔲 Especificado |
+| F01 | Catálogo y configuración del pastel | Cliente | ✅ Completa |
 | F02 | Logística de entrega | Cliente | 🔲 Pendiente |
 | F03 | Checkout y generación de ID de pedido | Cliente | 🔲 Pendiente |
 | F04 | Panel administrativo (consulta y cambio de estado) | Admin | 🔲 Especificado |

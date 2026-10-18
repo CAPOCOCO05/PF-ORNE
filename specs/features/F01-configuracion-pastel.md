@@ -36,7 +36,8 @@ Solo existen los sabores con imagen en `frontend/assets/sabores/` (ver
 5. En cualquier paso puede regresar al anterior sin perder lo ya capturado.
 6. En cualquier paso puede salir; el borrador queda guardado y aparece en
    "Mis pedidos" para retomarlo.
-7. Al terminar el paso 3, continúa a F02 (logística de entrega).
+7. Al terminar el paso 3, continúa a F02 (logística de entrega). Mientras F02 no
+   esté implementada, el paso 3 guarda el borrador y lleva a "Mis pedidos".
 
 ## Validaciones
 - No se puede avanzar de paso sin completar los campos obligatorios de ese paso.
@@ -63,12 +64,12 @@ Un registro en `pedido_detalle` vinculado al pedido en curso, con todas las
 especificaciones del pastel, listo para pasar a logística de entrega.
 
 ## Criterios de aceptación
-- [ ] El catálogo base carga paginado, sin traer todos los registros de golpe.
-- [ ] El usuario puede retroceder a cualquier paso anterior sin perder datos.
-- [ ] El usuario puede salir a medias y retomar el pedido desde "Mis pedidos".
-- [ ] El sabor de pan y relleno seleccionados se ven visualmente resaltados.
-- [ ] No se puede adjuntar un archivo que no sea imagen.
-- [ ] El precio se actualiza en tiempo real al cambiar tamaño/niveles/relleno.
+- [x] El catálogo base carga paginado, sin traer todos los registros de golpe.
+- [x] El usuario puede retroceder a cualquier paso anterior sin perder datos.
+- [x] El usuario puede salir a medias y retomar el pedido desde "Mis pedidos".
+- [x] El sabor de pan y relleno seleccionados se ven visualmente resaltados.
+- [x] No se puede adjuntar un archivo que no sea imagen.
+- [x] El precio se actualiza en tiempo real al cambiar tamaño/niveles/relleno.
 
 ## Decisiones (supuestos v1)
 
@@ -209,14 +210,17 @@ avanza.
 
 ## Tareas
 - [x] Migración `006_ajustes_borrador.sql` (D1) en `backend/supabase/migrations/`.
-- [ ] Menú lateral (Drawer) en los `_layout.tsx` de cada rol según `01-navigation.md` (pendiente de F00; requiere `@react-navigation/drawer`, `react-native-gesture-handler` y `react-native-reanimated`).
-- [ ] `src/constants/catalogoSabores.ts` (assets locales de sabores).
-- [ ] `src/constants/precios.ts` y función `calcularPrecio()` (D7).
-- [ ] `PedidoContext` para mantener el estado del wizard entre pasos.
-- [ ] `(cliente)/home.tsx` con catálogo paginado (tarjetas en 2 columnas según el diseño).
-- [ ] `pedido/nuevo/index.tsx` (tamaño + niveles).
-- [ ] `pedido/nuevo/sabor.tsx` (selector con resaltado visual).
-- [ ] `pedido/nuevo/decoracion.tsx` (texto + `expo-image-picker`).
-- [ ] Función `guardarBorrador()` en `src/services/pedidosService.ts`.
-- [ ] Validación de MIME type antes de subir a Storage.
-- [ ] Probar criterios de aceptación.
+- [x] Menú lateral (Drawer de `expo-router/drawer`) en los `_layout.tsx` de cada rol según `01-navigation.md` (pendiente de F00; requiere `react-native-gesture-handler`, `react-native-reanimated` y `react-native-worklets`).
+- [x] `perfil.tsx` de cada rol (nombre, correo, "Cerrar sesión").
+- [x] `src/constants/catalogoSabores.ts` (assets locales de sabores).
+- [x] `src/constants/precios.ts` y función `calcularPrecio()` (D7).
+- [x] `PedidoContext` para mantener el estado del wizard entre pasos.
+- [x] `(cliente)/home.tsx` con catálogo paginado (tarjetas en 2 columnas según el diseño).
+- [x] `pedido/nuevo/index.tsx` (tamaño + niveles).
+- [x] `pedido/nuevo/sabor.tsx` (selector con resaltado visual).
+- [x] `pedido/nuevo/decoracion.tsx` (texto + `expo-image-picker`).
+- [x] Función `guardarBorrador()` en `src/services/pedidosService.ts`.
+- [x] Validación de MIME type antes de subir a Storage.
+- [x] `(cliente)/pedidos.tsx` ("Mis pedidos"): lista con estado, "Continuar pedido"
+      (abre el borrador en `paso_actual`) y "Eliminar borrador" con confirmación (D2).
+- [x] Probar criterios de aceptación.

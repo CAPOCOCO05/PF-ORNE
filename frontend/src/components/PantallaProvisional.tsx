@@ -1,22 +1,20 @@
 import { StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { COLORS } from "../theme/colors";
-import Boton from "./Boton";
 
 interface PantallaProvisionalProps {
     titulo: string;
 }
 
-// pantalla de inicio temporal de cada rol hasta implementar su feature
-// (el cierre de sesion pasara al menu lateral en F01)
+// pantalla temporal de una seccion hasta implementar su feature
+// (cerrar sesion esta en el menu lateral y en el perfil)
 export default function PantallaProvisional({titulo}: PantallaProvisionalProps) {
-    const {perfil, signOut} = useAuth();
+    const {perfil} = useAuth();
 
     return (
         <View style={styles.container}>
             <Text style={styles.titulo}>{titulo}</Text>
             <Text style={styles.texto}>Hola, {perfil?.nombre}. Esta sección estará disponible pronto.</Text>
-            <Boton titulo="Cerrar sesión" onPress={signOut} style={styles.boton} />
         </View>
     );
 }
@@ -27,7 +25,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 24,
-        backgroundColor: COLORS.FONDO,
+        backgroundColor: COLORS.BLANCO,
     },
     titulo: {
         fontSize: 24,
@@ -39,8 +37,5 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: COLORS.TEXTO_SUAVE,
         textAlign: 'center',
-    },
-    boton: {
-        marginTop: 24,
     },
 });
