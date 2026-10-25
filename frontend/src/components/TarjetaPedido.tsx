@@ -12,10 +12,12 @@ interface TarjetaPedidoProps {
     eliminando: boolean;
     onContinuar: (pedido: ResumenPedido) => void;
     onEliminar: (pedido: ResumenPedido) => void;
+    onVer: (pedido: ResumenPedido) => void;
 }
 
 // renglon de "Mis pedidos"; los borradores se pueden continuar o eliminar (F01, D2)
-export default function TarjetaPedido({pedido, eliminando, onContinuar, onEliminar}: TarjetaPedidoProps) {
+// y los confirmados abren su comprobante (F03 D4)
+export default function TarjetaPedido({pedido, eliminando, onContinuar, onEliminar, onVer}: TarjetaPedidoProps) {
     const esBorrador = pedido.estado === 'borrador';
 
     return (
@@ -35,7 +37,9 @@ export default function TarjetaPedido({pedido, eliminando, onContinuar, onElimin
                     <Boton titulo="Eliminar" variante="secundario" onPress={() => onEliminar(pedido)} cargando={eliminando} style={styles.boton} />
                     <Boton titulo="Continuar pedido" onPress={() => onContinuar(pedido)} deshabilitado={eliminando} style={styles.boton} />
                 </View>
-            ) : null}
+            ) : (
+                <Boton titulo="Ver comprobante" variante="secundario" onPress={() => onVer(pedido)} style={[styles.boton, styles.botonVer]} />
+            )}
         </View>
     );
 }
@@ -106,5 +110,8 @@ const styles = StyleSheet.create({
     boton: {
         flex: 1,
         minHeight: 40,
+    },
+    botonVer: {
+        marginTop: 12,
     },
 });

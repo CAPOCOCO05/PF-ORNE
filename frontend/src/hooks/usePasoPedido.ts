@@ -7,14 +7,16 @@ import { validarPaso } from "../utils/pedido";
 
 // logica comun de los pasos del wizard: validar, guardar con "Siguiente" y salir (F01, D2-D4)
 
-export const RUTA_PASO: Record<PasoPedido, '/pedido/nuevo' | '/pedido/nuevo/sabor' | '/pedido/nuevo/decoracion'> = {
+export const RUTA_PASO: Record<PasoPedido, string> = {
     1: '/pedido/nuevo',
     2: '/pedido/nuevo/sabor',
     3: '/pedido/nuevo/decoracion',
+    4: '/pedido/nuevo/entrega',
+    5: '/pedido/nuevo/pago',
 };
 
 // paso en el que se retomara el borrador despues de completar cada paso
-const PASO_AL_COMPLETAR: Record<PasoPedido, PasoPedido> = {1: 2, 2: 3, 3: 3};
+const PASO_AL_COMPLETAR: Record<PasoPedido, PasoPedido> = {1: 2, 2: 3, 3: 4, 4: 5, 5: 5};
 
 export function usePasoPedido(paso: PasoPedido) {
     const router = useRouter();
@@ -26,13 +28,14 @@ export function usePasoPedido(paso: PasoPedido) {
     // los campos faltantes se marcan en rojo solo despues de presionar "Siguiente" (D4)
     const errores = intentoAvanzar ? faltantes : {};
 
-    const siguiente = useCallback(async (alGuardar: () => void) => {
+    // el paso 4 valida con sus propias reglas (utils/entrega.ts) y pasa sus errores en `otrosErrores`
+    const siguiente = useCallback(async (alGuardar: () => void, otrosErrores: object = {}) => {
         setIntentoAvanzar(true);
-        if (Object.keys(faltantes).length > 0) return;
+        if (Object.keys(faltantes).length > 0 || Object.keys(otrosErrores).length > 0) return;
 
         const intentar = async () => {
             setGuardando(true);
-            const error = await guardar({pasoActual: PASO_AL_COMPLETAR[paso], sincronizarImagen: paso === 3});
+            const error = await guardar({pasoActual: PASO_AL_COMPLETAR[paso], sincronizarImagen: paso === 3, guardarEntrega: paso === 4});
             setGuardando(false);
             if (!error) {
                 alGuardar();
@@ -75,5 +78,5 @@ export function usePasoPedido(paso: PasoPedido) {
         ]);
     }, [pedido.id, pedido.pasoActual, guardar, router]);
 
-    return {errores, guardando, siguiente, salir};
+    return {errores, intentoAvanzar, guardando, siguiente, salir};
 }

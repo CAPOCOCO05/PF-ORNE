@@ -36,6 +36,12 @@
           "cameraPermission": false,
           "microphonePermission": false
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ORNE usa tu ubicación para ubicar en el mapa la dirección de entrega de tu pastel."
+        }
       ]
     ]
   }

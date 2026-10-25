@@ -23,6 +23,8 @@ export default function PasoTamanio() {
             if (!inicial || !borrador) return;
             if (inicial.pasoActual >= 2) router.push(RUTA_PASO[2]);
             if (inicial.pasoActual >= 3) router.push(RUTA_PASO[3]);
+            if (inicial.pasoActual >= 4) router.push(RUTA_PASO[4]);
+            if (inicial.pasoActual >= 5) router.push(RUTA_PASO[5]);
         });
     }, [iniciar, pastel, borrador, router]));
 

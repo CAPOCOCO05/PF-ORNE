@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import PantallaPaso from "../../../../src/components/pedido/PantallaPaso";
 import { usePedido } from "../../../../src/context/PedidoContext";
-import { usePasoPedido } from "../../../../src/hooks/usePasoPedido";
+import { RUTA_PASO, usePasoPedido } from "../../../../src/hooks/usePasoPedido";
 import { urlReferencia } from "../../../../src/services/pedidosService";
 import { COLORS } from "../../../../src/theme/colors";
 import { ImagenLocal } from "../../../../src/types/pedido.types";
@@ -46,19 +46,13 @@ export default function PasoDecoracion() {
         setErrorImagen(null);
     };
 
-    const terminar = () => siguiente(() => {
-        // mientras F02 no exista, el pedido queda como borrador en "Mis pedidos"
-        Alert.alert('Pedido guardado', 'Tu pedido quedó guardado en "Mis pedidos". Pronto podrás elegir la entrega y confirmarlo.');
-        router.navigate('/pedidos');
-    });
 
     return (
         <PantallaPaso
             paso={3}
             textoAtras="Atrás"
             onAtras={() => router.back()}
-            textoSiguiente="Guardar pedido"
-            onSiguiente={terminar}
+            onSiguiente={() => siguiente(() => router.push(RUTA_PASO[4]))}
             guardando={guardando}
         >
             <Text style={styles.etiqueta}>Descripción de la decoración</Text>

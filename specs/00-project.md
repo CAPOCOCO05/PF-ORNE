@@ -49,7 +49,7 @@ debe seguir la paleta:
 |---|---|---|---|
 | F00 | Autenticación (login / registro) y redirección por rol | Todos | ✅ Completa |
 | F01 | Catálogo y configuración del pastel | Cliente | ✅ Completa |
-| F02 | Logística de entrega | Cliente | 🔲 Especificado |
+| F02 | Logística de entrega | Cliente | ✅ Completa |
 | F03 | Checkout y generación de ID de pedido | Cliente | 🔲 Especificado |
 | F04 | Panel administrativo (consulta y cambio de estado) | Admin | 🔲 Especificado |
 | F05 | Manejo de errores y validaciones (transversal) | Todos | 🔲 Pendiente |

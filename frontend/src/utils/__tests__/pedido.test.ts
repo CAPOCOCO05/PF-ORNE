@@ -2,11 +2,12 @@ import {
     MAX_BYTES_IMAGEN, MENSAJES_PEDIDO, ajustarNiveles, contarCaracteres, limitarMensaje,
     mimeImagen, nivelesPermitidos, normalizarMensaje, validarImagen, validarPaso,
 } from "../pedido";
+import { ENTREGA_VACIA } from "../entrega";
 import { PedidoEnCurso } from "../../types/pedido.types";
 
 const PEDIDO_VACIO: PedidoEnCurso = {
     id: null, tamanio: null, niveles: null, tipoPan: null, relleno: null,
-    mensaje: "", imagenLocal: null, imagenRuta: null, pasoActual: 1,
+    mensaje: "", imagenLocal: null, imagenRuta: null, entrega: ENTREGA_VACIA, pasoActual: 1,
 };
 
 describe("nivelesPermitidos", () => {

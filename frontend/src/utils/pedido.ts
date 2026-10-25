@@ -92,13 +92,16 @@ export function validarImagen(imagen: ImagenLocal): string | undefined {
     return undefined;
 }
 
-// campos obligatorios de cada paso (D4); el paso 3 no tiene obligatorios
+// campos obligatorios de cada paso (D4); el paso 3 no tiene obligatorios y los
+// pasos 4 y 5 se validan con sus propias reglas (utils/entrega.ts, F03)
 export type CampoPedido = 'tamanio' | 'niveles' | 'tipoPan' | 'relleno';
 
 const CAMPOS_POR_PASO: Record<PasoPedido, CampoPedido[]> = {
     1: ['tamanio', 'niveles'],
     2: ['tipoPan', 'relleno'],
     3: [],
+    4: [],
+    5: [],
 };
 
 export function validarPaso(paso: PasoPedido, pedido: PedidoEnCurso): Partial<Record<CampoPedido, string>> {

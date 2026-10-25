@@ -6,6 +6,8 @@ const PASOS: {paso: PasoPedido; titulo: string}[] = [
     {paso: 1, titulo: 'Pastel'},
     {paso: 2, titulo: 'Sabor'},
     {paso: 3, titulo: 'Decoración'},
+    {paso: 4, titulo: 'Entrega'},
+    {paso: 5, titulo: 'Pago'},
 ];
 
 // stepper solo visual: se retrocede con "Atrás", un paso a la vez (D3)
@@ -21,7 +23,7 @@ export default function IndicadorPasos({actual}: {actual: PasoPedido}) {
                             <View style={[styles.circulo, hecho && styles.circuloHecho]}>
                                 <Text style={[styles.numero, hecho && styles.numeroHecho]}>{paso}</Text>
                             </View>
-                            <Text style={[styles.titulo, paso === actual && styles.tituloActual]}>{titulo}</Text>
+                            <Text style={[styles.titulo, paso === actual && styles.tituloActual]} numberOfLines={1} adjustsFontSizeToFit>{titulo}</Text>
                         </View>
                     </View>
                 );
@@ -44,10 +46,10 @@ const styles = StyleSheet.create({
     },
     columna: {
         alignItems: 'center',
-        width: 76,
+        width: 56,
     },
     linea: {
-        width: 24,
+        width: 6,
         height: 2,
         marginTop: TAMANO_CIRCULO / 2,
         backgroundColor: COLORS.FONDO,
@@ -79,7 +81,7 @@ const styles = StyleSheet.create({
     },
     titulo: {
         marginTop: 4,
-        fontSize: 12,
+        fontSize: 11,
         color: COLORS.TEXTO_SUAVE,
     },
     tituloActual: {

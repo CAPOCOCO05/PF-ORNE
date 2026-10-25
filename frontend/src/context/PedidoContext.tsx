@@ -3,7 +3,8 @@ import { useFocusEffect } from "expo-router";
 import { useAuth } from "./AuthContext";
 import { obtenerPastel } from "../services/catalogoService";
 import { guardarBorrador, obtenerBorrador } from "../services/pedidosService";
-import { PasoPedido, PedidoEnCurso } from "../types/pedido.types";
+import { DatosEntrega, PasoPedido, PedidoEnCurso } from "../types/pedido.types";
+import { ENTREGA_VACIA } from "../utils/entrega";
 
 // estado del pedido en construccion, compartido por los pasos del wizard (01-navigation.md)
 
@@ -16,6 +17,7 @@ export const PEDIDO_VACIO: PedidoEnCurso = {
     mensaje: '',
     imagenLocal: null,
     imagenRuta: null,
+    entrega: ENTREGA_VACIA,
     pasoActual: 1,
 };
 
@@ -33,6 +35,7 @@ export interface OrigenPedido {
 interface OpcionesGuardado {
     pasoActual: PasoPedido;
     sincronizarImagen?: boolean;
+    guardarEntrega?: boolean;
 }
 
 interface PedidoContextType {
@@ -42,6 +45,7 @@ interface PedidoContextType {
     iniciar: (origen: OrigenPedido) => Promise<PedidoEnCurso | null>;
     reintentarCarga: () => void;
     actualizar: (cambios: Partial<PedidoEnCurso>) => void;
+    actualizarEntrega: (cambios: Partial<DatosEntrega>) => void;
     guardar: (opciones: OpcionesGuardado) => Promise<string | null>; // devuelve el mensaje de error
 }
 
@@ -104,6 +108,11 @@ export function PedidoProvider({children}: {children: React.ReactNode}) {
         setPedido((actual) => ({...actual, ...cambios}));
     }, [setPedido]);
 
+    // mezcla sobre la entrega mas reciente: la geocodificacion responde tarde y no debe pisar lo escrito
+    const actualizarEntrega = useCallback((cambios: Partial<DatosEntrega>) => {
+        setPedido((actual) => ({...actual, entrega: {...actual.entrega, ...cambios}}));
+    }, [setPedido]);
+
     // guarda el borrador (D2); el id y la ruta de la imagen se conservan aunque falle algo
     const guardar = useCallback(async (opciones: OpcionesGuardado) => {
         if (!user) return MENSAJES_PEDIDO_CONTEXTO.SESION_EXPIRADA;
@@ -119,7 +128,7 @@ export function PedidoProvider({children}: {children: React.ReactNode}) {
     }, [user, setPedido]);
 
     return (
-        <PedidoContext.Provider value={{pedido, cargando, errorCarga, iniciar, reintentarCarga, actualizar, guardar}}>
+        <PedidoContext.Provider value={{pedido, cargando, errorCarga, iniciar, reintentarCarga, actualizar, actualizarEntrega, guardar}}>
             {children}
         </PedidoContext.Provider>
     );

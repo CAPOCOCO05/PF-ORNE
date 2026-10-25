@@ -52,6 +52,15 @@ describe("Mis pedidos", () => {
         expect(mockPush).toHaveBeenCalledWith({ pathname: "/pedido/nuevo", params: { borrador: "ped1" } });
     });
 
+    it("los pedidos confirmados abren su comprobante", async () => {
+        await render(<Pedidos />);
+
+        await fireEvent.press(await screen.findByText("Ver comprobante"));
+
+        expect(screen.getAllByText("Ver comprobante")).toHaveLength(1);
+        expect(mockPush).toHaveBeenCalledWith("/pedido/ped2");
+    });
+
     it("eliminar pide confirmacion y quita el borrador de la lista", async () => {
         const alerta = jest.spyOn(Alert, "alert");
         (eliminarBorrador as jest.Mock).mockResolvedValue({ error: null });

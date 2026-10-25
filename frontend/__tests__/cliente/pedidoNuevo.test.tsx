@@ -98,7 +98,7 @@ describe("Paso 1: tamaño y niveles", () => {
 
         await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/pedido/nuevo/sabor"));
         expect(guardarBorrador).toHaveBeenCalledWith(
-            expect.objectContaining({ tamanio: "10", niveles: 1 }), "u1", { pasoActual: 2, sincronizarImagen: false },
+            expect.objectContaining({ tamanio: "10", niveles: 1 }), "u1", { pasoActual: 2, sincronizarImagen: false, guardarEntrega: false },
         );
     });
 
@@ -193,13 +193,12 @@ describe("Paso 3: decoración", () => {
         expect(ImagePicker.launchImageLibraryAsync).not.toHaveBeenCalled();
     });
 
-    it("'Guardar pedido' sube la imagen y lleva a Mis pedidos", async () => {
-        jest.spyOn(Alert, "alert");
+    it("'Siguiente' sube la imagen y avanza a la entrega (se retoma en el paso 4)", async () => {
         await renderPaso(<PasoDecoracion />, { id: "ped1", tamanio: "10", niveles: 1, tipoPan: "fresa", relleno: "cajeta" });
 
-        await fireEvent.press(screen.getByText("Guardar pedido"));
+        await fireEvent.press(screen.getByText("Siguiente"));
 
-        await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/pedidos"));
-        expect(guardarBorrador).toHaveBeenCalledWith(expect.anything(), "u1", { pasoActual: 3, sincronizarImagen: true });
+        await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/pedido/nuevo/entrega"));
+        expect(guardarBorrador).toHaveBeenCalledWith(expect.anything(), "u1", { pasoActual: 4, sincronizarImagen: true, guardarEntrega: false });
     });
 });

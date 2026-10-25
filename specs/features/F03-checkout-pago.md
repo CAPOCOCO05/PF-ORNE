@@ -41,10 +41,10 @@ Pedido con `estado = 'pendiente'`, folio único asignado, registro en la tabla
 `pagos` con `estado_pago = 'simulado'`.
 
 ## Criterios de aceptación
-- [ ] El resumen muestra todos los datos capturados en F01 y F02 sin omitir nada.
-- [ ] Al confirmar, se genera un folio único visible en pantalla.
-- [ ] El pedido cambia correctamente de "borrador" a "pendiente".
-- [ ] Si falla la conexión, el usuario puede reintentar sin perder su progreso.
+- [x] El resumen muestra todos los datos capturados en F01 y F02 sin omitir nada.
+- [x] Al confirmar, se genera un folio único visible en pantalla.
+- [x] El pedido cambia correctamente de "borrador" a "pendiente".
+- [x] Si falla la conexión, el usuario puede reintentar sin perder su progreso.
 
 ## Decisiones (supuestos v1)
 
@@ -56,8 +56,10 @@ Toda la confirmación ocurre en **una función SQL** `confirmar_pedido(pedido_id
 (`security definer`, una sola transacción), que la app llama con `supabase.rpc`:
 
 1. Verifica que el pedido sea del usuario y esté en `borrador`.
-2. Verifica que esté completo (detalle F01 + entrega F02) y que la fecha siga
-   cumpliendo la anticipación mínima (`fecha_minima_entrega`, F02 D3).
+2. Verifica que esté completo (detalle F01 + entrega F02), que los niveles sean
+   válidos para el tamaño (F01 D5), que la fecha siga cumpliendo la anticipación
+   mínima (`fecha_entrega_valida`, F02 D3) y que el domicilio esté dentro de la zona
+   de entrega (`distancia_sucursal_km`, F02 D5).
 3. **Recalcula el precio** con la fórmula de F01 D7 (función
    `calcular_precio(tamanio, niveles, relleno)`) y actualiza `total` y
    `precio_estimado`. Así el cliente no puede alterar el total.
@@ -104,16 +106,19 @@ solo la función crea pagos.
 | Sin conexión | "Error de conexión. Tu pedido no se ha enviado. Inténtalo de nuevo." (con "Reintentar") |
 | Fecha ya no válida (pasaron días) | "La fecha de entrega ya no está disponible, elige otra" → regresa al paso 4 |
 | Pedido incompleto | "Faltan datos de tu pedido" → regresa al primer paso incompleto |
+| Domicilio fuera de zona | "Esta dirección está fuera de nuestra zona de entrega" → regresa al paso 4 |
 | Ya no es borrador | "Este pedido ya fue confirmado" → abre su comprobante |
 
-La función identifica cada caso con un código de error propio y la app lo traduce.
+La función identifica cada caso con un código en el mensaje del error
+(`PEDIDO_NO_ENCONTRADO`, `PEDIDO_YA_CONFIRMADO`, `PEDIDO_INCOMPLETO`,
+`FECHA_NO_DISPONIBLE`, `FUERA_DE_ZONA`) y la app lo traduce.
 
 ## Tareas
-- [ ] Migración `008` (D1, D2): `calcular_precio`, `confirmar_pedido`, políticas de `pagos`.
-- [ ] `confirmarPedido()` en `src/services/pedidosService.ts` (llama al RPC) con traducción de errores (D5).
-- [ ] `obtenerPedido(id)` para el resumen y el comprobante.
-- [ ] Componente `ResumenPedido` (compartido por pago, confirmación y detalle).
-- [ ] `pedido/nuevo/pago.tsx` (paso 5).
-- [ ] `pedido/nuevo/confirmacion.tsx` (paso 6) con folio y datos bancarios.
-- [ ] `(cliente)/pedido/[id].tsx` y enlace desde "Mis pedidos".
-- [ ] Probar criterios de aceptación.
+- [x] Migración `008` (D1, D2): `calcular_precio`, `confirmar_pedido`, políticas de `pagos`.
+- [x] `confirmarPedido()` en `src/services/pedidosService.ts` (llama al RPC) con traducción de errores (D5).
+- [x] `obtenerPedido(id)` para el resumen y el comprobante.
+- [x] Componente `ResumenPedido` (compartido por pago, confirmación y detalle).
+- [x] `pedido/nuevo/pago.tsx` (paso 5).
+- [x] `pedido/nuevo/confirmacion.tsx` (paso 6) con folio y datos bancarios.
+- [x] `(cliente)/pedido/[id].tsx` y enlace desde "Mis pedidos".
+- [x] Probar criterios de aceptación.

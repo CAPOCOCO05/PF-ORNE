@@ -11,7 +11,7 @@ export default function Layout() {
                     {ruta: 'pedidos', titulo: 'Mis pedidos'},
                     {ruta: 'perfil', titulo: 'Perfil'},
                 ]}
-                ocultas={['pedido/nuevo']}
+                ocultas={['pedido/nuevo', 'pedido/[id]']}
                 rutaPerfil="perfil"
             />
         </GuardiaRol>

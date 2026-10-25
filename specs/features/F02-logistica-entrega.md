@@ -48,11 +48,11 @@ El pedido queda con todos los datos de entrega completos y válidos, listo para
 checkout.
 
 ## Criterios de aceptación
-- [ ] El usuario puede fijar su ubicación en un mapa y ver los campos de
+- [x] El usuario puede fijar su ubicación en un mapa y ver los campos de
       dirección autocompletados.
-- [ ] El calendario bloquea fechas no permitidas según el número de niveles.
-- [ ] No se puede avanzar sin dirección completa si eligió domicilio.
-- [ ] La opción "Sucursal" muestra la dirección fija sin pedir mapa.
+- [x] El calendario bloquea fechas no permitidas según el número de niveles.
+- [x] No se puede avanzar sin dirección completa si eligió domicilio.
+- [x] La opción "Sucursal" muestra la dirección fija sin pedir mapa.
 
 ## Decisiones (supuestos v1)
 
@@ -134,13 +134,13 @@ checkout.
 - `PasoPedido` pasa a `1 | 2 | 3 | 4 | 5`.
 
 ## Tareas
-- [ ] Migración `008_entrega_y_confirmacion.sql` (D1, compartida con F03).
-- [ ] Instalar y configurar `react-native-maps` + `expo-location`.
-- [ ] `src/constants/sucursal.ts` y `src/constants/horarios.ts`.
-- [ ] Funciones de fecha mínima, días disponibles y zona de entrega en `src/utils/` (con pruebas).
-- [ ] `Calendario.tsx` y selector de bloques de horario.
-- [ ] `pedido/nuevo/entrega.tsx` con mapa + formulario de dirección.
-- [ ] Geocodificación inversa y búsqueda por texto (`src/services/ubicacionService.ts`).
-- [ ] `guardarBorrador()` guarda los datos de entrega.
-- [ ] Ajustes de F01 (paso 3 → entrega, indicador de 5 pasos).
-- [ ] Probar criterios de aceptación.
+- [x] Migración `008_entrega_y_confirmacion.sql` (D1, compartida con F03).
+- [x] Instalar y configurar `react-native-maps` + `expo-location`.
+- [x] `src/constants/sucursal.ts` y `src/constants/horarios.ts`.
+- [x] Funciones de fecha mínima, días disponibles y zona de entrega en `src/utils/` (con pruebas).
+- [x] `Calendario.tsx` y selector de bloques de horario.
+- [x] `pedido/nuevo/entrega.tsx` con mapa + formulario de dirección.
+- [x] Geocodificación inversa y búsqueda por texto (`src/services/ubicacionService.ts`).
+- [x] `guardarBorrador()` guarda los datos de entrega.
+- [x] Ajustes de F01 (paso 3 → entrega, indicador de 5 pasos).
+- [x] Probar criterios de aceptación.

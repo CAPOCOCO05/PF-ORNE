@@ -26,6 +26,7 @@ Se aplican **en orden**:
 | `005_catalogo.sql` | Tabla `catalogo_pasteles`, 12 pasteles de prueba, bucket público `catalogo` | F01 |
 | `006_ajustes_borrador.sql` | Columnas nullable para borradores, `paso_actual`, `tamanio`, RLS de edición de borradores, bucket `referencias-pasteles` con políticas | F01 |
 | `007_estados_y_roles.sql` | `repartidor_id`, `check` de estados, RLS de admin y repartidor, trigger que valida las transiciones de estado | F04, F06 |
+| `008_entrega_y_confirmacion.sql` | Dirección y teléfono de entrega, bloques de horario, `paso_actual` 1–5, funciones de fecha mínima y zona de entrega, `calcular_precio`, `confirmar_pedido` (folio + pago simulado); el cliente ya no puede confirmar con un update directo ni insertar pagos | F02, F03 |
 
 El modelo completo, el ciclo de estados y los permisos por rol están en
 [`../specs/02-data-model.md`](../specs/02-data-model.md).

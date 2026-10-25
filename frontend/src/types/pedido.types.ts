@@ -9,8 +9,30 @@ export type EstadoPedido =
     | 'borrador' | 'pendiente' | 'confirmado' | 'en_preparacion'
     | 'listo' | 'en_camino' | 'entregado' | 'cancelado';
 
-// pasos del wizard que guarda F01 (pedidos.paso_actual)
-export type PasoPedido = 1 | 2 | 3;
+// pasos del wizard que se guardan en pedidos.paso_actual (F01: 1-3, F02: 4, F03: 5)
+export type PasoPedido = 1 | 2 | 3 | 4 | 5;
+
+// entrega (F02)
+export type TipoEntrega = 'domicilio' | 'recoleccion';
+export type HoraBloque = '10:00' | '12:00' | '14:00' | '16:00';
+
+export interface Coordenadas {
+    latitud: number;
+    longitud: number;
+}
+
+export interface DatosEntrega {
+    tipoEntrega: TipoEntrega | null;
+    calle: string;
+    numeroExterior: string;
+    numeroInterior: string;
+    colonia: string;
+    referencia: string;
+    telefono: string;
+    ubicacion: Coordenadas | null;
+    fechaEntrega: string | null;    // 'YYYY-MM-DD'
+    horaEntrega: HoraBloque | null;
+}
 
 // fila de catalogo_pasteles
 export interface PastelCatalogo {
@@ -43,6 +65,7 @@ export interface PedidoEnCurso {
     mensaje: string;
     imagenLocal: ImagenLocal | null; // imagen nueva por subir
     imagenRuta: string | null;       // ruta ya guardada en Storage
+    entrega: DatosEntrega;           // paso 4 (F02)
     pasoActual: PasoPedido;
 }
 
@@ -58,4 +81,20 @@ export interface ResumenPedido {
     niveles: Niveles | null;
     tipoPan: SaborPanId | null;
     relleno: RellenoId | null;
+}
+
+// pedido completo para el resumen del paso 5, el comprobante y el detalle (F03)
+export interface PedidoCompleto {
+    id: string;
+    estado: EstadoPedido;
+    folio: string | null;
+    total: number;
+    creadoEn: string;
+    tamanio: Tamanio | null;
+    niveles: Niveles | null;
+    tipoPan: SaborPanId | null;
+    relleno: RellenoId | null;
+    mensaje: string;
+    imagenRuta: string | null;
+    entrega: DatosEntrega;
 }

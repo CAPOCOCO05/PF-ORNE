@@ -12,6 +12,7 @@ export default function Pedidos() {
     const {pedidos, cargando, error, eliminando, recargar, eliminar} = useMisPedidos();
 
     const continuar = (pedido: ResumenPedido) => router.push({pathname: '/pedido/nuevo', params: {borrador: pedido.id}});
+    const ver = (pedido: ResumenPedido) => router.push(`/pedido/${pedido.id}`);
 
     const confirmarEliminar = (pedido: ResumenPedido) => {
         Alert.alert('¿Eliminar borrador?', 'Se borrará el pedido y su imagen de referencia. No se puede deshacer.', [
@@ -48,6 +49,7 @@ export default function Pedidos() {
                     eliminando={eliminando === item.id}
                     onContinuar={continuar}
                     onEliminar={confirmarEliminar}
+                    onVer={ver}
                 />
             )}
             ListHeaderComponent={<Text style={styles.titulo}>Mis pedidos</Text>}
