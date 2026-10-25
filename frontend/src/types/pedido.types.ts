@@ -98,3 +98,32 @@ export interface PedidoCompleto {
     imagenRuta: string | null;
     entrega: DatosEntrega;
 }
+
+// panel admin (F04)
+export interface PedidoAdminResumen {
+    id: string;
+    estado: EstadoPedido;
+    folio: string | null;
+    total: number;
+    cliente: string;
+    tipoEntrega: TipoEntrega | null;
+    fechaEntrega: string | null;    // 'YYYY-MM-DD'
+    horaEntrega: HoraBloque | null;
+}
+
+export interface PagoPedido {
+    metodo: string;
+    monto: number;
+    estado: 'simulado' | 'pagado' | 'fallido';
+}
+
+export interface PedidoAdmin extends PedidoCompleto {
+    cliente: string;
+    repartidor: string | null;     // nombre del repartidor asignado
+    pago: PagoPedido | null;
+}
+
+export interface Repartidor {
+    id: string;
+    nombre: string;
+}

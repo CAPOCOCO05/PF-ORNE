@@ -237,34 +237,40 @@ export async function obtenerBorrador(id: string): Promise<{pedido: PedidoEnCurs
     };
 }
 
+// columnas de un pedido completo; tambien las usa el panel admin (F04)
+export const COLUMNAS_PEDIDO_COMPLETO = `id, estado, folio, total, paso_actual, created_at, ${COLUMNAS_ENTREGA}, `
+    + 'pedido_detalle(tamanio, niveles, tipo_pan, relleno, decoracion_texto, imagen_referencia_url)';
+
+export type FilaPedidoCompleto = FilaPedido & Partial<FilaEntrega>;
+
+export function pedidoCompletoDeFila(fila: FilaPedidoCompleto): PedidoCompleto {
+    const detalle = detalleDe(fila);
+    return {
+        id: fila.id,
+        estado: fila.estado,
+        folio: fila.folio,
+        total: Number(fila.total),
+        creadoEn: fila.created_at,
+        tamanio: detalle?.tamanio ?? null,
+        niveles: detalle?.niveles ?? null,
+        tipoPan: detalle?.tipo_pan ?? null,
+        relleno: detalle?.relleno ?? null,
+        mensaje: detalle?.decoracion_texto ?? '',
+        imagenRuta: detalle?.imagen_referencia_url ?? null,
+        entrega: entregaDeFila(fila),
+    };
+}
+
 // pedido con su detalle y entrega, en cualquier estado; RLS solo deja ver los del usuario (F03)
 export async function obtenerPedido(id: string): Promise<{pedido: PedidoCompleto | null; error: string | null}> {
     const {data, error} = await supabase
         .from('pedidos')
-        .select(`id, estado, folio, total, paso_actual, created_at, ${COLUMNAS_ENTREGA}, pedido_detalle(tamanio, niveles, tipo_pan, relleno, decoracion_texto, imagen_referencia_url)`)
+        .select(COLUMNAS_PEDIDO_COMPLETO)
         .eq('id', id)
-        .maybeSingle<FilaPedido & Partial<FilaEntrega>>();
+        .maybeSingle<FilaPedidoCompleto>();
     if (error) return {pedido: null, error: traducirErrorDatos(error)};
     if (!data) return {pedido: null, error: null};
-
-    const detalle = detalleDe(data);
-    return {
-        pedido: {
-            id: data.id,
-            estado: data.estado,
-            folio: data.folio,
-            total: Number(data.total),
-            creadoEn: data.created_at,
-            tamanio: detalle?.tamanio ?? null,
-            niveles: detalle?.niveles ?? null,
-            tipoPan: detalle?.tipo_pan ?? null,
-            relleno: detalle?.relleno ?? null,
-            mensaje: detalle?.decoracion_texto ?? '',
-            imagenRuta: detalle?.imagen_referencia_url ?? null,
-            entrega: entregaDeFila(data),
-        },
-        error: null,
-    };
+    return {pedido: pedidoCompletoDeFila(data), error: null};
 }
 
 // errores de confirmar_pedido (migracion 008): la funcion los lanza con un codigo en el mensaje (F03 D5)

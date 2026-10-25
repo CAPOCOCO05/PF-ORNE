@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { nombrePan, nombreRelleno } from "../../constants/catalogoSabores";
+import { nombrePan, nombreRelleno, SABORES_PAN, SABORES_RELLENO } from "../../constants/catalogoSabores";
 import { textoBloque } from "../../constants/horarios";
 import { SUCURSAL } from "../../constants/sucursal";
 import { urlReferencia } from "../../services/pedidosService";
@@ -14,10 +14,11 @@ export type DatosResumen = Pick<PedidoEnCurso, 'tamanio' | 'niveles' | 'tipoPan'
 interface ResumenPedidoProps {
     pedido: DatosResumen;
     onEditar?: (paso: PasoPedido) => void; // solo en el paso 5: regresa al paso de la seccion (D4)
+    imagenesSabor?: boolean;                // detalle del admin: pan y relleno con su imagen (F04 D5)
 }
 
 // resumen de todo lo capturado en F01 y F02; lo usan el pago, la confirmacion y el detalle (F03)
-export default function ResumenPedido({pedido, onEditar}: ResumenPedidoProps) {
+export default function ResumenPedido({pedido, onEditar, imagenesSabor = false}: ResumenPedidoProps) {
     const imagen = useUrlReferencia(pedido.imagenRuta);
     const {entrega} = pedido;
 
@@ -30,6 +31,7 @@ export default function ResumenPedido({pedido, onEditar}: ResumenPedidoProps) {
             <Seccion titulo="Sabor" paso={2} onEditar={onEditar}>
                 <Dato etiqueta="Pan" valor={nombrePan(pedido.tipoPan) || '—'} />
                 <Dato etiqueta="Relleno" valor={nombreRelleno(pedido.relleno) || '—'} />
+                {imagenesSabor ? <ImagenesSabor tipoPan={pedido.tipoPan} relleno={pedido.relleno} /> : null}
             </Seccion>
             <Seccion titulo="Decoración" paso={3} onEditar={onEditar}>
                 <Text style={styles.texto}>{pedido.mensaje.trim() || 'Sin descripción'}</Text>
@@ -42,6 +44,17 @@ export default function ResumenPedido({pedido, onEditar}: ResumenPedidoProps) {
                 <Dato etiqueta="Horario" valor={textoBloque(entrega.horaEntrega) || '—'} />
                 <Dato etiqueta="Teléfono" valor={entrega.telefono || '—'} />
             </Seccion>
+        </View>
+    );
+}
+
+function ImagenesSabor({tipoPan, relleno}: Pick<DatosResumen, 'tipoPan' | 'relleno'>) {
+    const pan = SABORES_PAN.find((s) => s.id === tipoPan);
+    const sabor = SABORES_RELLENO.find((s) => s.id === relleno);
+    return (
+        <View style={styles.sabores}>
+            {pan ? <Image source={pan.imagen} style={styles.imagen} accessibilityLabel={`Pan de ${pan.nombre}`} /> : null}
+            {sabor ? <Image source={sabor.imagen} style={styles.imagen} accessibilityLabel={`Relleno de ${sabor.nombre}`} /> : null}
         </View>
     );
 }
@@ -140,6 +153,10 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: COLORS.TEXTO_SUAVE,
         marginTop: 4,
+    },
+    sabores: {
+        flexDirection: 'row',
+        gap: 12,
     },
     imagen: {
         width: 96,

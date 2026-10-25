@@ -108,6 +108,7 @@ En `backend/supabase/migrations/`, en este orden:
 | `006_ajustes_borrador.sql` | Ajustes para guardar borradores (ver F01, D1) | F01 |
 | `007_estados_y_roles.sql` | `check` de estados, `repartidor_id`, políticas RLS de admin y repartidor, validación de transiciones | F04, F06 |
 | `008_entrega_y_confirmacion.sql` | Campos de dirección y teléfono, bloques de horario, `paso_actual` 1–5, `fecha_minima_entrega`, `calcular_precio`, `confirmar_pedido` (folio + pago) | F02, F03 |
+| `009_validar_repartidor.sql` | El trigger de transiciones exige que `repartidor_id` sea un perfil con rol `repartidor` | F04 |
 
 ## Catálogo de sabores e imágenes
 
