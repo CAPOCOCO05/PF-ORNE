@@ -35,13 +35,13 @@ export default function Home() {
     );
 
     // pie: cargando la siguiente pagina o error al pedirla; al final de la lista no se pide nada mas
-    const pie = primeraCarga ? null : cargando ? (
+    const pie = primeraCarga ? undefined : cargando ? (
         <ActivityIndicator testID="catalogo-cargando-mas" color={COLORS.BOTON_PRINCIPAL} style={styles.pie} />
     ) : error ? (
         <AvisoError mensaje={error} onReintentar={reintentar} />
     ) : !hayMas ? (
         <Text style={[styles.pie, styles.textoEstado]}>No hay más pasteles</Text>
-    ) : null;
+    ) : undefined;
 
     return (
         <FlatList

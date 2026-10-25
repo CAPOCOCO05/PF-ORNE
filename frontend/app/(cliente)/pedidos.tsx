@@ -55,7 +55,7 @@ export default function Pedidos() {
             ListHeaderComponent={<Text style={styles.titulo}>Mis pedidos</Text>}
             ListEmptyComponent={vacio}
             // con pedidos ya cargados, un error al recargar se avisa al final de la lista
-            ListFooterComponent={pedidos.length > 0 && error ? <Text style={[styles.textoEstado, styles.textoError]}>{error}</Text> : null}
+            ListFooterComponent={pedidos.length > 0 && error ? <Text style={[styles.textoEstado, styles.textoError]}>{error}</Text> : undefined}
             refreshControl={<RefreshControl refreshing={cargando && pedidos.length > 0} onRefresh={recargar} colors={[COLORS.BOTON_PRINCIPAL]} />}
             contentContainerStyle={styles.lista}
             style={styles.fondo}
