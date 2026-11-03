@@ -53,7 +53,7 @@ debe seguir la paleta:
 | F03 | Checkout y generación de ID de pedido | Cliente | ✅ Completa |
 | F04 | Panel administrativo (consulta y cambio de estado) | Admin | ✅ Completa |
 | F05 | Manejo de errores y validaciones (transversal) | Todos | 🔲 Pendiente |
-| F06 | Entregas del repartidor | Repartidor | ✅ Completa (falta correr `permisos_repartidor.sql`) |
+| F06 | Entregas del repartidor | Repartidor | ✅ Completa (falta probar en un dispositivo) |
 
 **Orden de implementación:** F00 → catálogo de F01 (pantalla de inicio) → resto de
 F01 → F02 → F03 → F04 → F06. F05 se aplica en cada una.

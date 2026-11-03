@@ -55,9 +55,9 @@ del repartidor.
 - [x] La ubicación de entrega se muestra en un mapa y se puede abrir en la app de
       mapas.
 - [x] Puede marcar un pedido como entregado y la lista se actualiza.
-- [ ] No puede cambiar el pedido a ningún otro estado ni ver pedidos ajenos
-      (probado contra la base de datos, no solo la app). Script listo en
-      `backend/supabase/tests/permisos_repartidor.sql`; falta correrlo en Supabase.
+- [x] No puede cambiar el pedido a ningún otro estado ni ver pedidos ajenos
+      (probado contra la base de datos con
+      `backend/supabase/tests/permisos_repartidor.sql`: todo OK).
 
 ## Decisiones (supuestos v1)
 
@@ -91,4 +91,4 @@ Sección opcional; queda fuera de esta versión.
       `repartidor/entrega/[id].tsx` (usa `react-native-maps`, ya requerido por F02).
 - [x] Abrir la app de mapas con `Linking`.
 - [x] Script de permisos `backend/supabase/tests/permisos_repartidor.sql`.
-- [ ] Probar criterios de aceptación (pruebas de la app ✅; falta el script en Supabase y probar en un dispositivo).
+- [ ] Probar criterios de aceptación (pruebas de la app ✅, permisos en Supabase ✅; falta probar en un dispositivo).
