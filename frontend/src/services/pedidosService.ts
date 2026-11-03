@@ -33,7 +33,7 @@ interface FilaPedido {
 }
 
 // columnas de entrega de pedidos (F02 D1)
-interface FilaEntrega {
+export interface FilaEntrega {
     tipo_entrega: TipoEntrega | null;
     calle: string | null;
     numero_exterior: string | null;
@@ -48,7 +48,7 @@ interface FilaEntrega {
     hora_entrega: string | null;   // tipo time: llega como '10:00:00'
 }
 
-const COLUMNAS_ENTREGA = 'tipo_entrega, calle, numero_exterior, numero_interior, colonia, direccion, direccion_referencia, '
+export const COLUMNAS_ENTREGA ='tipo_entrega, calle, numero_exterior, numero_interior, colonia, direccion, direccion_referencia, '
     + 'direccion_lat, direccion_lng, telefono_contacto, fecha_entrega, hora_entrega';
 
 function textoONulo(texto: string): string | null {
@@ -76,7 +76,7 @@ export function filaEntrega(entrega: DatosEntrega): FilaEntrega {
 }
 
 // las columnas que falten (borrador de F01) quedan como en ENTREGA_VACIA
-function entregaDeFila(fila: Partial<FilaEntrega>): DatosEntrega {
+export function entregaDeFila(fila: Partial<FilaEntrega>): DatosEntrega {
     const tieneUbicacion = fila.direccion_lat != null && fila.direccion_lng != null;
     return {
         tipoEntrega: fila.tipo_entrega ?? null,

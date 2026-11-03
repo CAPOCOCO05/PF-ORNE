@@ -10,6 +10,7 @@ export default function Layout() {
                     {ruta: 'index', titulo: 'Mis entregas'},
                     {ruta: 'perfil', titulo: 'Perfil'},
                 ]}
+                ocultas={['entrega/[id]']}
                 rutaPerfil="perfil"
             />
         </GuardiaRol>

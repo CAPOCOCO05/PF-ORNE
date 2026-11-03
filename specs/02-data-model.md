@@ -87,7 +87,7 @@ Reglas:
 
 | Tabla | Cliente | Admin | Repartidor |
 |---|---|---|---|
-| `perfiles` | Ver y editar su `nombre` (no su `rol`) | Ver todos | Ver el suyo |
+| `perfiles` | Ver y editar su `nombre` (no su `rol`) | Ver todos | Ver el suyo y el nombre de los clientes de sus entregas en camino |
 | `pedidos` | Ver/crear los suyos; editar solo borradores; pasar a `pendiente` | Ver todos; cambiar `estado` y `repartidor_id` | Ver los asignados a él; cambiar a `entregado` |
 | `pedido_detalle` | Ver/crear/editar el de sus borradores | Ver todos | Ver el de sus entregas |
 | `pagos` | Ver/crear los suyos | Ver todos | — |
@@ -109,6 +109,7 @@ En `backend/supabase/migrations/`, en este orden:
 | `007_estados_y_roles.sql` | `check` de estados, `repartidor_id`, políticas RLS de admin y repartidor, validación de transiciones | F04, F06 |
 | `008_entrega_y_confirmacion.sql` | Campos de dirección y teléfono, bloques de horario, `paso_actual` 1–5, `fecha_minima_entrega`, `calcular_precio`, `confirmar_pedido` (folio + pago) | F02, F03 |
 | `009_validar_repartidor.sql` | El trigger de transiciones exige que `repartidor_id` sea un perfil con rol `repartidor` | F04 |
+| `010_repartidor_ve_clientes.sql` | El repartidor ve el nombre del cliente de sus entregas en camino | F06 |
 
 ## Catálogo de sabores e imágenes
 

@@ -51,18 +51,44 @@ El pedido queda en estado `entregado` y deja de aparecer en las entregas pendien
 del repartidor.
 
 ## Criterios de aceptación
-- [ ] El repartidor solo ve los pedidos que tiene asignados.
-- [ ] La ubicación de entrega se muestra en un mapa y se puede abrir en la app de
+- [x] El repartidor solo ve los pedidos que tiene asignados.
+- [x] La ubicación de entrega se muestra en un mapa y se puede abrir en la app de
       mapas.
-- [ ] Puede marcar un pedido como entregado y la lista se actualiza.
+- [x] Puede marcar un pedido como entregado y la lista se actualiza.
 - [ ] No puede cambiar el pedido a ningún otro estado ni ver pedidos ajenos
-      (probado contra la base de datos, no solo la app).
+      (probado contra la base de datos, no solo la app). Script listo en
+      `backend/supabase/tests/permisos_repartidor.sql`; falta correrlo en Supabase.
+
+## Decisiones (supuestos v1)
+
+### D1. Nombre del cliente (migración `010_repartidor_ve_clientes.sql`)
+`perfiles` solo dejaba ver el propio perfil (y al admin todos), así que el nombre
+del cliente llegaba vacío. Nueva política: el repartidor ve el perfil de los
+clientes con un pedido `en_camino` asignado a él. Al entregarlo deja de verlo.
+
+### D2. Lista sin paginar
+Un repartidor tiene pocas entregas en curso a la vez; se traen todas las
+`en_camino` ordenadas por fecha, hora e `id`. La lista se recarga al volver a la
+pantalla y al deslizar hacia abajo.
+
+### D3. "Cómo llegar"
+iOS abre Apple Maps (`maps.apple.com/?daddr=`); Android, Google Maps
+(`google.com/maps/dir/?api=1&destination=`), que abre la app si está instalada.
+Sin coordenadas se usa la dirección en texto (`src/utils/mapas.ts`).
+
+### D4. Cambios simultáneos
+El update solo aplica si el pedido sigue `en_camino` (como F04 D6). Si ya no lo
+está, se avisa "Esta entrega ya no está en camino" y se regresa a la lista.
+
+### D5. "Entregados hoy"
+Sección opcional; queda fuera de esta versión.
 
 ## Tareas
-- [ ] Políticas RLS del repartidor en `007_estados_y_roles.sql`.
-- [ ] `src/services/repartidorService.ts`: listar entregas, obtener detalle, marcar
+- [x] Políticas RLS del repartidor en `007_estados_y_roles.sql` (+ `010` para el nombre del cliente, D1).
+- [x] `src/services/repartidorService.ts`: listar entregas, obtener detalle, marcar
       como entregado.
-- [ ] `repartidor/_layout.tsx`, `repartidor/index.tsx`,
+- [x] `repartidor/_layout.tsx`, `repartidor/index.tsx`,
       `repartidor/entrega/[id].tsx` (usa `react-native-maps`, ya requerido por F02).
-- [ ] Abrir la app de mapas con `Linking`.
-- [ ] Probar criterios de aceptación.
+- [x] Abrir la app de mapas con `Linking`.
+- [x] Script de permisos `backend/supabase/tests/permisos_repartidor.sql`.
+- [ ] Probar criterios de aceptación (pruebas de la app ✅; falta el script en Supabase y probar en un dispositivo).

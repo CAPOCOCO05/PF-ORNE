@@ -28,6 +28,7 @@ Se aplican **en orden**:
 | `007_estados_y_roles.sql` | `repartidor_id`, `check` de estados, RLS de admin y repartidor, trigger que valida las transiciones de estado | F04, F06 |
 | `008_entrega_y_confirmacion.sql` | Dirección y teléfono de entrega, bloques de horario, `paso_actual` 1–5, funciones de fecha mínima y zona de entrega, `calcular_precio`, `confirmar_pedido` (folio + pago simulado); el cliente ya no puede confirmar con un update directo ni insertar pagos | F02, F03 |
 | `009_validar_repartidor.sql` | El trigger de transiciones solo acepta como `repartidor_id` a perfiles con rol `repartidor` | F04 |
+| `010_repartidor_ve_clientes.sql` | Política para que el repartidor vea el nombre del cliente de sus entregas en camino | F06 |
 
 ## Pruebas de permisos
 
@@ -38,6 +39,7 @@ muestran una tabla con `OK` / `FALLA` por prueba.
 | Script | Qué prueba | Feature |
 |---|---|---|
 | `permisos_admin.sql` | Otro cliente, el dueño y un repartidor no ven ni cambian el pedido; el admin solo avanza por transiciones válidas y `en_camino` exige repartidor | F04 |
+| `permisos_repartidor.sql` | El repartidor ve solo su entrega (detalle y nombre del cliente, sin pagos), no ve ni cambia pedidos ajenos y solo puede pasar `en_camino → entregado` | F06 |
 
 El modelo completo, el ciclo de estados y los permisos por rol están en
 [`../specs/02-data-model.md`](../specs/02-data-model.md).
