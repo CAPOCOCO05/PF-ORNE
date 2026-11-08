@@ -1,5 +1,5 @@
-import { Alert } from "react-native";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { render } from "../../src/test-utils/renderConDialogo";
 import Pedidos from "../../app/(cliente)/pedidos";
 import { eliminarBorrador, listarMisPedidos } from "../../src/services/pedidosService";
 import { ResumenPedido } from "../../src/types/pedido.types";
@@ -62,15 +62,14 @@ describe("Mis pedidos", () => {
     });
 
     it("eliminar pide confirmacion y quita el borrador de la lista", async () => {
-        const alerta = jest.spyOn(Alert, "alert");
         (eliminarBorrador as jest.Mock).mockResolvedValue({ error: null });
         await render(<Pedidos />);
 
         await fireEvent.press(await screen.findByText("Eliminar"));
-        expect(alerta.mock.calls[0][0]).toBe("¿Eliminar borrador?");
+        expect(screen.getByText("¿Eliminar borrador?")).toBeTruthy();
         expect(eliminarBorrador).not.toHaveBeenCalled();
 
-        await alerta.mock.calls[0][2]?.find((b) => b.text === "Eliminar")?.onPress?.();
+        await fireEvent.press(screen.getByText("Sí, eliminar"));
 
         expect(eliminarBorrador).toHaveBeenCalledWith("ped1", "u1");
         await waitFor(() => expect(screen.queryByText("Pedido sin confirmar")).toBeNull());
@@ -78,14 +77,14 @@ describe("Mis pedidos", () => {
     });
 
     it("si falla eliminar, avisa y conserva el borrador", async () => {
-        const alerta = jest.spyOn(Alert, "alert");
         (eliminarBorrador as jest.Mock).mockResolvedValue({ error: "Error de conexión, inténtalo de nuevo" });
         await render(<Pedidos />);
 
         await fireEvent.press(await screen.findByText("Eliminar"));
-        await alerta.mock.calls[0][2]?.find((b) => b.text === "Eliminar")?.onPress?.();
+        await fireEvent.press(screen.getByText("Sí, eliminar"));
 
-        await waitFor(() => expect(alerta).toHaveBeenLastCalledWith("No se pudo eliminar", "Error de conexión, inténtalo de nuevo"));
+        expect(await screen.findByText("No se pudo eliminar")).toBeTruthy();
+        expect(screen.getByText("Error de conexión, inténtalo de nuevo")).toBeTruthy();
         expect(screen.getByText("Pedido sin confirmar")).toBeTruthy();
     });
 

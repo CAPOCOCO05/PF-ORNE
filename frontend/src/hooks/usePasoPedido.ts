@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
-import { Alert } from "react-native";
 import { useRouter } from "expo-router";
+import { useDialogo } from "../context/DialogoContext";
 import { usePedido } from "../context/PedidoContext";
 import { PasoPedido } from "../types/pedido.types";
 import { validarPaso } from "../utils/pedido";
@@ -21,6 +21,7 @@ const PASO_AL_COMPLETAR: Record<PasoPedido, PasoPedido> = {1: 2, 2: 3, 3: 4, 4: 
 export function usePasoPedido(paso: PasoPedido) {
     const router = useRouter();
     const {pedido, guardar} = usePedido();
+    const {confirmar, mostrar} = useDialogo();
     const [intentoAvanzar, setIntentoAvanzar] = useState(false);
     const [guardando, setGuardando] = useState(false);
 
@@ -42,21 +43,19 @@ export function usePasoPedido(paso: PasoPedido) {
                 return;
             }
             // D3: el usuario decide; no se le bloquea
-            Alert.alert('No se pudo guardar', error, [
-                {text: 'Cancelar', style: 'cancel'},
-                {text: 'Reintentar', onPress: intentar},
-            ]);
+            const reintentar = await confirmar({tipo: 'error', titulo: 'No se pudo guardar', mensaje: error, textoConfirmar: 'Reintentar'});
+            if (reintentar) await intentar();
         };
         await intentar();
-    }, [faltantes, guardar, paso]);
+    }, [faltantes, guardar, paso, confirmar]);
 
     // salir del wizard (boton "Salir" o atras de Android en el paso 1, D3)
-    const salir = useCallback(() => {
+    const salir = useCallback(async () => {
         if (!pedido.id) {
-            Alert.alert('¿Salir del pedido?', 'Se perderá lo que capturaste.', [
-                {text: 'Cancelar', style: 'cancel'},
-                {text: 'Salir', style: 'destructive', onPress: () => router.navigate('/home')},
-            ]);
+            const salirSinGuardar = await confirmar({
+                titulo: '¿Salir del pedido?', mensaje: 'Se perderá lo que capturaste.', textoConfirmar: 'Sí, salir', destructiva: true,
+            });
+            if (salirSinGuardar) router.navigate('/home');
             return;
         }
 
@@ -67,16 +66,18 @@ export function usePasoPedido(paso: PasoPedido) {
                 router.navigate('/pedidos');
                 return;
             }
-            Alert.alert('No se pudo guardar', error, [
-                {text: 'Salir sin guardar', style: 'destructive', onPress: () => router.navigate('/pedidos')},
-                {text: 'Reintentar', onPress: guardarYSalir},
-            ]);
+            // cerrar el dialogo (atras / tocar fuera) deja al usuario en el paso, sin salir
+            const respuesta = await mostrar({
+                tipo: 'error', titulo: 'No se pudo guardar', mensaje: error, textoConfirmar: 'Reintentar', textoCancelar: 'Salir sin guardar',
+            });
+            if (respuesta === 'confirmar') await guardarYSalir();
+            if (respuesta === 'cancelar') router.navigate('/pedidos');
         };
-        Alert.alert('¿Salir del pedido?', 'Tu pedido se guardará en "Mis pedidos" para que lo termines después.', [
-            {text: 'Cancelar', style: 'cancel'},
-            {text: 'Salir', onPress: guardarYSalir},
-        ]);
-    }, [pedido.id, pedido.pasoActual, guardar, router]);
+        const salirGuardando = await confirmar({
+            titulo: '¿Salir del pedido?', mensaje: 'Tu pedido se guardará en "Mis pedidos" para que lo termines después.', textoConfirmar: 'Guardar y salir',
+        });
+        if (salirGuardando) await guardarYSalir();
+    }, [pedido.id, pedido.pasoActual, guardar, router, confirmar, mostrar]);
 
     return {errores, intentoAvanzar, guardando, siguiente, salir};
 }

@@ -1,5 +1,5 @@
-import { Alert } from "react-native";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { render } from "../../src/test-utils/renderConDialogo";
 import PasoPago from "../../app/(cliente)/pedido/nuevo/pago";
 import Confirmacion from "../../app/(cliente)/pedido/nuevo/confirmacion";
 import { DATOS_BANCARIOS } from "../../src/constants/pago";
@@ -89,48 +89,43 @@ describe("Paso 5: pago", () => {
     });
 
     it("sin conexion: avisa y permite reintentar sin perder el pedido", async () => {
-        const alerta = jest.spyOn(Alert, "alert").mockImplementation(() => {});
         (confirmarPedido as jest.Mock)
             .mockResolvedValueOnce({ folio: null, total: null, error: { codigo: "CONEXION", mensaje: MENSAJES_CONFIRMACION.CONEXION } })
             .mockResolvedValueOnce({ folio: "ORN-7K2QXM", total: 790, error: null });
         await renderPago();
 
         await fireEvent.press(screen.getByText("Confirmar pedido"));
-        await waitFor(() => expect(alerta).toHaveBeenCalled());
-        expect(alerta.mock.calls[0][1]).toBe(MENSAJES_CONFIRMACION.CONEXION);
+        expect(await screen.findByText(MENSAJES_CONFIRMACION.CONEXION)).toBeTruthy();
         expect(mockReplace).not.toHaveBeenCalled();
 
-        const reintentar = alerta.mock.calls[0][2]?.find((b) => b.text === "Reintentar");
-        await act(async () => { await reintentar?.onPress?.(); });
+        await fireEvent.press(screen.getByText("Reintentar"));
 
         await waitFor(() => expect(mockReplace).toHaveBeenCalled());
         expect(confirmarPedido).toHaveBeenCalledTimes(2);
     });
 
     it("fecha que ya no es valida: regresa al paso de entrega", async () => {
-        const alerta = jest.spyOn(Alert, "alert").mockImplementation(() => {});
         (confirmarPedido as jest.Mock).mockResolvedValue({
             folio: null, total: null, error: { codigo: "FECHA_NO_DISPONIBLE", mensaje: MENSAJES_CONFIRMACION.FECHA_NO_DISPONIBLE },
         });
         await renderPago();
 
         await fireEvent.press(screen.getByText("Confirmar pedido"));
-        await waitFor(() => expect(alerta).toHaveBeenCalled());
-        await act(async () => { await alerta.mock.calls[0][2]?.[0].onPress?.(); });
+        expect(await screen.findByText("No se pudo confirmar")).toBeTruthy();
+        await fireEvent.press(screen.getByTestId("dialogo-confirmar"));
 
         expect(mockDismissTo).toHaveBeenCalledWith("/pedido/nuevo/entrega");
     });
 
     it("ya confirmado: abre su comprobante", async () => {
-        const alerta = jest.spyOn(Alert, "alert").mockImplementation(() => {});
         (confirmarPedido as jest.Mock).mockResolvedValue({
             folio: null, total: null, error: { codigo: "PEDIDO_YA_CONFIRMADO", mensaje: MENSAJES_CONFIRMACION.PEDIDO_YA_CONFIRMADO },
         });
         await renderPago();
 
         await fireEvent.press(screen.getByText("Confirmar pedido"));
-        await waitFor(() => expect(alerta).toHaveBeenCalled());
-        await act(async () => { await alerta.mock.calls[0][2]?.[0].onPress?.(); });
+        expect(await screen.findByText("No se pudo confirmar")).toBeTruthy();
+        await fireEvent.press(screen.getByTestId("dialogo-confirmar"));
 
         expect(mockReplace).toHaveBeenCalledWith("/pedido/ped1");
     });

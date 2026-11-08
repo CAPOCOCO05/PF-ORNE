@@ -7,7 +7,7 @@
 
 | # | Mejora | Rol | Estado |
 |---|---|---|---|
-| M1 | Diálogos personalizados (reemplazan los `Alert` del dispositivo) | Todos | 🔲 Pendiente |
+| M1 | Diálogos personalizados (reemplazan los `Alert` del dispositivo) | Todos | 🟡 Implementada (falta probar en un dispositivo) |
 | M2 | Pedido no entregado por el repartidor | Repartidor / Admin / Cliente | 🔲 Pendiente |
 | M3 | Filtro por estado dentro de "Activos" en el panel admin | Admin | 🔲 Pendiente |
 | M4 | Publicar y editar pasteles del catálogo desde la app | Admin | 🔲 Pendiente |
@@ -67,18 +67,23 @@ pedidos, wizard, acciones del admin y entrega del repartidor). Todas se migran.
   cierra tocando fuera.
 - **D5. Accesibilidad.** La tarjeta usa `accessibilityViewIsModal` y el título se
   anuncia al abrir.
+- **D6. `Boton` no propaga promesas.** `Boton` llama a `onPress` y descarta lo que
+  regresa: una acción que espera la respuesta de un diálogo no debe dejar el toque
+  "pendiente" (y en Testing Library v14, `fireEvent.press` esperaría esa promesa).
+- **D7. Destructiva.** El botón principal usa el vino oscuro de títulos (`#5b0e17`)
+  en vez del rojo de botón principal, y la insignia muestra "!" en lugar del pastel.
 
 ### Criterios de aceptación
-- [ ] No queda ninguna llamada a `Alert.alert` en `app/` ni en `src/`.
+- [x] No queda ninguna llamada a `Alert.alert` en `app/` ni en `src/`.
 - [ ] Los diálogos usan la paleta de `00-project.md` y se ven igual en Android e iOS.
-- [ ] Las acciones destructivas se distinguen visualmente y su botón describe la acción.
-- [ ] El botón "atrás" de Android cierra el diálogo sin ejecutar la acción.
+- [x] Las acciones destructivas se distinguen visualmente y su botón describe la acción.
+- [x] El botón "atrás" de Android cierra el diálogo sin ejecutar la acción.
 
 ### Tareas
-- [ ] `src/components/Dialogo.tsx` (presentación) y `src/context/DialogoContext.tsx` (provider + `useDialogo`), con pruebas.
-- [ ] Montar `DialogoProvider` en `app/_layout.tsx`.
-- [ ] Migrar las 17 llamadas a `Alert.alert` y ajustar sus pruebas (mock de `useDialogo`).
-- [ ] Probar criterios de aceptación.
+- [x] `src/components/Dialogo.tsx` (presentación) y `src/context/DialogoContext.tsx` (provider + `useDialogo`), con pruebas.
+- [x] Montar `DialogoProvider` en `app/_layout.tsx`.
+- [x] Migrar las 17 llamadas a `Alert.alert` y ajustar sus pruebas (las pruebas usan el provider real vía `src/test-utils/renderConDialogo.tsx` y presionan los botones del diálogo).
+- [ ] Probar criterios de aceptación (pruebas de la app ✅; falta revisar el diseño en Android e iOS).
 
 ---
 

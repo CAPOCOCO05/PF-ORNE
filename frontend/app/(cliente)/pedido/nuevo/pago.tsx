@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import PantallaPaso from "../../../../src/components/pedido/PantallaPaso";
 import ResumenPedido from "../../../../src/components/pedido/ResumenPedido";
 import { DATOS_BANCARIOS, METODO_PAGO } from "../../../../src/constants/pago";
+import { useDialogo } from "../../../../src/context/DialogoContext";
 import { usePedido } from "../../../../src/context/PedidoContext";
 import { RUTA_PASO } from "../../../../src/hooks/usePasoPedido";
 import { CodigoConfirmacion, confirmarPedido } from "../../../../src/services/pedidosService";
@@ -23,6 +24,7 @@ export default function PasoPago() {
     const router = useRouter();
     const {pedido} = usePedido();
     const [confirmando, setConfirmando] = useState(false);
+    const dialogo = useDialogo();
 
     // a donde lleva cada error de confirmar_pedido (D5); CONEXION se reintenta aparte.
     // dismissTo regresa a un paso que ya esta en la pila en lugar de abrir otro encima
@@ -49,14 +51,13 @@ export default function PasoPago() {
         }
         const ir = destinoError(error.codigo);
         if (ir) {
-            Alert.alert('No se pudo confirmar', error.mensaje, [{text: 'Aceptar', onPress: ir}]);
+            await dialogo.avisar({tipo: 'error', titulo: 'No se pudo confirmar', mensaje: error.mensaje});
+            ir();
             return;
         }
         // sin conexion o error inesperado: el borrador sigue intacto y se puede reintentar
-        Alert.alert('No se pudo confirmar', error.mensaje, [
-            {text: 'Cancelar', style: 'cancel'},
-            {text: 'Reintentar', onPress: confirmar},
-        ]);
+        const reintentar = await dialogo.confirmar({tipo: 'error', titulo: 'No se pudo confirmar', mensaje: error.mensaje, textoConfirmar: 'Reintentar'});
+        if (reintentar) await confirmar();
     };
 
     return (

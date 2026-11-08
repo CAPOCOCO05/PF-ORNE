@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Alert, Image, Linking, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, Linking, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import PantallaPaso from "../../../../src/components/pedido/PantallaPaso";
+import { useDialogo } from "../../../../src/context/DialogoContext";
 import { usePedido } from "../../../../src/context/PedidoContext";
 import { RUTA_PASO, usePasoPedido } from "../../../../src/hooks/usePasoPedido";
 import { urlReferencia } from "../../../../src/services/pedidosService";
@@ -17,16 +18,19 @@ export default function PasoDecoracion() {
     const router = useRouter();
     const {pedido, actualizar} = usePedido();
     const {guardando, siguiente} = usePasoPedido(3);
+    const {confirmar} = useDialogo();
     const [errorImagen, setErrorImagen] = useState<string | null>(null);
     const vistaPrevia = useVistaPrevia(pedido.imagenLocal, pedido.imagenRuta);
 
     const elegirImagen = async () => {
         const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permiso.granted) {
-            Alert.alert(MENSAJE_PERMISO_GALERIA, 'Permite el acceso a tus fotos para adjuntar una imagen de referencia.', [
-                {text: 'Cancelar', style: 'cancel'},
-                {text: 'Abrir Ajustes', onPress: () => Linking.openSettings()},
-            ]);
+            const abrirAjustes = await confirmar({
+                titulo: MENSAJE_PERMISO_GALERIA,
+                mensaje: 'Permite el acceso a tus fotos para adjuntar una imagen de referencia.',
+                textoConfirmar: 'Abrir Ajustes',
+            });
+            if (abrirAjustes) await Linking.openSettings();
             return;
         }
 
@@ -72,7 +76,7 @@ export default function PasoDecoracion() {
                 <View style={styles.vistaPrevia}>
                     <Image source={{uri: vistaPrevia}} style={styles.imagen} resizeMode="cover" accessibilityLabel="Imagen de referencia" />
                     <View style={styles.accionesImagen}>
-                        <Pressable onPress={elegirImagen} accessibilityRole="button">
+                        <Pressable onPress={() => { void elegirImagen(); }} accessibilityRole="button">
                             <Text style={styles.enlace}>Cambiar</Text>
                         </Pressable>
                         <Pressable onPress={quitarImagen} accessibilityRole="button">
@@ -81,7 +85,7 @@ export default function PasoDecoracion() {
                     </View>
                 </View>
             ) : (
-                <Pressable onPress={elegirImagen} accessibilityRole="button" style={[styles.adjuntar, !!errorImagen && styles.adjuntarConError]}>
+                <Pressable onPress={() => { void elegirImagen(); }} accessibilityRole="button" style={[styles.adjuntar, !!errorImagen && styles.adjuntarConError]}>
                     <Text style={styles.textoAdjuntar}>Adjuntar imagen</Text>
                 </Pressable>
             )}

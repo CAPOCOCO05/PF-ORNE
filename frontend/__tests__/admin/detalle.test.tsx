@@ -1,5 +1,5 @@
-import { Alert } from "react-native";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { render } from "../../src/test-utils/renderConDialogo";
 import AdminDetallePedido from "../../app/admin/pedido/[id]";
 import { cambiarEstado, listarRepartidores, MENSAJES_ADMIN, obtenerPedidoAdmin } from "../../src/services/adminService";
 import { PedidoAdmin } from "../../src/types/pedido.types";
@@ -36,17 +36,14 @@ const PEDIDO: PedidoAdmin = {
 };
 
 // presiona el boton de la accion y luego el boton de confirmar del dialogo
-async function confirmarAccion(alerta: jest.SpyInstance, titulo: string) {
+// presiona la accion en pantalla y luego la confirma en el dialogo (F07 M1)
+async function confirmarAccion(titulo: string) {
     await fireEvent.press(screen.getByText(titulo));
-    const botones = alerta.mock.calls[alerta.mock.calls.length - 1][2] as { text: string; onPress?: () => void }[];
-    botones.find((b) => b.text === titulo)?.onPress?.();
+    await fireEvent.press(screen.getByTestId("dialogo-confirmar"));
 }
-
-let alerta: jest.SpyInstance;
 
 beforeEach(() => {
     jest.clearAllMocks();
-    alerta = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     (obtenerPedidoAdmin as jest.Mock).mockResolvedValue({ pedido: PEDIDO, error: null });
     (listarRepartidores as jest.Mock).mockResolvedValue({ repartidores: [{ id: "rep1", nombre: "Luis" }], error: null });
 });
@@ -81,11 +78,11 @@ describe("Detalle del pedido (admin)", () => {
         await screen.findByText("Pedido ORN-7K2QXM");
 
         await fireEvent.press(screen.getByText("Confirmar pedido"));
-        expect(alerta.mock.calls[0][0]).toBe("¿Confirmar el pedido ORN-7K2QXM?");
+        expect(screen.getByText("¿Confirmar el pedido ORN-7K2QXM?")).toBeTruthy();
         expect(cambiarEstado).not.toHaveBeenCalled();
 
         (obtenerPedidoAdmin as jest.Mock).mockResolvedValue({ pedido: { ...PEDIDO, estado: "confirmado" }, error: null });
-        (alerta.mock.calls[0][2] as { text: string; onPress?: () => void }[]).find((b) => b.text === "Confirmar pedido")?.onPress?.();
+        await fireEvent.press(screen.getByTestId("dialogo-confirmar"));
 
         await waitFor(() => expect(cambiarEstado).toHaveBeenCalledWith({ id: "ped1", estadoActual: "pendiente", destino: "confirmado", repartidorId: undefined }));
         expect(await screen.findByText("Iniciar preparación")).toBeTruthy();
@@ -96,9 +93,10 @@ describe("Detalle del pedido (admin)", () => {
         await render(<AdminDetallePedido />);
         await screen.findByText("Pedido ORN-7K2QXM");
 
-        await confirmarAccion(alerta, "Confirmar pedido");
+        await confirmarAccion("Confirmar pedido");
 
-        await waitFor(() => expect(alerta).toHaveBeenLastCalledWith("No se pudo actualizar", MENSAJES_ADMIN.ACTUALIZAR));
+        expect(await screen.findByText("No se pudo actualizar")).toBeTruthy();
+        expect(screen.getByText(MENSAJES_ADMIN.ACTUALIZAR)).toBeTruthy();
         expect(obtenerPedidoAdmin).toHaveBeenCalledTimes(1);
         expect(screen.getByText("Confirmar pedido")).toBeTruthy();
     });
@@ -109,9 +107,9 @@ describe("Detalle del pedido (admin)", () => {
         await screen.findByText("Pedido ORN-7K2QXM");
 
         (obtenerPedidoAdmin as jest.Mock).mockResolvedValue({ pedido: { ...PEDIDO, estado: "cancelado" }, error: null });
-        await confirmarAccion(alerta, "Confirmar pedido");
+        await confirmarAccion("Confirmar pedido");
 
-        await waitFor(() => expect(alerta).toHaveBeenLastCalledWith("Aviso", "El pedido fue actualizado"));
+        expect(await screen.findByText("El pedido fue actualizado")).toBeTruthy();
         expect(obtenerPedidoAdmin).toHaveBeenCalledTimes(2);
         expect(screen.getByText("Cancelado")).toBeTruthy();
         expect(screen.queryByText("Confirmar pedido")).toBeNull();
@@ -124,12 +122,13 @@ describe("Detalle del pedido (admin)", () => {
         await screen.findByText("Pedido ORN-7K2QXM");
 
         await fireEvent.press(await screen.findByText("Enviar a reparto"));
-        expect(alerta).not.toHaveBeenCalled();
+        expect(screen.queryByTestId("dialogo")).toBeNull();
 
         await fireEvent.press(screen.getByLabelText("Repartidor Luis"));
-        await confirmarAccion(alerta, "Enviar a reparto");
+        await fireEvent.press(screen.getByText("Enviar a reparto"));
+        expect(screen.getByText("Repartidor: Luis")).toBeTruthy();
+        await fireEvent.press(screen.getByTestId("dialogo-confirmar"));
 
-        expect(alerta.mock.calls[0][1]).toBe("Repartidor: Luis");
         await waitFor(() => expect(cambiarEstado).toHaveBeenCalledWith({ id: "ped1", estadoActual: "listo", destino: "en_camino", repartidorId: "rep1" }));
     });
 

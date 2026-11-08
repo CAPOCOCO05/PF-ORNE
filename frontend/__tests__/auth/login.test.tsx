@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { render } from "../../src/test-utils/renderConDialogo";
 import Login from "../../app/(auth)/login";
 import { useAuth } from "../../src/context/AuthContext";
 import { MENSAJES_VALIDACION } from "../../src/utils/validaciones";

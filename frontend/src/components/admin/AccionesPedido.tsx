@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { AccionEstado } from "../../constants/estadosPedido";
+import { useDialogo } from "../../context/DialogoContext";
 import { useRepartidores } from "../../hooks/useRepartidores";
 import { MENSAJES_ADMIN, ResultadoCambio } from "../../services/adminService";
 import { COLORS } from "../../theme/colors";
@@ -21,23 +22,28 @@ export default function AccionesPedido({pedido, actualizando, onAplicar}: Accion
     const enviaAReparto = acciones.some((a) => a.requiereRepartidor);
     const [repartidorId, setRepartidorId] = useState<string | null>(null);
     const repartidores = useRepartidores(enviaAReparto);
+    const dialogo = useDialogo();
 
     if (acciones.length === 0) return null;
 
     const ejecutar = async (accion: AccionEstado) => {
         const cambio = await onAplicar(accion, accion.requiereRepartidor ? repartidorId ?? undefined : undefined);
-        if (cambio.resultado === 'error') Alert.alert('No se pudo actualizar', cambio.error ?? MENSAJES_ADMIN.ACTUALIZAR);
-        if (cambio.resultado === 'desactualizado') Alert.alert('Aviso', MENSAJES_ADMIN.ACTUALIZADO);
+        if (cambio.resultado === 'error') await dialogo.avisar({tipo: 'error', titulo: 'No se pudo actualizar', mensaje: cambio.error ?? MENSAJES_ADMIN.ACTUALIZAR});
+        if (cambio.resultado === 'desactualizado') await dialogo.avisar({titulo: 'Aviso', mensaje: MENSAJES_ADMIN.ACTUALIZADO});
     };
 
     // toda accion pide confirmacion
-    const confirmar = (accion: AccionEstado) => {
+    const confirmar = async (accion: AccionEstado) => {
         const repartidor = repartidores.repartidores.find((r) => r.id === repartidorId);
         const detalle = accion.requiereRepartidor && repartidor ? `Repartidor: ${repartidor.nombre}` : undefined;
-        Alert.alert(preguntaAccion(accion, pedido.folio), detalle, [
-            {text: 'Volver', style: 'cancel'},
-            {text: accion.titulo, style: accion.destructiva ? 'destructive' : 'default', onPress: () => { ejecutar(accion); }},
-        ]);
+        const aplicar = await dialogo.confirmar({
+            titulo: preguntaAccion(accion, pedido.folio),
+            mensaje: detalle,
+            textoConfirmar: accion.titulo,
+            textoCancelar: 'Volver',
+            destructiva: accion.destructiva,
+        });
+        if (aplicar) await ejecutar(accion);
     };
 
     return (

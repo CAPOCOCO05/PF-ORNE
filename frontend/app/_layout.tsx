@@ -1,4 +1,5 @@
 import { AuthProvider } from "../src/context/AuthContext";
+import { DialogoProvider } from "../src/context/DialogoContext";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -6,11 +7,14 @@ export default function RootLayout(){ // root layout para proveer el contexto de
     return(
         // el menu lateral (Drawer) necesita el contenedor de gestos en la raiz
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <AuthProvider>
-                <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="index" />
-                </Stack>
-            </AuthProvider>
+            {/* dialogos propios (F07 M1); arriba del Stack para que sigan visibles al navegar */}
+            <DialogoProvider>
+                <AuthProvider>
+                    <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen name="index" />
+                    </Stack>
+                </AuthProvider>
+            </DialogoProvider>
         </GestureHandlerRootView>
     );
 }

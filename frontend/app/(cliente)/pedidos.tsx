@@ -1,7 +1,8 @@
-import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import Boton from "../../src/components/Boton";
 import TarjetaPedido from "../../src/components/TarjetaPedido";
+import { useDialogo } from "../../src/context/DialogoContext";
 import { useMisPedidos } from "../../src/hooks/useMisPedidos";
 import { COLORS } from "../../src/theme/colors";
 import { ResumenPedido } from "../../src/types/pedido.types";
@@ -10,18 +11,21 @@ import { ResumenPedido } from "../../src/types/pedido.types";
 export default function Pedidos() {
     const router = useRouter();
     const {pedidos, cargando, error, eliminando, recargar, eliminar} = useMisPedidos();
+    const {confirmar, avisar} = useDialogo();
 
     const continuar = (pedido: ResumenPedido) => router.push({pathname: '/pedido/nuevo', params: {borrador: pedido.id}});
     const ver = (pedido: ResumenPedido) => router.push(`/pedido/${pedido.id}`);
 
-    const confirmarEliminar = (pedido: ResumenPedido) => {
-        Alert.alert('¿Eliminar borrador?', 'Se borrará el pedido y su imagen de referencia. No se puede deshacer.', [
-            {text: 'Cancelar', style: 'cancel'},
-            {text: 'Eliminar', style: 'destructive', onPress: async () => {
-                const errorEliminar = await eliminar(pedido.id);
-                if (errorEliminar) Alert.alert('No se pudo eliminar', errorEliminar);
-            }},
-        ]);
+    const confirmarEliminar = async (pedido: ResumenPedido) => {
+        const eliminarlo = await confirmar({
+            titulo: '¿Eliminar borrador?',
+            mensaje: 'Se borrará el pedido y su imagen de referencia. No se puede deshacer.',
+            textoConfirmar: 'Sí, eliminar',
+            destructiva: true,
+        });
+        if (!eliminarlo) return;
+        const errorEliminar = await eliminar(pedido.id);
+        if (errorEliminar) await avisar({tipo: 'error', titulo: 'No se pudo eliminar', mensaje: errorEliminar});
     };
 
     // la lista vacia muestra la carga, el error o la invitacion a pedir

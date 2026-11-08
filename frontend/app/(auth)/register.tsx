@@ -1,6 +1,7 @@
-import { Alert, StyleSheet, Text } from 'react-native'
+import { StyleSheet, Text } from 'react-native'
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
+import { useDialogo } from '../../src/context/DialogoContext';
 import { useState } from 'react';
 import Boton from '../../src/components/Boton';
 import Input from '../../src/components/Input';
@@ -13,6 +14,7 @@ const DATOS_VACIOS: DatosRegistro = {nombre: '', correo: '', contrasena: '', con
 export default function Register() {
     const {signUp} = useAuth();
     const router = useRouter();
+    const {avisar} = useDialogo();
     const [datos, setDatos] = useState<DatosRegistro>(DATOS_VACIOS);
     const [tocados, setTocados] = useState<Partial<Record<keyof DatosRegistro, boolean>>>({});
     const [intentoEnvio, setIntentoEnvio] = useState(false);
@@ -46,7 +48,8 @@ export default function Register() {
         }
         if (requiereConfirmacion) {
             // solo si se activa "Confirm email" en Supabase (hoy esta desactivado)
-            Alert.alert('Revisa tu correo', 'Te enviamos un correo para confirmar tu cuenta.');
+            // el dialogo vive arriba del Stack: sigue visible despues de navegar al login
+            void avisar({titulo: 'Revisa tu correo', mensaje: 'Te enviamos un correo para confirmar tu cuenta.'});
             router.replace('/login');
             return;
         }

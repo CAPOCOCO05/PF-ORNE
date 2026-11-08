@@ -1,5 +1,5 @@
-import { Alert } from "react-native";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { render } from "../../src/test-utils/renderConDialogo";
 import PasoEntrega from "../../app/(cliente)/pedido/nuevo/entrega";
 import { SUCURSAL } from "../../src/constants/sucursal";
 import { PedidoProvider, usePedido } from "../../src/context/PedidoContext";
@@ -70,7 +70,6 @@ async function elegirFechaYHorario() {
 
 beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(Alert, "alert").mockImplementation(() => {});
     (guardarBorrador as jest.Mock).mockResolvedValue({ id: "ped1", imagenRuta: null, error: null });
     (ubicacionInicial as jest.Mock).mockResolvedValue({ coordenadas: SUCURSAL.coordenadas, esDelUsuario: false });
     (direccionDesdeCoordenadas as jest.Mock).mockResolvedValue({

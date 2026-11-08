@@ -1,5 +1,5 @@
-import { Alert } from "react-native";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { render } from "../../src/test-utils/renderConDialogo";
 import * as ImagePicker from "expo-image-picker";
 import PasoTamanio from "../../app/(cliente)/pedido/nuevo/index";
 import PasoSabor from "../../app/(cliente)/pedido/nuevo/sabor";
@@ -103,28 +103,25 @@ describe("Paso 1: tamaño y niveles", () => {
     });
 
     it("si falla el guardado avisa con Reintentar y no avanza", async () => {
-        const alerta = jest.spyOn(Alert, "alert");
         (guardarBorrador as jest.Mock).mockResolvedValue({ id: null, imagenRuta: null, error: "Error de conexión. Tu progreso no se guardó, inténtalo de nuevo" });
         await renderPaso(<PasoTamanio />, { tamanio: "10", niveles: 1 });
 
         await fireEvent.press(screen.getByText("Siguiente"));
 
-        await waitFor(() => expect(alerta).toHaveBeenCalled());
-        const [, mensaje, botones] = alerta.mock.calls[0];
-        expect(mensaje).toBe("Error de conexión. Tu progreso no se guardó, inténtalo de nuevo");
-        expect(botones?.map((b) => b.text)).toEqual(["Cancelar", "Reintentar"]);
+        expect(await screen.findByText("Error de conexión. Tu progreso no se guardó, inténtalo de nuevo")).toBeTruthy();
+        expect(screen.getByText("Reintentar")).toBeTruthy();
+        expect(screen.getByText("Cancelar")).toBeTruthy();
         expect(mockPush).not.toHaveBeenCalled();
     });
 
     it("'Salir' sin borrador pregunta antes de salir", async () => {
-        const alerta = jest.spyOn(Alert, "alert");
         await renderPaso(<PasoTamanio />);
 
         await fireEvent.press(screen.getByText("Salir"));
 
-        expect(alerta.mock.calls[0][0]).toBe("¿Salir del pedido?");
-        alerta.mock.calls[0][2]?.find((b) => b.text === "Salir")?.onPress?.();
-        expect(mockNavigate).toHaveBeenCalledWith("/home");
+        expect(screen.getByText("¿Salir del pedido?")).toBeTruthy();
+        await fireEvent.press(screen.getByText("Sí, salir"));
+        await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/home"));
     });
 });
 
@@ -181,15 +178,13 @@ describe("Paso 3: decoración", () => {
     });
 
     it("permiso de galeria denegado: ofrece abrir Ajustes", async () => {
-        const alerta = jest.spyOn(Alert, "alert");
         (ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock).mockResolvedValue({ granted: false });
         await renderPaso(<PasoDecoracion />);
 
         await fireEvent.press(screen.getByText("Adjuntar imagen"));
 
-        await waitFor(() => expect(alerta).toHaveBeenCalled());
-        expect(alerta.mock.calls[0][0]).toBe("Necesitamos acceso a tu galería");
-        expect(alerta.mock.calls[0][2]?.map((b) => b.text)).toContain("Abrir Ajustes");
+        expect(await screen.findByText("Necesitamos acceso a tu galería")).toBeTruthy();
+        expect(screen.getByText("Abrir Ajustes")).toBeTruthy();
         expect(ImagePicker.launchImageLibraryAsync).not.toHaveBeenCalled();
     });
 

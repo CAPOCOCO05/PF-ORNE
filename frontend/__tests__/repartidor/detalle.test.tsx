@@ -1,5 +1,6 @@
-import { Alert, Linking } from "react-native";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { Linking } from "react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { render } from "../../src/test-utils/renderConDialogo";
 import RepartidorDetalleEntrega from "../../app/repartidor/entrega/[id]";
 import { marcarEntregado, MENSAJES_REPARTIDOR, obtenerEntrega } from "../../src/services/repartidorService";
 import { EntregaRepartidor } from "../../src/types/pedido.types";
@@ -32,17 +33,14 @@ const ENTREGA: EntregaRepartidor = {
 };
 
 // presiona "Marcar como entregado" y confirma en el dialogo
-async function confirmarEntrega(alerta: jest.SpyInstance) {
+async function confirmarEntrega() {
     await fireEvent.press(await screen.findByText("Marcar como entregado"));
-    const botones = alerta.mock.calls[alerta.mock.calls.length - 1][2] as { text: string; onPress?: () => void }[];
-    botones.find((b) => b.text === "Marcar como entregado")?.onPress?.();
+    expect(screen.getByText("¿Marcar el pedido ORN-7K2QXM como entregado?")).toBeTruthy();
+    await fireEvent.press(screen.getByTestId("dialogo-confirmar"));
 }
-
-let alerta: jest.SpyInstance;
 
 beforeEach(() => {
     jest.clearAllMocks();
-    alerta = jest.spyOn(Alert, "alert").mockImplementation(() => {});
     (obtenerEntrega as jest.Mock).mockResolvedValue({ entrega: ENTREGA, error: null });
 });
 
@@ -85,7 +83,7 @@ describe("Detalle de la entrega (repartidor)", () => {
         (marcarEntregado as jest.Mock).mockResolvedValue({ resultado: "ok", error: null });
         await render(<RepartidorDetalleEntrega />);
 
-        await confirmarEntrega(alerta);
+        await confirmarEntrega();
 
         await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/repartidor"));
         expect(marcarEntregado).toHaveBeenCalledWith("ped1");
@@ -95,11 +93,22 @@ describe("Detalle de la entrega (repartidor)", () => {
         (marcarEntregado as jest.Mock).mockResolvedValue({ resultado: "error", error: MENSAJES_REPARTIDOR.ACTUALIZAR });
         await render(<RepartidorDetalleEntrega />);
 
-        await confirmarEntrega(alerta);
+        await confirmarEntrega();
 
-        await waitFor(() => expect(alerta).toHaveBeenLastCalledWith("No se pudo actualizar", MENSAJES_REPARTIDOR.ACTUALIZAR));
+        expect(await screen.findByText("No se pudo actualizar")).toBeTruthy();
+        expect(screen.getByText(MENSAJES_REPARTIDOR.ACTUALIZAR)).toBeTruthy();
         expect(mockNavigate).not.toHaveBeenCalled();
         expect(screen.getByText("Marcar como entregado")).toBeTruthy();
+    });
+
+    it("'Volver' en el dialogo no marca la entrega", async () => {
+        await render(<RepartidorDetalleEntrega />);
+
+        await fireEvent.press(await screen.findByText("Marcar como entregado"));
+        await fireEvent.press(screen.getByTestId("dialogo-cancelar"));
+
+        expect(marcarEntregado).not.toHaveBeenCalled();
+        expect(screen.queryByTestId("dialogo")).toBeNull();
     });
 
     it("pedido ya entregado: no ofrece marcarlo otra vez", async () => {

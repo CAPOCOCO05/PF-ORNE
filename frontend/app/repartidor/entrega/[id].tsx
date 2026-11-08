@@ -1,8 +1,9 @@
-import { ActivityIndicator, Alert, Linking, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Linking, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Boton from "../../../src/components/Boton";
 import MapaDestino from "../../../src/components/repartidor/MapaDestino";
 import { textoBloque } from "../../../src/constants/horarios";
+import { useDialogo } from "../../../src/context/DialogoContext";
 import { useEntrega } from "../../../src/hooks/useEntrega";
 import { MENSAJES_REPARTIDOR } from "../../../src/services/repartidorService";
 import { COLORS } from "../../../src/theme/colors";
@@ -18,23 +19,26 @@ export default function RepartidorDetalleEntrega() {
     const router = useRouter();
     const {id} = useLocalSearchParams<{id?: string}>();
     const {entrega, cargando, error, actualizando, reintentar, entregar} = useEntrega(id);
+    const {confirmar: confirmarDialogo, avisar} = useDialogo();
     const volver = () => router.navigate('/repartidor');
 
     const ejecutar = async () => {
         const cambio = await entregar();
         if (cambio.resultado === 'error') {
-            Alert.alert('No se pudo actualizar', cambio.error ?? MENSAJES_REPARTIDOR.ACTUALIZAR);
+            await avisar({tipo: 'error', titulo: 'No se pudo actualizar', mensaje: cambio.error ?? MENSAJES_REPARTIDOR.ACTUALIZAR});
             return;
         }
-        if (cambio.resultado === 'desactualizado') Alert.alert('Aviso', MENSAJES_REPARTIDOR.YA_NO_DISPONIBLE);
+        if (cambio.resultado === 'desactualizado') await avisar({titulo: 'Aviso', mensaje: MENSAJES_REPARTIDOR.YA_NO_DISPONIBLE});
         volver();
     };
 
-    const confirmar = () => {
-        Alert.alert(`¿Marcar el pedido ${entrega?.folio ?? ''} como entregado?`, undefined, [
-            {text: 'Volver', style: 'cancel'},
-            {text: 'Marcar como entregado', onPress: () => { ejecutar(); }},
-        ]);
+    const confirmar = async () => {
+        const entregado = await confirmarDialogo({
+            titulo: `¿Marcar el pedido ${entrega?.folio ?? ''} como entregado?`,
+            textoConfirmar: 'Marcar como entregado',
+            textoCancelar: 'Volver',
+        });
+        if (entregado) await ejecutar();
     };
 
     let contenido: React.ReactNode;
@@ -69,16 +73,16 @@ export default function RepartidorDetalleEntrega() {
     );
 }
 
-async function abrirMapas(url: string) {
-    try {
-        await Linking.openURL(url);
-    } catch (e) {
-        console.warn('abrirMapas:', e);
-        Alert.alert('Aviso', MENSAJE_SIN_MAPAS);
-    }
-}
-
 function Detalle({entrega}: {entrega: EntregaRepartidor}) {
+    const {avisar} = useDialogo();
+    const abrirMapas = async (url: string) => {
+        try {
+            await Linking.openURL(url);
+        } catch (e) {
+            console.warn('abrirMapas:', e);
+            await avisar({tipo: 'error', titulo: 'Aviso', mensaje: MENSAJE_SIN_MAPAS});
+        }
+    };
     const {entrega: datos} = entrega;
     const direccion = armarDireccion(datos);
     const url = urlComoLlegar(datos.ubicacion, direccion, Platform.OS);

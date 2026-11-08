@@ -8,16 +8,20 @@ interface BotonProps {
     cargando?: boolean; // muestra spinner y bloquea toques repetidos (F00)
     deshabilitado?: boolean;
     style?: StyleProp<ViewStyle>;
+    testID?: string;
 }
 
-export default function Boton({titulo, onPress, variante = 'principal', cargando = false, deshabilitado = false, style}: BotonProps) {
+export default function Boton({titulo, onPress, variante = 'principal', cargando = false, deshabilitado = false, style, testID}: BotonProps) {
     const esPrincipal = variante === 'principal';
     const colorTexto = esPrincipal ? COLORS.BLANCO : COLORS.TITULO;
     const bloqueado = cargando || deshabilitado;
 
     return (
         <Pressable
-            onPress={onPress}
+            testID={testID}
+            // se descarta la promesa de un handler async: el boton no espera su resultado
+            // (p. ej. una accion que queda esperando la respuesta de un dialogo, F07 M1)
+            onPress={() => { onPress(); }}
             disabled={bloqueado}
             accessibilityRole="button"
             accessibilityState={{disabled: bloqueado, busy: cargando}}

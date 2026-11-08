@@ -1,6 +1,7 @@
-import { Alert, Pressable, StyleSheet, Text } from 'react-native'
+import { Pressable, StyleSheet, Text } from 'react-native'
 import { Link, useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
+import { useDialogo } from '../../src/context/DialogoContext';
 import { useState } from 'react';
 import Boton from '../../src/components/Boton';
 import Input from '../../src/components/Input';
@@ -11,6 +12,7 @@ import { DatosLogin, tieneErrores, validarLogin } from '../../src/utils/validaci
 export default function Login() {
     const {signIn, authError} = useAuth();
     const router = useRouter();
+    const {avisar} = useDialogo();
     const [datos, setDatos] = useState<DatosLogin>({correo: '', contrasena: ''});
     const [tocados, setTocados] = useState<Partial<Record<keyof DatosLogin, boolean>>>({});
     const [intentoEnvio, setIntentoEnvio] = useState(false);
@@ -76,7 +78,7 @@ export default function Login() {
                 onSubmitEditing={handleLogin}
             />
             <Boton titulo="Iniciar sesión" onPress={handleLogin} cargando={loading} style={styles.boton} />
-            <Pressable onPress={() => Alert.alert('Próximamente', 'La recuperación de contraseña estará disponible pronto.')}>
+            <Pressable onPress={() => { void avisar({titulo: 'Próximamente', mensaje: 'La recuperación de contraseña estará disponible pronto.'}); }}>
                 <Text style={styles.olvide}>Olvidé mi contraseña</Text>
             </Pressable>
         </PantallaAuth>
