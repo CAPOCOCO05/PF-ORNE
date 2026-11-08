@@ -21,8 +21,8 @@ en silencio.
   de reintentar, y nunca deben perder el progreso ya capturado por el usuario.
 
 ## Criterios de aceptación
-- [ ] Ningún formulario del flujo de pedido permite avanzar con campos
+- [x] Ningún formulario del flujo de pedido permite avanzar con campos
       obligatorios vacíos.
-- [ ] Todo error de red muestra un mensaje entendible, no un crash ni pantalla
+- [x] Todo error de red muestra un mensaje entendible, no un crash ni pantalla
       en blanco.
-- [ ] Las listas (catálogo, mis pedidos) manejan correctamente el caso "vacío".
+- [x] Las listas (catálogo, mis pedidos) manejan correctamente el caso "vacío".

@@ -91,4 +91,4 @@ Sección opcional; queda fuera de esta versión.
       `repartidor/entrega/[id].tsx` (usa `react-native-maps`, ya requerido por F02).
 - [x] Abrir la app de mapas con `Linking`.
 - [x] Script de permisos `backend/supabase/tests/permisos_repartidor.sql`.
-- [ ] Probar criterios de aceptación (pruebas de la app ✅, permisos en Supabase ✅; falta probar en un dispositivo).
+- [x] Probar criterios de aceptación (pruebas de la app ✅, permisos en Supabase ✅, dispositivo ✅).
