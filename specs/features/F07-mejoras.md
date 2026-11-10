@@ -8,8 +8,8 @@
 | # | Mejora | Rol | Estado |
 |---|---|---|---|
 | M1 | Diálogos personalizados (reemplazan los `Alert` del dispositivo) | Todos | 🟡 Implementada (falta probar en un dispositivo) |
-| M2 | Pedido no entregado por el repartidor | Repartidor / Admin / Cliente | 🟡 Implementada (falta aplicar `011` en Supabase y probar) |
-| M3 | Filtro por estado dentro de "Activos" en el panel admin | Admin | 🔲 Pendiente |
+| M2 | Pedido no entregado por el repartidor | Repartidor / Admin / Cliente | 🟡 Implementada, `011` aplicada (falta probar en un dispositivo) |
+| M3 | Filtro por estado dentro de "Activos" en el panel admin | Admin | 🟡 Implementada (falta probar en un dispositivo) |
 | M4 | Publicar y editar pasteles del catálogo desde la app | Admin | 🔲 Pendiente |
 | M5 | Filtros del catálogo del cliente (precio, sabores, relleno…) | Cliente | 🔲 Pendiente |
 | M6 | Nombre completo del cliente (para el repartidor) | Cliente / Repartidor | 🔲 Pendiente |
@@ -151,7 +151,7 @@ Repartidor (lo marca), admin (decide qué sigue), cliente (lo consulta).
 
 ### Criterios de aceptación
 - [x] El repartidor puede marcar un pedido `en_camino` como no entregado indicando el motivo.
-- [ ] No puede hacerlo sin motivo ni sobre pedidos que no son suyos o no están en camino (probado en SQL).
+- [x] No puede hacerlo sin motivo ni sobre pedidos que no son suyos o no están en camino (probado en SQL).
 - [x] El admin ve el motivo y puede reprogramar (vuelve a `listo` sin repartidor) o cancelar.
 - [x] El cliente ve el estado "No entregado" y el motivo en su pedido.
 
@@ -162,8 +162,8 @@ Repartidor (lo marca), admin (decide qué sigue), cliente (lo consulta).
 - [x] `repartidorService.marcarNoEntregado(id, motivo)` con pruebas.
 - [x] Botón y diálogo de motivo en `repartidor/entrega/[id].tsx` (`DialogoNoEntregado`, sobre el `MarcoDialogo` de M1).
 - [x] Motivo en el detalle del admin y del cliente.
-- [x] Ampliar `backend/supabase/tests/permisos_repartidor.sql` y `permisos_admin.sql` (falta correrlos en Supabase).
-- [ ] Probar criterios de aceptación (pruebas de la app ✅; falta aplicar `011`, correr los scripts de permisos y probar en un dispositivo).
+- [x] Ampliar `backend/supabase/tests/permisos_repartidor.sql` y `permisos_admin.sql` (corridos en Supabase: OK).
+- [ ] Probar criterios de aceptación (pruebas de la app ✅; `011` aplicada y permisos SQL OK; falta probar en un dispositivo).
 
 ---
 
@@ -197,19 +197,21 @@ pedidos hay en cada uno, sin salir de la vista de activos.
   cambios.
 - **D4. Persistencia.** La selección se conserva al ir al detalle y regresar (vive
   en el hook de la lista, no se reinicia en `useFocusEffect`).
+- **D5. Falla del contador.** Si `contar_pedidos_por_estado()` falla, los chips se
+  muestran sin número y la lista carga normal (el conteo es secundario).
 
 ### Criterios de aceptación
-- [ ] En "Activos" el admin puede marcar uno o varios estados y la lista muestra solo esos.
-- [ ] Cada chip muestra cuántos pedidos hay en ese estado.
-- [ ] Al regresar del detalle se conserva la selección.
-- [ ] "Entregados" y "Cancelados" se siguen viendo como hoy.
+- [x] En "Activos" el admin puede marcar uno o varios estados y la lista muestra solo esos.
+- [x] Cada chip muestra cuántos pedidos hay en ese estado.
+- [x] Al regresar del detalle se conserva la selección.
+- [x] "Entregados" y "Cancelados" se siguen viendo como hoy.
 
 ### Tareas
-- [ ] `contar_pedidos_por_estado()` en `011` (✅ ya incluida en la migración) y `adminService.contarPorEstado()` con pruebas.
-- [ ] `FiltroAdmin` → `{pestania, estados[]}`; actualizar `estadosDeFiltro`/`ordenAscendente` y pruebas.
-- [ ] Componente `FiltrosEstado` con pestañas + chips múltiples con contador.
-- [ ] Ajustar `usePedidosAdmin` y `admin/index.tsx`; actualizar `__tests__/admin/pedidos.test.tsx`.
-- [ ] Probar criterios de aceptación.
+- [x] `contar_pedidos_por_estado()` en `011` y `adminService.contarPorEstado()` con pruebas.
+- [x] `FiltroAdmin` → `{pestania, estados[]}`; actualizar `estadosDeFiltro`/`ordenAscendente` (+ `alternarEstado`) y pruebas.
+- [x] Componente `FiltrosEstado` con pestañas + chips múltiples con contador.
+- [x] Ajustar `usePedidosAdmin` y `admin/index.tsx`; actualizar `__tests__/admin/pedidos.test.tsx`.
+- [ ] Probar criterios de aceptación (pruebas de la app ✅; falta probar en un dispositivo).
 
 ---
 

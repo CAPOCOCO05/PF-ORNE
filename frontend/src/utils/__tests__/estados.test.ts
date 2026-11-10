@@ -1,5 +1,5 @@
 import { ACCIONES } from "../../constants/estadosPedido";
-import { accionesDisponibles, estadosDeFiltro, MENSAJES_MOTIVO, motivoNoEntrega, ordenAscendente, preguntaAccion } from "../estados";
+import { accionesDisponibles, alternarEstado, estadosDeFiltro, MENSAJES_MOTIVO, motivoNoEntrega, ordenAscendente, preguntaAccion } from "../estados";
 
 describe("accionesDisponibles", () => {
     it.each([
@@ -36,22 +36,35 @@ describe("preguntaAccion", () => {
 });
 
 describe("estadosDeFiltro y ordenAscendente", () => {
-    it("activos trae de pendiente a no entregado, sin borradores ni terminados", () => {
-        expect(estadosDeFiltro("activos")).toEqual(["pendiente", "confirmado", "en_preparacion", "listo", "en_camino", "no_entregado"]);
+    it("activos sin chips trae de pendiente a no entregado, sin borradores ni terminados", () => {
+        expect(estadosDeFiltro({ pestania: "activos", estados: [] })).toEqual(["pendiente", "confirmado", "en_preparacion", "listo", "en_camino", "no_entregado"]);
     });
 
-    it("un estado trae solo ese estado", () => {
-        expect(estadosDeFiltro("listo")).toEqual(["listo"]);
+    it("activos con chips trae solo los marcados, en el orden del ciclo", () => {
+        expect(estadosDeFiltro({ pestania: "activos", estados: ["en_camino", "pendiente", "listo"] })).toEqual(["pendiente", "listo", "en_camino"]);
+    });
+
+    it("entregados y cancelados traen solo ese estado e ignoran los chips", () => {
+        expect(estadosDeFiltro({ pestania: "entregado", estados: ["listo"] })).toEqual(["entregado"]);
+        expect(estadosDeFiltro({ pestania: "cancelado", estados: [] })).toEqual(["cancelado"]);
     });
 
     it.each([
         ["activos", true],
-        ["pendiente", true],
-        ["en_camino", true],
         ["entregado", false],
         ["cancelado", false],
-    ] as const)("%s ascendente: %s", (filtro, esperado) => {
-        expect(ordenAscendente(filtro)).toBe(esperado);
+    ] as const)("%s ascendente: %s", (pestania, esperado) => {
+        expect(ordenAscendente({ pestania, estados: [] })).toBe(esperado);
+    });
+});
+
+describe("alternarEstado", () => {
+    it("marca un estado no marcado", () => {
+        expect(alternarEstado(["listo"], "pendiente")).toEqual(["listo", "pendiente"]);
+    });
+
+    it("desmarca un estado marcado", () => {
+        expect(alternarEstado(["listo", "pendiente"], "listo")).toEqual(["pendiente"]);
     });
 });
 

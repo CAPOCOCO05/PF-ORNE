@@ -46,23 +46,38 @@ export const ACCIONES: Record<'confirmar' | 'preparar' | 'listo' | 'reparto' | '
     cancelar: {destino: 'cancelado', titulo: 'Cancelar pedido', pregunta: '¿Cancelar el pedido {folio}? No se puede deshacer.', destructiva: true},
 };
 
-// chips de la lista del admin (F04 D3); los borradores nunca se muestran
-export type FiltroAdmin = 'activos' | Exclude<EstadoPedido, 'borrador'>;
+// no_entregado es activo: espera que el admin reprograme o cancele (F07 M2)
+export const ESTADOS_ACTIVOS = ['pendiente', 'confirmado', 'en_preparacion', 'listo', 'en_camino', 'no_entregado'] as const;
+export type EstadoActivo = typeof ESTADOS_ACTIVOS[number];
 
-export const FILTROS_ADMIN: {valor: FiltroAdmin; texto: string}[] = [
+// lista del admin (F04 D3, F07 M3): pestaña y, dentro de "Activos", los estados
+// marcados (ninguno = todos los activos); los borradores nunca se muestran
+export type PestaniaAdmin = 'activos' | 'entregado' | 'cancelado';
+
+export interface FiltroAdmin {
+    pestania: PestaniaAdmin;
+    estados: EstadoActivo[];
+}
+
+export const FILTRO_ADMIN_INICIAL: FiltroAdmin = {pestania: 'activos', estados: []};
+
+export const PESTANIAS_ADMIN: {valor: PestaniaAdmin; texto: string}[] = [
     {valor: 'activos', texto: 'Activos'},
+    {valor: 'entregado', texto: 'Entregados'},
+    {valor: 'cancelado', texto: 'Cancelados'},
+];
+
+export const CHIPS_ACTIVOS: {valor: EstadoActivo; texto: string}[] = [
     {valor: 'pendiente', texto: 'Pendientes'},
     {valor: 'confirmado', texto: 'Confirmados'},
     {valor: 'en_preparacion', texto: 'En preparación'},
     {valor: 'listo', texto: 'Listos'},
     {valor: 'en_camino', texto: 'En camino'},
     {valor: 'no_entregado', texto: 'No entregados'},
-    {valor: 'entregado', texto: 'Entregados'},
-    {valor: 'cancelado', texto: 'Cancelados'},
 ];
 
-// no_entregado es activo: espera que el admin reprograme o cancele (F07 M2)
-export const ESTADOS_ACTIVOS: EstadoPedido[] = ['pendiente', 'confirmado', 'en_preparacion', 'listo', 'en_camino', 'no_entregado'];
+// pedidos por estado para los contadores de los chips (M3 D2)
+export type ConteoEstados = Record<Exclude<EstadoPedido, 'borrador'>, number>;
 
 // motivos que elige el repartidor al no poder entregar (F07 M2); "Otro" pide escribirlo
 export const MOTIVOS_NO_ENTREGA = [

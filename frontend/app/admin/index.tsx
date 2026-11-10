@@ -12,7 +12,10 @@ const MENSAJE_SIN_PEDIDOS = 'No hay pedidos en este estado';
 // F04: lista de los pedidos de todos los clientes (sin borradores), filtrada por estado
 export default function AdminPedidos() {
     const router = useRouter();
-    const {filtro, cambiarFiltro, pedidos, cargando, error, cargarMas, reintentar, recargar} = usePedidosAdmin();
+    const {
+        filtro, cambiarPestania, marcarEstado, limpiarEstados, conteos,
+        pedidos, cargando, error, cargarMas, reintentar, recargar,
+    } = usePedidosAdmin();
     const primeraCarga = pedidos.length === 0;
 
     const ver = (pedido: PedidoAdminResumen) => router.push(`/admin/pedido/${pedido.id}`);
@@ -20,7 +23,13 @@ export default function AdminPedidos() {
     const encabezado = (
         <View>
             <Text style={styles.titulo}>Pedidos</Text>
-            <FiltrosEstado seleccionado={filtro} onSeleccionar={cambiarFiltro} />
+            <FiltrosEstado
+                filtro={filtro}
+                conteos={conteos}
+                onPestania={cambiarPestania}
+                onMarcarEstado={marcarEstado}
+                onLimpiar={limpiarEstados}
+            />
         </View>
     );
 

@@ -1,10 +1,10 @@
-import { cambiarEstado, listarPedidosAdmin, listarRepartidores, MENSAJES_ADMIN, obtenerPedidoAdmin } from "../adminService";
+import { cambiarEstado, contarPorEstado, listarPedidosAdmin, listarRepartidores, MENSAJES_ADMIN, obtenerPedidoAdmin } from "../adminService";
 import { MENSAJES_DATOS } from "../erroresDatos";
 import { supabase } from "../supabase";
 import { consultaSimulada } from "../../test-utils/consultaSupabase";
 import { ENTREGA_VACIA } from "../../utils/entrega";
 
-jest.mock("../supabase", () => ({ supabase: { from: jest.fn() } }));
+jest.mock("../supabase", () => ({ supabase: { from: jest.fn(), rpc: jest.fn() } }));
 
 const ERROR_RED = { message: "TypeError: Network request failed", code: "" };
 
@@ -28,7 +28,7 @@ describe("listarPedidosAdmin", () => {
     it("activos: filtra los estados en curso y ordena por la entrega mas proxima", async () => {
         const consulta = mockConsulta({ data: [FILA_RESUMEN], error: null });
 
-        const resultado = await listarPedidosAdmin("activos", 0);
+        const resultado = await listarPedidosAdmin({ pestania: "activos", estados: [] }, 0);
 
         expect(supabase.from).toHaveBeenCalledWith("pedidos");
         expect(consulta.in).toHaveBeenCalledWith("estado", ["pendiente", "confirmado", "en_preparacion", "listo", "en_camino", "no_entregado"]);
@@ -48,7 +48,7 @@ describe("listarPedidosAdmin", () => {
     it("entregados: del mas reciente al mas antiguo, segunda pagina", async () => {
         const consulta = mockConsulta({ data: [], error: null });
 
-        await listarPedidosAdmin("entregado", 1);
+        await listarPedidosAdmin({ pestania: "entregado", estados: [] }, 1);
 
         expect(consulta.in).toHaveBeenCalledWith("estado", ["entregado"]);
         expect(consulta.order).toHaveBeenCalledWith("fecha_entrega", { ascending: false });
@@ -59,7 +59,7 @@ describe("listarPedidosAdmin", () => {
         const filas = Array.from({ length: 3 }, (_, i) => ({ ...FILA_RESUMEN, id: `ped${i}`, cliente: [{ nombre: "" }] }));
         mockConsulta({ data: filas, error: null });
 
-        const resultado = await listarPedidosAdmin("pendiente", 0, 2);
+        const resultado = await listarPedidosAdmin({ pestania: "activos", estados: ["pendiente"] }, 0, 2);
 
         expect(resultado.hayMas).toBe(true);
         expect(resultado.pedidos.map((p) => p.id)).toEqual(["ped0", "ped1"]);
@@ -69,7 +69,52 @@ describe("listarPedidosAdmin", () => {
     it("error de conexion", async () => {
         mockConsulta({ data: null, error: ERROR_RED });
 
-        expect(await listarPedidosAdmin("activos", 0)).toEqual({ pedidos: [], hayMas: false, error: MENSAJES_DATOS.CONEXION });
+        expect(await listarPedidosAdmin({ pestania: "activos", estados: [] }, 0)).toEqual({ pedidos: [], hayMas: false, error: MENSAJES_DATOS.CONEXION });
+    });
+});
+
+describe("listarPedidosAdmin con chips de Activos (F07 M3)", () => {
+    it("filtra solo los estados marcados y sigue ordenando por la entrega mas proxima", async () => {
+        const consulta = mockConsulta({ data: [], error: null });
+
+        await listarPedidosAdmin({ pestania: "activos", estados: ["en_camino", "listo"] }, 0);
+
+        expect(consulta.in).toHaveBeenCalledWith("estado", ["listo", "en_camino"]);
+        expect(consulta.order).toHaveBeenCalledWith("fecha_entrega", { ascending: true });
+    });
+});
+
+describe("contarPorEstado", () => {
+    it("convierte las filas en un conteo por estado y deja en 0 los que no vienen", async () => {
+        (supabase.rpc as jest.Mock).mockResolvedValue({
+            data: [{ estado: "pendiente", total: 3 }, { estado: "listo", total: "1" }, { estado: "no_entregado", total: 2 }],
+            error: null,
+        });
+
+        const resultado = await contarPorEstado();
+
+        expect(supabase.rpc).toHaveBeenCalledWith("contar_pedidos_por_estado");
+        expect(resultado).toEqual({
+            conteos: {
+                pendiente: 3, confirmado: 0, en_preparacion: 0, listo: 1,
+                en_camino: 0, entregado: 0, no_entregado: 2, cancelado: 0,
+            },
+            error: null,
+        });
+    });
+
+    it("ignora estados que no se muestran (borrador)", async () => {
+        (supabase.rpc as jest.Mock).mockResolvedValue({ data: [{ estado: "borrador", total: 9 }], error: null });
+
+        const { conteos } = await contarPorEstado();
+
+        expect(conteos).not.toHaveProperty("borrador");
+    });
+
+    it("error de conexion: sin conteos y con mensaje", async () => {
+        (supabase.rpc as jest.Mock).mockResolvedValue({ data: null, error: ERROR_RED });
+
+        expect(await contarPorEstado()).toEqual({ conteos: null, error: MENSAJES_DATOS.CONEXION });
     });
 });
 

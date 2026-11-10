@@ -1,7 +1,7 @@
 import { supabase } from "./supabase";
 import { traducirErrorDatos } from "./erroresDatos";
 import { COLUMNAS_PEDIDO_COMPLETO, FilaPedidoCompleto, pedidoCompletoDeFila } from "./pedidosService";
-import { FiltroAdmin } from "../constants/estadosPedido";
+import { ConteoEstados, FiltroAdmin } from "../constants/estadosPedido";
 import { estadosDeFiltro, ordenAscendente } from "../utils/estados";
 import {
     EstadoPedido, HoraBloque, PagoPedido, PedidoAdmin, PedidoAdminResumen, Repartidor, TipoEntrega,
@@ -87,6 +87,26 @@ export async function listarPedidosAdmin(filtro: FiltroAdmin, pagina: number, po
         horaEntrega: fila.hora_entrega ? fila.hora_entrega.slice(0, 5) as HoraBloque : null,
     }));
     return {pedidos, hayMas: filas.length > porPagina, error: null};
+}
+
+const CONTEO_VACIO: ConteoEstados = {
+    pendiente: 0, confirmado: 0, en_preparacion: 0, listo: 0,
+    en_camino: 0, entregado: 0, no_entregado: 0, cancelado: 0,
+};
+
+// pedidos por estado para los chips de "Activos" (F07 M3 D2); la funcion de 011
+// solo devuelve los estados que tienen pedidos, el resto queda en 0
+export async function contarPorEstado(): Promise<{conteos: ConteoEstados | null; error: string | null}> {
+    const {data, error} = await supabase.rpc('contar_pedidos_por_estado');
+    if (error) {
+        console.warn('contarPorEstado:', error.code, error.message);
+        return {conteos: null, error: traducirErrorDatos(error)};
+    }
+    const conteos = {...CONTEO_VACIO};
+    for (const fila of (data ?? []) as {estado: string; total: number | string}[]) {
+        if (fila.estado in conteos) conteos[fila.estado as keyof ConteoEstados] = Number(fila.total);
+    }
+    return {conteos, error: null};
 }
 
 // detalle completo: pastel, entrega, cliente, pago y repartidor (D5)
