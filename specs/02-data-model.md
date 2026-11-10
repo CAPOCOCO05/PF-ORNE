@@ -34,6 +34,7 @@ Pedido {
   total: number
   folio: string              // ID único de seguimiento (F03): ORN-XXXXXX
   paso_actual: 1 | 2 | 3 | 4 | 5     // paso donde se retoma el borrador
+  motivo_no_entrega: string | null   // NUEVO (F07 M2) — lo escribe el repartidor; se conserva al reprogramar
 }
 
 PedidoDetalle {
@@ -60,9 +61,11 @@ Pago {
 ## Estados del pedido
 
 ```
-borrador → pendiente → confirmado → en_preparacion → listo ─┬─ (domicilio)   → en_camino → entregado
-                │            │                              └─ (recolección) ─────────────→ entregado
-                └────────────┴──→ cancelado
+borrador → pendiente → confirmado → en_preparacion → listo ─┬─ (domicilio)   → en_camino ─┬─→ entregado
+                │            │                       ▲      │                             └─→ no_entregado ─┐
+                │            │                       │      └─ (recolección) ─────────────→ entregado      │
+                │            │                       └──────────── reprogramar (sin repartidor) ◄──────────┤
+                └────────────┴──→ cancelado ◄──────────────────────────────────────────────────────────────┘
 ```
 
 | Estado | Significado | Quién lo pone |
@@ -74,13 +77,16 @@ borrador → pendiente → confirmado → en_preparacion → listo ─┬─ (do
 | `listo` | Terminado; espera recolección o salida a reparto | Admin |
 | `en_camino` | Asignado a un repartidor y en ruta (solo domicilio) | Admin (al asignar repartidor) |
 | `entregado` | Recibido por el cliente | Repartidor (domicilio) · Admin (recolección) |
-| `cancelado` | Cancelado (solo desde `pendiente` o `confirmado`) | Admin |
+| `no_entregado` | Salió a reparto pero no se pudo entregar; guarda el motivo (F07 M2) | Repartidor |
+| `cancelado` | Cancelado (desde `pendiente`, `confirmado` o `no_entregado`) | Admin |
 
 Reglas:
 - Solo se avanza a un estado de la flecha; no se puede regresar ni saltar estados.
 - `en_camino` exige `repartidor_id` y `tipo_entrega = 'domicilio'`.
-- El repartidor solo puede cambiar `en_camino → entregado`, y solo en los pedidos
-  que tiene asignados.
+- El repartidor solo puede cambiar `en_camino → entregado` o `en_camino → no_entregado`
+  (con motivo), y solo en los pedidos que tiene asignados.
+- Desde `no_entregado` el admin reprograma (`→ listo`, quitando el repartidor) o
+  cancela (F07 M2).
 - Las transiciones se validan en la base de datos (no solo en la app).
 
 ## Permisos por rol (RLS)
@@ -88,7 +94,7 @@ Reglas:
 | Tabla | Cliente | Admin | Repartidor |
 |---|---|---|---|
 | `perfiles` | Ver y editar su `nombre` (no su `rol`) | Ver todos | Ver el suyo y el nombre de los clientes de sus entregas en camino |
-| `pedidos` | Ver/crear los suyos; editar solo borradores; pasar a `pendiente` | Ver todos; cambiar `estado` y `repartidor_id` | Ver los asignados a él; cambiar a `entregado` |
+| `pedidos` | Ver/crear los suyos; editar solo borradores; pasar a `pendiente` | Ver todos; cambiar `estado` y `repartidor_id` | Ver los asignados a él; cambiar a `entregado` o `no_entregado` (con motivo) |
 | `pedido_detalle` | Ver/crear/editar el de sus borradores | Ver todos | Ver el de sus entregas |
 | `pagos` | Ver/crear los suyos | Ver todos | — |
 | `catalogo_pasteles` | Ver activos | Ver todos | — |
@@ -110,6 +116,7 @@ En `backend/supabase/migrations/`, en este orden:
 | `008_entrega_y_confirmacion.sql` | Campos de dirección y teléfono, bloques de horario, `paso_actual` 1–5, `fecha_minima_entrega`, `calcular_precio`, `confirmar_pedido` (folio + pago) | F02, F03 |
 | `009_validar_repartidor.sql` | El trigger de transiciones exige que `repartidor_id` sea un perfil con rol `repartidor` | F04 |
 | `010_repartidor_ve_clientes.sql` | El repartidor ve el nombre del cliente de sus entregas en camino | F06 |
+| `011_no_entregado.sql` | Estado `no_entregado`, `motivo_no_entrega`, política y trigger del repartidor, `contar_pedidos_por_estado()` | F07 M2, M3 |
 
 ## Catálogo de sabores e imágenes
 

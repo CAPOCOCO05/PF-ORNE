@@ -1,4 +1,5 @@
 -- F04 D8: prueba de permisos del panel admin contra la base de datos (no solo la app).
+-- F07: incluye el contador por estado (M3) y la cancelacion de un pedido no entregado (M2).
 -- Se corre completo en el SQL Editor de Supabase. Simula a cada usuario cambiando el rol a
 -- 'authenticated' y el usuario de auth.uid(); al final DESHACE todos los cambios y solo
 -- muestra la tabla de resultados (prueba / OK o FALLA).
@@ -69,6 +70,11 @@ begin
     v_pruebas := v_pruebas || 'El dueño no confirma su propio pedido'::text;
     v_estados := v_estados || case when n = 0 then 'OK' else 'FALLA' end;
 
+    select coalesce(sum(total), 0) - (select count(*) from public.pedidos where usuario_id = v_duenio and estado <> 'borrador')
+    into n from public.contar_pedidos_por_estado();
+    v_pruebas := v_pruebas || 'El contador por estado solo cuenta los pedidos del propio cliente'::text;
+    v_estados := v_estados || case when n = 0 then 'OK' else 'FALLA' end;
+
     -- ---------------------------------------------------------------- repartidor sin asignar
     perform set_config('request.jwt.claims', json_build_object('sub', v_repartidor, 'role', 'authenticated')::text, true);
 
@@ -94,6 +100,10 @@ begin
 
     select count(*) into n from public.pedidos where estado = 'borrador';
     v_pruebas := v_pruebas || format('Admin no ve borradores (hay %s en la base)', v_borradores);
+    v_estados := v_estados || case when n = 0 then 'OK' else 'FALLA' end;
+
+    select coalesce(sum(total), 0) - (select count(*) from public.pedidos) into n from public.contar_pedidos_por_estado();
+    v_pruebas := v_pruebas || 'El contador por estado coincide con los pedidos que ve el admin (011)'::text;
     v_estados := v_estados || case when n = 0 then 'OK' else 'FALLA' end;
 
     v_fallo := false;
@@ -140,6 +150,24 @@ begin
       update public.pedidos set estado = 'en_camino', repartidor_id = v_repartidor where id = v_pedido;
       select count(*) into n from public.pedidos where id = v_pedido and estado = 'en_camino';
       v_pruebas := v_pruebas || 'Domicilio pasa a en camino con repartidor'::text;
+      v_estados := v_estados || case when n = 1 then 'OK' else 'FALLA' end;
+
+      v_fallo := false;
+      begin
+        update public.pedidos set estado = 'no_entregado', motivo_no_entrega = 'Nadie recibió el pedido' where id = v_pedido;
+      exception when others then v_fallo := true;
+      end;
+      v_pruebas := v_pruebas || 'Admin no marca no entregado (solo el repartidor, 011)'::text;
+      v_estados := v_estados || case when v_fallo then 'OK' else 'FALLA' end;
+
+      -- el repartidor lo marca no entregado y el admin lo cancela
+      perform set_config('request.jwt.claims', json_build_object('sub', v_repartidor, 'role', 'authenticated')::text, true);
+      update public.pedidos set estado = 'no_entregado', motivo_no_entrega = 'El cliente rechazó el pedido' where id = v_pedido;
+      perform set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
+
+      update public.pedidos set estado = 'cancelado' where id = v_pedido;
+      select count(*) into n from public.pedidos where id = v_pedido and estado = 'cancelado';
+      v_pruebas := v_pruebas || 'Admin cancela un pedido no entregado'::text;
       v_estados := v_estados || case when n = 1 then 'OK' else 'FALLA' end;
     else
       update public.pedidos set estado = 'entregado' where id = v_pedido;

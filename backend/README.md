@@ -29,6 +29,7 @@ Se aplican **en orden**:
 | `008_entrega_y_confirmacion.sql` | Dirección y teléfono de entrega, bloques de horario, `paso_actual` 1–5, funciones de fecha mínima y zona de entrega, `calcular_precio`, `confirmar_pedido` (folio + pago simulado); el cliente ya no puede confirmar con un update directo ni insertar pagos | F02, F03 |
 | `009_validar_repartidor.sql` | El trigger de transiciones solo acepta como `repartidor_id` a perfiles con rol `repartidor` | F04 |
 | `010_repartidor_ve_clientes.sql` | Política para que el repartidor vea el nombre del cliente de sus entregas en camino | F06 |
+| `011_no_entregado.sql` | Estado `no_entregado` con `motivo_no_entrega`, trigger y política del repartidor; función `contar_pedidos_por_estado()` | F07 M2, M3 |
 
 ## Pruebas de permisos
 

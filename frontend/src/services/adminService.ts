@@ -118,12 +118,15 @@ interface CambioEstado {
     estadoActual: EstadoPedido;     // el que se esta mostrando (D6)
     destino: EstadoPedido;
     repartidorId?: string;          // solo al enviar a reparto (D7)
+    quitarRepartidor?: boolean;     // al reprogramar una entrega fallida (F07 M2)
 }
 
 // el update solo aplica si el pedido sigue en el estado mostrado; si otro admin
 // ya lo movio no se actualiza ninguna fila (D6). El trigger valida la transicion
-export async function cambiarEstado({id, estadoActual, destino, repartidorId}: CambioEstado): Promise<{resultado: ResultadoCambio; error: string | null}> {
-    const cambios = repartidorId ? {estado: destino, repartidor_id: repartidorId} : {estado: destino};
+export async function cambiarEstado({id, estadoActual, destino, repartidorId, quitarRepartidor}: CambioEstado): Promise<{resultado: ResultadoCambio; error: string | null}> {
+    const cambios = quitarRepartidor
+        ? {estado: destino, repartidor_id: null}
+        : repartidorId ? {estado: destino, repartidor_id: repartidorId} : {estado: destino};
     const {data, error} = await supabase
         .from('pedidos')
         .update(cambios)

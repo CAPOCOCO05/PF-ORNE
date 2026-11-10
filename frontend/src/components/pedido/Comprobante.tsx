@@ -53,6 +53,8 @@ function Detalle({pedido}: {pedido: PedidoCompleto}) {
                 </Text>
             </View>
 
+            {pedido.estado === 'no_entregado' ? <AvisoNoEntregado motivo={pedido.motivoNoEntrega} /> : null}
+
             <ResumenPedido pedido={pedido} />
 
             <View style={styles.total}>
@@ -64,6 +66,17 @@ function Detalle({pedido}: {pedido: PedidoCompleto}) {
 
             {pedido.folio ? <DatosPago folio={pedido.folio} /> : null}
         </>
+    );
+}
+
+// F07 M2: el repartidor no pudo entregar; la pastelería decide si se reprograma
+function AvisoNoEntregado({motivo}: {motivo: string | null}) {
+    return (
+        <View testID="aviso-no-entregado" style={styles.noEntregado}>
+            <Text style={styles.tituloNoEntregado}>No pudimos entregar tu pedido</Text>
+            {motivo ? <Text style={styles.textoNoEntregado}>Motivo: {motivo}</Text> : null}
+            <Text style={styles.textoNoEntregado}>La pastelería se pondrá en contacto contigo para reprogramar la entrega.</Text>
+        </View>
     );
 }
 
@@ -131,6 +144,24 @@ const styles = StyleSheet.create({
     estadoPedido: {
         fontSize: 13,
         color: COLORS.TEXTO_SUAVE,
+    },
+    noEntregado: {
+        padding: 16,
+        marginBottom: 16,
+        borderRadius: 12,
+        borderWidth: 1.5,
+        borderColor: COLORS.BOTON_PRINCIPAL,
+        backgroundColor: COLORS.FONDO,
+        gap: 4,
+    },
+    tituloNoEntregado: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: COLORS.TITULO,
+    },
+    textoNoEntregado: {
+        fontSize: 14,
+        color: COLORS.TEXTO,
     },
     total: {
         marginTop: 4,

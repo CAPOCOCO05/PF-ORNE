@@ -1,4 +1,5 @@
 -- F06: prueba de permisos del repartidor contra la base de datos (no solo la app).
+-- F07 M2: incluye el ciclo "no entregado" → reprogramar (migracion 011).
 -- Se corre completo en el SQL Editor de Supabase. Simula a cada usuario cambiando el rol a
 -- 'authenticated' y el usuario de auth.uid(); al final DESHACE todos los cambios y solo
 -- muestra la tabla de resultados (prueba / OK o FALLA).
@@ -111,7 +112,82 @@ begin
     v_pruebas := v_pruebas || 'Repartidor no puede reasignar la entrega'::text;
     v_estados := v_estados || case when v_fallo then 'OK' else 'FALLA' end;
 
+    -- ---------------------------------------------------------------- F07 M2: no entregado
+    v_fallo := false;
+    begin
+      update public.pedidos set estado = 'no_entregado' where id = v_pedido;
+      get diagnostics n = row_count;
+      v_fallo := n = 0;
+    exception when others then v_fallo := true;
+    end;
+    v_pruebas := v_pruebas || 'Repartidor no marca no entregado sin motivo (011)'::text;
+    v_estados := v_estados || case when v_fallo then 'OK' else 'FALLA' end;
+
+    v_fallo := false;
+    begin
+      update public.pedidos set estado = 'no_entregado', motivo_no_entrega = '   ' where id = v_pedido;
+      get diagnostics n = row_count;
+      v_fallo := n = 0;
+    exception when others then v_fallo := true;
+    end;
+    v_pruebas := v_pruebas || 'Repartidor no marca no entregado con un motivo en blanco'::text;
+    v_estados := v_estados || case when v_fallo then 'OK' else 'FALLA' end;
+
+    v_fallo := false;
+    begin
+      update public.pedidos set estado = 'entregado', motivo_no_entrega = 'Nadie recibió el pedido' where id = v_pedido;
+      get diagnostics n = row_count;
+      v_fallo := n = 0;
+    exception when others then v_fallo := true;
+    end;
+    v_pruebas := v_pruebas || 'Repartidor no escribe motivo al marcar entregado'::text;
+    v_estados := v_estados || case when v_fallo then 'OK' else 'FALLA' end;
+
+    update public.pedidos set estado = 'no_entregado', motivo_no_entrega = 'Nadie recibió el pedido' where id = v_pedido;
+    get diagnostics n = row_count;
+    v_pruebas := v_pruebas || 'Repartidor marca su entrega como no entregada con motivo'::text;
+    v_estados := v_estados || case when n = 1 then 'OK' else 'FALLA' end;
+
+    v_fallo := false;
+    begin
+      update public.pedidos set estado = 'entregado' where id = v_pedido;
+      get diagnostics n = row_count;
+      v_fallo := n = 0;
+    exception when others then v_fallo := true;
+    end;
+    v_pruebas := v_pruebas || 'Repartidor no cambia un pedido no entregado'::text;
+    v_estados := v_estados || case when v_fallo then 'OK' else 'FALLA' end;
+
+    -- ---------------------------------------------------------------- admin: reprograma y reenvia
+    perform set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
+
+    v_fallo := false;
+    begin
+      update public.pedidos set motivo_no_entrega = 'Otro' where id = v_pedido;
+    exception when others then v_fallo := true;
+    end;
+    v_pruebas := v_pruebas || 'Admin no cambia el motivo de no entrega'::text;
+    v_estados := v_estados || case when v_fallo then 'OK' else 'FALLA' end;
+
+    v_fallo := false;
+    begin
+      update public.pedidos set estado = 'listo' where id = v_pedido;
+    exception when others then v_fallo := true;
+    end;
+    v_pruebas := v_pruebas || 'Admin no reprograma sin quitar el repartidor'::text;
+    v_estados := v_estados || case when v_fallo then 'OK' else 'FALLA' end;
+
+    update public.pedidos set estado = 'listo', repartidor_id = null where id = v_pedido;
+    select count(*) into n from public.pedidos
+    where id = v_pedido and estado = 'listo' and repartidor_id is null and motivo_no_entrega = 'Nadie recibió el pedido';
+    v_pruebas := v_pruebas || 'Admin reprograma (no entregado → listo sin repartidor) y se conserva el motivo'::text;
+    v_estados := v_estados || case when n = 1 then 'OK' else 'FALLA' end;
+
+    update public.pedidos set estado = 'en_camino', repartidor_id = v_repartidor where id = v_pedido;
+
     -- ---------------------------------------------------------------- repartidor: entrega
+    perform set_config('request.jwt.claims', json_build_object('sub', v_repartidor, 'role', 'authenticated')::text, true);
+
     update public.pedidos set estado = 'entregado' where id = v_pedido;
     get diagnostics n = row_count;
     v_pruebas := v_pruebas || 'Repartidor marca su entrega como entregada'::text;

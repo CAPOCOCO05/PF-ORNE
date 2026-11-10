@@ -11,35 +11,60 @@ interface DialogoProps {
 
 // tarjeta de confirmacion/aviso con la paleta de ORNE (F07 M1); se usa a traves de useDialogo()
 export default function Dialogo({opciones, onResponder}: DialogoProps) {
-    useEffect(() => {
-        if (opciones) AccessibilityInfo.announceForAccessibility?.(opciones.titulo); // D5
-    }, [opciones]);
-
     if (!opciones) return null;
 
     const {titulo, mensaje, tipo = 'confirmacion', textoConfirmar = 'Aceptar', textoCancelar = 'Cancelar', destructiva = false} = opciones;
-    // los errores no se cierran tocando fuera, para que no se pasen por alto (D4)
-    const cerrarFuera = tipo === 'error' ? undefined : () => onResponder('cerrar');
 
     return (
-        <Modal testID="dialogo-modal" visible transparent animationType="fade" statusBarTranslucent onRequestClose={() => onResponder('cerrar')}>
-            <Pressable testID="dialogo-fondo" style={styles.fondo} onPress={cerrarFuera} accessible={false}>
+        <MarcoDialogo
+            titulo={titulo}
+            mensaje={mensaje}
+            alerta={tipo === 'error' || destructiva}
+            // los errores no se cierran tocando fuera, para que no se pasen por alto (D4)
+            cerrarAlTocarFuera={tipo !== 'error'}
+            onCerrar={() => onResponder('cerrar')}
+        >
+            <View style={styles.botones}>
+                <Boton
+                    testID="dialogo-confirmar"
+                    titulo={textoConfirmar}
+                    onPress={() => onResponder('confirmar')}
+                    style={destructiva ? styles.destructiva : undefined}
+                />
+                {textoCancelar ? (
+                    <Boton testID="dialogo-cancelar" titulo={textoCancelar} variante="secundario" onPress={() => onResponder('cancelar')} />
+                ) : null}
+            </View>
+        </MarcoDialogo>
+    );
+}
+
+interface MarcoDialogoProps {
+    titulo: string;
+    mensaje?: string;
+    alerta?: boolean;               // insignia "!" en lugar del pastel
+    cerrarAlTocarFuera?: boolean;
+    onCerrar: () => void;           // atras de Android (y tocar fuera, si se permite)
+    testID?: string;                // prefijo: <testID>, <testID>-modal, <testID>-fondo
+    children: React.ReactNode;      // contenido y botones
+}
+
+// modal, fondo, tarjeta, insignia y titulo comunes a todos los dialogos (F07 M1);
+// tambien lo usan dialogos con contenido propio, como el motivo de no entrega (M2)
+export function MarcoDialogo({titulo, mensaje, alerta = false, cerrarAlTocarFuera = true, onCerrar, testID = 'dialogo', children}: MarcoDialogoProps) {
+    useEffect(() => {
+        AccessibilityInfo.announceForAccessibility?.(titulo); // D5
+    }, [titulo]);
+
+    return (
+        <Modal testID={`${testID}-modal`} visible transparent animationType="fade" statusBarTranslucent onRequestClose={onCerrar}>
+            <Pressable testID={`${testID}-fondo`} style={styles.fondo} onPress={cerrarAlTocarFuera ? onCerrar : undefined} accessible={false}>
                 {/* la tarjeta absorbe el toque para que no llegue al fondo */}
-                <View testID="dialogo" style={styles.tarjeta} accessibilityViewIsModal onStartShouldSetResponder={() => true}>
-                    <Insignia alerta={tipo === 'error' || destructiva} />
+                <View testID={testID} style={styles.tarjeta} accessibilityViewIsModal onStartShouldSetResponder={() => true}>
+                    <Insignia alerta={alerta} />
                     <Text style={styles.titulo} accessibilityRole="header">{titulo}</Text>
                     {mensaje ? <Text style={styles.mensaje}>{mensaje}</Text> : null}
-                    <View style={styles.botones}>
-                        <Boton
-                            testID="dialogo-confirmar"
-                            titulo={textoConfirmar}
-                            onPress={() => onResponder('confirmar')}
-                            style={destructiva ? styles.destructiva : undefined}
-                        />
-                        {textoCancelar ? (
-                            <Boton testID="dialogo-cancelar" titulo={textoCancelar} variante="secundario" onPress={() => onResponder('cancelar')} />
-                        ) : null}
-                    </View>
+                    {children}
                 </View>
             </Pressable>
         </Modal>
@@ -123,3 +148,5 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.TITULO,
     },
 });
+
+export const estilosDialogo = styles;

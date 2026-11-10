@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { ActivityIndicator, Linking, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Boton from "../../../src/components/Boton";
+import DialogoNoEntregado from "../../../src/components/repartidor/DialogoNoEntregado";
 import MapaDestino from "../../../src/components/repartidor/MapaDestino";
 import { textoBloque } from "../../../src/constants/horarios";
 import { useDialogo } from "../../../src/context/DialogoContext";
 import { useEntrega } from "../../../src/hooks/useEntrega";
-import { MENSAJES_REPARTIDOR } from "../../../src/services/repartidorService";
+import { MENSAJES_REPARTIDOR, ResultadoEntrega } from "../../../src/services/repartidorService";
 import { COLORS } from "../../../src/theme/colors";
 import { EntregaRepartidor } from "../../../src/types/pedido.types";
 import { armarDireccion } from "../../../src/utils/entrega";
@@ -14,16 +16,18 @@ import { urlComoLlegar } from "../../../src/utils/mapas";
 
 const MENSAJE_SIN_MAPAS = 'No se pudo abrir la app de mapas';
 
-// F06: ubicacion de la entrega, "Cómo llegar" y "Marcar como entregado"
+// F06: ubicacion de la entrega, "Cómo llegar" y "Marcar como entregado"; F07 M2: "No se pudo entregar"
 export default function RepartidorDetalleEntrega() {
     const router = useRouter();
     const {id} = useLocalSearchParams<{id?: string}>();
-    const {entrega, cargando, error, actualizando, reintentar, entregar} = useEntrega(id);
+    const {entrega, cargando, error, actualizando, reintentar, entregar, noEntregar} = useEntrega(id);
     const {confirmar: confirmarDialogo, avisar} = useDialogo();
+    const [pidiendoMotivo, setPidiendoMotivo] = useState(false);
     const volver = () => router.navigate('/repartidor');
 
-    const ejecutar = async () => {
-        const cambio = await entregar();
+    // mismo manejo para entregado y no entregado: si falla se queda en el detalle para reintentar
+    const ejecutar = async (cambiar: () => Promise<{resultado: ResultadoEntrega; error: string | null}>) => {
+        const cambio = await cambiar();
         if (cambio.resultado === 'error') {
             await avisar({tipo: 'error', titulo: 'No se pudo actualizar', mensaje: cambio.error ?? MENSAJES_REPARTIDOR.ACTUALIZAR});
             return;
@@ -38,7 +42,12 @@ export default function RepartidorDetalleEntrega() {
             textoConfirmar: 'Marcar como entregado',
             textoCancelar: 'Volver',
         });
-        if (entregado) await ejecutar();
+        if (entregado) await ejecutar(entregar);
+    };
+
+    const registrarNoEntrega = async (motivo: string) => {
+        setPidiendoMotivo(false);
+        await ejecutar(() => noEntregar(motivo));
     };
 
     let contenido: React.ReactNode;
@@ -56,7 +65,16 @@ export default function RepartidorDetalleEntrega() {
             <>
                 <Detalle entrega={entrega} />
                 {entrega.estado === 'en_camino' ? (
-                    <Boton titulo="Marcar como entregado" onPress={confirmar} cargando={actualizando} style={styles.boton} />
+                    <>
+                        <Boton titulo="Marcar como entregado" onPress={confirmar} cargando={actualizando} style={styles.boton} />
+                        <Boton
+                            titulo="No se pudo entregar"
+                            variante="secundario"
+                            onPress={() => setPidiendoMotivo(true)}
+                            deshabilitado={actualizando}
+                            style={styles.boton}
+                        />
+                    </>
                 ) : (
                     <Text style={styles.suave}>{MENSAJES_REPARTIDOR.YA_NO_DISPONIBLE}</Text>
                 )}
@@ -69,6 +87,9 @@ export default function RepartidorDetalleEntrega() {
             <Text style={styles.titulo}>{entrega?.folio ? `Entrega ${entrega.folio}` : 'Entrega'}</Text>
             {contenido}
             <Boton titulo="Volver a mis entregas" variante="secundario" onPress={volver} style={styles.boton} />
+            {pidiendoMotivo && entrega ? (
+                <DialogoNoEntregado folio={entrega.folio} onConfirmar={registrarNoEntrega} onCancelar={() => setPidiendoMotivo(false)} />
+            ) : null}
         </ScrollView>
     );
 }

@@ -29,6 +29,7 @@ interface FilaPedido {
     total: number;
     paso_actual: PasoPedido;
     created_at: string;
+    motivo_no_entrega?: string | null;   // F07 M2
     pedido_detalle: FilaDetalle | FilaDetalle[] | null;
 }
 
@@ -238,7 +239,7 @@ export async function obtenerBorrador(id: string): Promise<{pedido: PedidoEnCurs
 }
 
 // columnas de un pedido completo; tambien las usa el panel admin (F04)
-export const COLUMNAS_PEDIDO_COMPLETO = `id, estado, folio, total, paso_actual, created_at, ${COLUMNAS_ENTREGA}, `
+export const COLUMNAS_PEDIDO_COMPLETO = `id, estado, folio, total, paso_actual, created_at, motivo_no_entrega, ${COLUMNAS_ENTREGA}, `
     + 'pedido_detalle(tamanio, niveles, tipo_pan, relleno, decoracion_texto, imagen_referencia_url)';
 
 export type FilaPedidoCompleto = FilaPedido & Partial<FilaEntrega>;
@@ -258,6 +259,7 @@ export function pedidoCompletoDeFila(fila: FilaPedidoCompleto): PedidoCompleto {
         mensaje: detalle?.decoracion_texto ?? '',
         imagenRuta: detalle?.imagen_referencia_url ?? null,
         entrega: entregaDeFila(fila),
+        motivoNoEntrega: fila.motivo_no_entrega ?? null,
     };
 }
 

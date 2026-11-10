@@ -215,6 +215,7 @@ describe("obtenerPedido", () => {
             tamanio: "15", niveles: 2, tipoPan: "fresa", relleno: "chocolate", mensaje: "Feliz día",
             imagenRuta: "u1/ped1/referencia.jpg",
             entrega: { ...ENTREGA_VACIA, tipoEntrega: "recoleccion", telefono: "6461234567", fechaEntrega: "2026-10-26", horaEntrega: "10:00" },
+            motivoNoEntrega: null,
         });
     });
 

@@ -1,5 +1,5 @@
 import { ACCIONES } from "../../constants/estadosPedido";
-import { accionesDisponibles, estadosDeFiltro, ordenAscendente, preguntaAccion } from "../estados";
+import { accionesDisponibles, estadosDeFiltro, MENSAJES_MOTIVO, motivoNoEntrega, ordenAscendente, preguntaAccion } from "../estados";
 
 describe("accionesDisponibles", () => {
     it.each([
@@ -10,6 +10,7 @@ describe("accionesDisponibles", () => {
         ["listo", "recoleccion", ["entregado"]],
         ["listo", null, []],
         ["en_camino", "domicilio", []],
+        ["no_entregado", "domicilio", ["listo", "cancelado"]],
         ["entregado", "recoleccion", []],
         ["cancelado", "domicilio", []],
         ["borrador", "domicilio", []],
@@ -22,6 +23,10 @@ describe("accionesDisponibles", () => {
         expect(todas.filter((a) => a.requiereRepartidor)).toEqual([ACCIONES.reparto]);
         expect(todas.filter((a) => a.destructiva)).toEqual([ACCIONES.cancelar]);
     });
+
+    it("solo reprogramar quita el repartidor", () => {
+        expect(Object.values(ACCIONES).filter((a) => a.quitaRepartidor)).toEqual([ACCIONES.reprogramar]);
+    });
 });
 
 describe("preguntaAccion", () => {
@@ -31,8 +36,8 @@ describe("preguntaAccion", () => {
 });
 
 describe("estadosDeFiltro y ordenAscendente", () => {
-    it("activos trae de pendiente a en camino, sin borradores ni terminados", () => {
-        expect(estadosDeFiltro("activos")).toEqual(["pendiente", "confirmado", "en_preparacion", "listo", "en_camino"]);
+    it("activos trae de pendiente a no entregado, sin borradores ni terminados", () => {
+        expect(estadosDeFiltro("activos")).toEqual(["pendiente", "confirmado", "en_preparacion", "listo", "en_camino", "no_entregado"]);
     });
 
     it("un estado trae solo ese estado", () => {
@@ -47,5 +52,27 @@ describe("estadosDeFiltro y ordenAscendente", () => {
         ["cancelado", false],
     ] as const)("%s ascendente: %s", (filtro, esperado) => {
         expect(ordenAscendente(filtro)).toBe(esperado);
+    });
+});
+
+describe("motivoNoEntrega", () => {
+    it("usa la opcion elegida tal cual", () => {
+        expect(motivoNoEntrega("Nadie recibió el pedido", "")).toEqual({ motivo: "Nadie recibió el pedido", error: null });
+    });
+
+    it("sin opcion pide elegir un motivo", () => {
+        expect(motivoNoEntrega(null, "")).toEqual({ motivo: null, error: MENSAJES_MOTIVO.SIN_MOTIVO });
+    });
+
+    it("'Otro' usa el texto escrito, sin espacios de sobra", () => {
+        expect(motivoNoEntrega("Otro", "  Calle cerrada por obras  ")).toEqual({ motivo: "Calle cerrada por obras", error: null });
+    });
+
+    it("'Otro' vacio o solo con espacios pide escribirlo", () => {
+        expect(motivoNoEntrega("Otro", "   ")).toEqual({ motivo: null, error: MENSAJES_MOTIVO.OTRO_VACIO });
+    });
+
+    it("'Otro' de mas de 200 caracteres no se acepta", () => {
+        expect(motivoNoEntrega("Otro", "a".repeat(201)).error).toBe(MENSAJES_MOTIVO.MUY_LARGO);
     });
 });

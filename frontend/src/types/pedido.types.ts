@@ -7,7 +7,7 @@ export type RellenoId = 'cajeta' | 'chocolate' | 'cremapastelera' | 'mantequilla
 
 export type EstadoPedido =
     | 'borrador' | 'pendiente' | 'confirmado' | 'en_preparacion'
-    | 'listo' | 'en_camino' | 'entregado' | 'cancelado';
+    | 'listo' | 'en_camino' | 'entregado' | 'no_entregado' | 'cancelado';
 
 // pasos del wizard que se guardan en pedidos.paso_actual (F01: 1-3, F02: 4, F03: 5)
 export type PasoPedido = 1 | 2 | 3 | 4 | 5;
@@ -97,6 +97,7 @@ export interface PedidoCompleto {
     mensaje: string;
     imagenRuta: string | null;
     entrega: DatosEntrega;
+    motivoNoEntrega: string | null; // F07 M2: ultimo intento de entrega fallido
 }
 
 // panel admin (F04)

@@ -1,4 +1,4 @@
-import { ACCIONES, AccionEstado, ESTADOS_ACTIVOS, FiltroAdmin } from "../constants/estadosPedido";
+import { ACCIONES, AccionEstado, ESTADOS_ACTIVOS, FiltroAdmin, MAX_MOTIVO_NO_ENTREGA, MOTIVO_OTRO } from "../constants/estadosPedido";
 import { EstadoPedido, TipoEntrega } from "../types/pedido.types";
 
 // acciones que el admin puede hacer segun el estado y el tipo de entrega (F04 D2);
@@ -11,6 +11,8 @@ export function accionesDisponibles(estado: EstadoPedido, tipoEntrega: TipoEntre
             return [ACCIONES.preparar, ACCIONES.cancelar];
         case 'en_preparacion':
             return [ACCIONES.listo];
+        case 'no_entregado':
+            return [ACCIONES.reprogramar, ACCIONES.cancelar];
         case 'listo':
             if (tipoEntrega === 'domicilio') return [ACCIONES.reparto];
             if (tipoEntrega === 'recoleccion') return [ACCIONES.entregar];
@@ -33,4 +35,21 @@ export function estadosDeFiltro(filtro: FiltroAdmin): EstadoPedido[] {
 // los terminados se ven del mas reciente al mas antiguo; el resto, por la entrega mas proxima (D3)
 export function ordenAscendente(filtro: FiltroAdmin): boolean {
     return filtro !== 'entregado' && filtro !== 'cancelado';
+}
+
+export const MENSAJES_MOTIVO = {
+    SIN_MOTIVO: 'Elige un motivo',
+    OTRO_VACIO: 'Escribe el motivo',
+    MUY_LARGO: `Máximo ${MAX_MOTIVO_NO_ENTREGA} caracteres`,
+} as const;
+
+// motivo que se guarda al marcar "No se pudo entregar" (F07 M2): la opcion elegida,
+// o el texto escrito si eligio "Otro"
+export function motivoNoEntrega(opcion: string | null, otro: string): {motivo: string | null; error: string | null} {
+    if (!opcion) return {motivo: null, error: MENSAJES_MOTIVO.SIN_MOTIVO};
+    if (opcion !== MOTIVO_OTRO) return {motivo: opcion, error: null};
+    const texto = otro.trim();
+    if (!texto) return {motivo: null, error: MENSAJES_MOTIVO.OTRO_VACIO};
+    if (texto.length > MAX_MOTIVO_NO_ENTREGA) return {motivo: null, error: MENSAJES_MOTIVO.MUY_LARGO};
+    return {motivo: texto, error: null};
 }

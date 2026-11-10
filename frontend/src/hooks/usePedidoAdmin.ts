@@ -37,7 +37,9 @@ export function usePedidoAdmin(id: string | undefined) {
     const aplicar = useCallback(async (accion: AccionEstado, repartidorId?: string): Promise<{resultado: ResultadoCambio; error: string | null}> => {
         if (!pedido) return {resultado: 'error', error: MENSAJE_PEDIDO_ADMIN_NO_ENCONTRADO};
         setActualizando(true);
-        const cambio = await cambiarEstado({id: pedido.id, estadoActual: pedido.estado, destino: accion.destino, repartidorId});
+        const cambio = await cambiarEstado({
+            id: pedido.id, estadoActual: pedido.estado, destino: accion.destino, repartidorId, quitarRepartidor: accion.quitaRepartidor,
+        });
         setActualizando(false);
         if (cambio.resultado !== 'error') await cargar();
         return cambio;

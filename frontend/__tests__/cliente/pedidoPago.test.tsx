@@ -136,6 +136,7 @@ describe("Paso 6: confirmación", () => {
         id: "ped1", estado: "pendiente", folio: "ORN-7K2QXM", total: 790, creadoEn: "2026-10-22T12:00:00Z",
         tamanio: "15", niveles: 2, tipoPan: "fresa", relleno: "chocolate", mensaje: "", imagenRuta: null,
         entrega: { ...ENTREGA_VACIA, tipoEntrega: "recoleccion", telefono: "6461234567", fechaEntrega: "2026-10-26", horaEntrega: "10:00" },
+        motivoNoEntrega: null,
     };
 
     it("muestra el folio, el total del servidor y los datos bancarios con el folio como referencia", async () => {
@@ -159,6 +160,25 @@ describe("Paso 6: confirmación", () => {
         expect(mockNavigate).toHaveBeenCalledWith("/pedidos");
         await fireEvent.press(screen.getByText("Volver al catálogo"));
         expect(mockNavigate).toHaveBeenCalledWith("/home");
+    });
+
+    it("pedido no entregado: avisa al cliente con el motivo (F07 M2)", async () => {
+        (obtenerPedido as jest.Mock).mockResolvedValue({
+            pedido: { ...CONFIRMADO, estado: "no_entregado", motivoNoEntrega: "Nadie recibió el pedido" }, error: null,
+        });
+        await render(<Confirmacion />);
+
+        expect(await screen.findByText("No pudimos entregar tu pedido")).toBeTruthy();
+        expect(screen.getByText("Motivo: Nadie recibió el pedido")).toBeTruthy();
+        expect(screen.getByText(/No entregado ·/)).toBeTruthy();
+    });
+
+    it("sin entrega fallida no muestra el aviso", async () => {
+        (obtenerPedido as jest.Mock).mockResolvedValue({ pedido: CONFIRMADO, error: null });
+        await render(<Confirmacion />);
+        await screen.findByText("ORN-7K2QXM");
+
+        expect(screen.queryByTestId("aviso-no-entregado")).toBeNull();
     });
 
     it("si no carga, permite reintentar", async () => {

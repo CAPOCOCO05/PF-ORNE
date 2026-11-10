@@ -1,4 +1,4 @@
-import { listarEntregas, marcarEntregado, MENSAJES_REPARTIDOR, obtenerEntrega } from "../repartidorService";
+import { listarEntregas, marcarEntregado, marcarNoEntregado, MENSAJES_REPARTIDOR, obtenerEntrega } from "../repartidorService";
 import { MENSAJES_DATOS } from "../erroresDatos";
 import { supabase } from "../supabase";
 import { consultaSimulada } from "../../test-utils/consultaSupabase";
@@ -117,5 +117,33 @@ describe("marcarEntregado", () => {
         mockConsulta({ data: null, error: { code: "P0001", message: "Cambio de estado no permitido" } });
 
         expect(await marcarEntregado("ped1")).toEqual({ resultado: "error", error: MENSAJES_REPARTIDOR.ACTUALIZAR });
+    });
+});
+
+describe("marcarNoEntregado (F07 M2)", () => {
+    it("guarda el motivo sin espacios de sobra, solo si sigue en camino", async () => {
+        const consulta = mockConsulta({ data: [{ id: "ped1" }], error: null });
+
+        expect(await marcarNoEntregado("ped1", "  Nadie recibió el pedido ")).toEqual({ resultado: "ok", error: null });
+        expect(consulta.update).toHaveBeenCalledWith({ estado: "no_entregado", motivo_no_entrega: "Nadie recibió el pedido" });
+        expect(consulta.eq).toHaveBeenCalledWith("id", "ped1");
+        expect(consulta.eq).toHaveBeenCalledWith("estado", "en_camino");
+    });
+
+    it("sin motivo no consulta la base", async () => {
+        expect(await marcarNoEntregado("ped1", "   ")).toEqual({ resultado: "error", error: MENSAJES_REPARTIDOR.SIN_MOTIVO });
+        expect(supabase.from).not.toHaveBeenCalled();
+    });
+
+    it("si ya no estaba en camino no actualiza ninguna fila", async () => {
+        mockConsulta({ data: [], error: null });
+
+        expect(await marcarNoEntregado("ped1", "Otro motivo")).toEqual({ resultado: "desactualizado", error: MENSAJES_REPARTIDOR.YA_NO_DISPONIBLE });
+    });
+
+    it("error de la base de datos", async () => {
+        mockConsulta({ data: null, error: { code: "P0001", message: "Cambio de estado no permitido" } });
+
+        expect(await marcarNoEntregado("ped1", "Otro motivo")).toEqual({ resultado: "error", error: MENSAJES_REPARTIDOR.ACTUALIZAR });
     });
 });

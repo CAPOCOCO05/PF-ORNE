@@ -10,6 +10,7 @@ import { armarDireccion } from "../utils/entrega";
 export const MENSAJES_REPARTIDOR = {
     ACTUALIZAR: 'No se pudo actualizar la entrega, inténtalo de nuevo',
     YA_NO_DISPONIBLE: 'Esta entrega ya no está en camino',
+    SIN_MOTIVO: 'Indica por qué no se pudo entregar',
 } as const;
 
 const CLIENTE = 'cliente:perfiles!pedidos_usuario_perfil_fkey(nombre)';
@@ -95,6 +96,25 @@ export async function marcarEntregado(id: string): Promise<{resultado: Resultado
         .select('id');
     if (error) {
         console.warn('marcarEntregado:', error.code, error.message);
+        return {resultado: 'error', error: MENSAJES_REPARTIDOR.ACTUALIZAR};
+    }
+    if (!data || data.length === 0) return {resultado: 'desactualizado', error: MENSAJES_REPARTIDOR.YA_NO_DISPONIBLE};
+    return {resultado: 'ok', error: null};
+}
+
+// "No se pudo entregar" con su motivo (F07 M2); igual que marcarEntregado, solo si sigue en camino.
+// RLS exige el motivo y el trigger valida la transicion (011)
+export async function marcarNoEntregado(id: string, motivo: string): Promise<{resultado: ResultadoEntrega; error: string | null}> {
+    const texto = motivo.trim();
+    if (!texto) return {resultado: 'error', error: MENSAJES_REPARTIDOR.SIN_MOTIVO};
+    const {data, error} = await supabase
+        .from('pedidos')
+        .update({estado: 'no_entregado', motivo_no_entrega: texto})
+        .eq('id', id)
+        .eq('estado', 'en_camino')
+        .select('id');
+    if (error) {
+        console.warn('marcarNoEntregado:', error.code, error.message);
         return {resultado: 'error', error: MENSAJES_REPARTIDOR.ACTUALIZAR};
     }
     if (!data || data.length === 0) return {resultado: 'desactualizado', error: MENSAJES_REPARTIDOR.YA_NO_DISPONIBLE};

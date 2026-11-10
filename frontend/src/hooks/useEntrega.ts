@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { marcarEntregado, obtenerEntrega, ResultadoEntrega } from "../services/repartidorService";
+import { marcarEntregado, marcarNoEntregado, obtenerEntrega, ResultadoEntrega } from "../services/repartidorService";
 import { EntregaRepartidor } from "../types/pedido.types";
 
 export const MENSAJE_ENTREGA_NO_ENCONTRADA = 'No encontramos esta entrega';
@@ -41,5 +41,14 @@ export function useEntrega(id: string | undefined) {
         return cambio;
     }, [entrega]);
 
-    return {entrega, cargando, error, actualizando, reintentar: cargar, entregar};
+    // "No se pudo entregar" (F07 M2); misma logica que entregar
+    const noEntregar = useCallback(async (motivo: string): Promise<{resultado: ResultadoEntrega; error: string | null}> => {
+        if (!entrega) return {resultado: 'error', error: MENSAJE_ENTREGA_NO_ENCONTRADA};
+        setActualizando(true);
+        const cambio = await marcarNoEntregado(entrega.id, motivo);
+        setActualizando(false);
+        return cambio;
+    }, [entrega]);
+
+    return {entrega, cargando, error, actualizando, reintentar: cargar, entregar, noEntregar};
 }

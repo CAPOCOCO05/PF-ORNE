@@ -9,6 +9,7 @@ export const ETIQUETA_ESTADO: Record<EstadoPedido, string> = {
     listo: 'Listo',
     en_camino: 'En camino',
     entregado: 'Entregado',
+    no_entregado: 'No entregado',
     cancelado: 'Cancelado',
 };
 
@@ -21,6 +22,7 @@ export const COLOR_ESTADO: Record<EstadoPedido, {fondo: string; texto: string}> 
     listo: {fondo: '#d8f3ea', texto: '#13684f'},
     en_camino: {fondo: '#ffe3cf', texto: '#9a4a10'},
     entregado: {fondo: '#e0f2dc', texto: '#2e6b2a'},
+    no_entregado: {fondo: '#fde2e1', texto: '#a50e16'},
     cancelado: {fondo: '#ebebeb', texto: '#5f5f5f'},
 };
 
@@ -30,15 +32,17 @@ export interface AccionEstado {
     titulo: string;                 // texto del boton
     pregunta: string;               // confirmacion; {folio} se reemplaza por el folio
     requiereRepartidor?: boolean;   // "Enviar a reparto" (D7)
+    quitaRepartidor?: boolean;      // "Reprogramar entrega" (F07 M2)
     destructiva?: boolean;          // cancelar
 }
 
-export const ACCIONES: Record<'confirmar' | 'preparar' | 'listo' | 'reparto' | 'entregar' | 'cancelar', AccionEstado> = {
+export const ACCIONES: Record<'confirmar' | 'preparar' | 'listo' | 'reparto' | 'entregar' | 'reprogramar' | 'cancelar', AccionEstado> = {
     confirmar: {destino: 'confirmado', titulo: 'Confirmar pedido', pregunta: '¿Confirmar el pedido {folio}?'},
     preparar: {destino: 'en_preparacion', titulo: 'Iniciar preparación', pregunta: '¿Iniciar la preparación del pedido {folio}?'},
     listo: {destino: 'listo', titulo: 'Marcar como listo', pregunta: '¿Marcar el pedido {folio} como listo?'},
     reparto: {destino: 'en_camino', titulo: 'Enviar a reparto', pregunta: '¿Enviar el pedido {folio} a reparto?', requiereRepartidor: true},
     entregar: {destino: 'entregado', titulo: 'Marcar como entregado', pregunta: '¿Marcar el pedido {folio} como entregado?'},
+    reprogramar: {destino: 'listo', titulo: 'Reprogramar entrega', pregunta: '¿Reprogramar la entrega del pedido {folio}? Regresará a "Listo" para enviarlo de nuevo a reparto.', quitaRepartidor: true},
     cancelar: {destino: 'cancelado', titulo: 'Cancelar pedido', pregunta: '¿Cancelar el pedido {folio}? No se puede deshacer.', destructiva: true},
 };
 
@@ -52,8 +56,19 @@ export const FILTROS_ADMIN: {valor: FiltroAdmin; texto: string}[] = [
     {valor: 'en_preparacion', texto: 'En preparación'},
     {valor: 'listo', texto: 'Listos'},
     {valor: 'en_camino', texto: 'En camino'},
+    {valor: 'no_entregado', texto: 'No entregados'},
     {valor: 'entregado', texto: 'Entregados'},
     {valor: 'cancelado', texto: 'Cancelados'},
 ];
 
-export const ESTADOS_ACTIVOS: EstadoPedido[] = ['pendiente', 'confirmado', 'en_preparacion', 'listo', 'en_camino'];
+// no_entregado es activo: espera que el admin reprograme o cancele (F07 M2)
+export const ESTADOS_ACTIVOS: EstadoPedido[] = ['pendiente', 'confirmado', 'en_preparacion', 'listo', 'en_camino', 'no_entregado'];
+
+// motivos que elige el repartidor al no poder entregar (F07 M2); "Otro" pide escribirlo
+export const MOTIVOS_NO_ENTREGA = [
+    'Nadie recibió el pedido',
+    'Dirección incorrecta o no encontrada',
+    'El cliente rechazó el pedido',
+] as const;
+export const MOTIVO_OTRO = 'Otro';
+export const MAX_MOTIVO_NO_ENTREGA = 200;

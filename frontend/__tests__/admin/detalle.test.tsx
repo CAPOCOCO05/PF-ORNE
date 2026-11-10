@@ -30,12 +30,12 @@ const PEDIDO: PedidoAdmin = {
         referencia: "Casa azul", telefono: "6461234567", ubicacion: { latitud: 31.78, longitud: -116.59 },
         fechaEntrega: "2026-10-26", horaEntrega: "12:00",
     },
+    motivoNoEntrega: null,
     cliente: "Ana López",
     repartidor: null,
     pago: { metodo: "tarjeta", monto: 790, estado: "simulado" },
 };
 
-// presiona el boton de la accion y luego el boton de confirmar del dialogo
 // presiona la accion en pantalla y luego la confirma en el dialogo (F07 M1)
 async function confirmarAccion(titulo: string) {
     await fireEvent.press(screen.getByText(titulo));
@@ -84,7 +84,7 @@ describe("Detalle del pedido (admin)", () => {
         (obtenerPedidoAdmin as jest.Mock).mockResolvedValue({ pedido: { ...PEDIDO, estado: "confirmado" }, error: null });
         await fireEvent.press(screen.getByTestId("dialogo-confirmar"));
 
-        await waitFor(() => expect(cambiarEstado).toHaveBeenCalledWith({ id: "ped1", estadoActual: "pendiente", destino: "confirmado", repartidorId: undefined }));
+        await waitFor(() => expect(cambiarEstado).toHaveBeenCalledWith({ id: "ped1", estadoActual: "pendiente", destino: "confirmado", repartidorId: undefined, quitarRepartidor: undefined }));
         expect(await screen.findByText("Iniciar preparación")).toBeTruthy();
     });
 
@@ -129,7 +129,7 @@ describe("Detalle del pedido (admin)", () => {
         expect(screen.getByText("Repartidor: Luis")).toBeTruthy();
         await fireEvent.press(screen.getByTestId("dialogo-confirmar"));
 
-        await waitFor(() => expect(cambiarEstado).toHaveBeenCalledWith({ id: "ped1", estadoActual: "listo", destino: "en_camino", repartidorId: "rep1" }));
+        await waitFor(() => expect(cambiarEstado).toHaveBeenCalledWith({ id: "ped1", estadoActual: "listo", destino: "en_camino", repartidorId: "rep1", quitarRepartidor: undefined }));
     });
 
     it("sin repartidores registrados lo avisa", async () => {
@@ -148,6 +148,40 @@ describe("Detalle del pedido (admin)", () => {
         expect(await screen.findByText("Marcar como entregado")).toBeTruthy();
         expect(screen.queryByText("Enviar a reparto")).toBeNull();
         expect(listarRepartidores).not.toHaveBeenCalled();
+    });
+
+    it("no entregado: muestra el motivo y ofrece reprogramar o cancelar (F07 M2)", async () => {
+        const noEntregado = { ...PEDIDO, estado: "no_entregado", motivoNoEntrega: "Nadie recibió el pedido", repartidor: "Luis" };
+        (obtenerPedidoAdmin as jest.Mock).mockResolvedValue({ pedido: noEntregado, error: null });
+        await render(<AdminDetallePedido />);
+
+        expect(await screen.findByText("No se pudo entregar")).toBeTruthy();
+        expect(screen.getByText(/Motivo: Nadie recibió el pedido/)).toBeTruthy();
+        expect(screen.getByText("Reprogramar entrega")).toBeTruthy();
+        expect(screen.getByText("Cancelar pedido")).toBeTruthy();
+        expect(screen.queryByText("Enviar a reparto")).toBeNull();
+    });
+
+    it("reprogramar regresa el pedido a listo sin repartidor", async () => {
+        const noEntregado = { ...PEDIDO, estado: "no_entregado", motivoNoEntrega: "Nadie recibió el pedido", repartidor: "Luis" };
+        (obtenerPedidoAdmin as jest.Mock).mockResolvedValue({ pedido: noEntregado, error: null });
+        (cambiarEstado as jest.Mock).mockResolvedValue({ resultado: "ok", error: null });
+        await render(<AdminDetallePedido />);
+        await screen.findByText("Reprogramar entrega");
+
+        await confirmarAccion("Reprogramar entrega");
+
+        await waitFor(() => expect(cambiarEstado).toHaveBeenCalledWith({
+            id: "ped1", estadoActual: "no_entregado", destino: "listo", repartidorId: undefined, quitarRepartidor: true,
+        }));
+    });
+
+    it("pedido reprogramado: conserva el motivo como intento anterior", async () => {
+        (obtenerPedidoAdmin as jest.Mock).mockResolvedValue({ pedido: { ...PEDIDO, estado: "listo", motivoNoEntrega: "Dirección incorrecta o no encontrada" }, error: null });
+        await render(<AdminDetallePedido />);
+
+        expect(await screen.findByText("Intento de entrega anterior")).toBeTruthy();
+        expect(screen.getByText(/Motivo: Dirección incorrecta o no encontrada/)).toBeTruthy();
     });
 
     it("error al cargar: mensaje y reintentar", async () => {

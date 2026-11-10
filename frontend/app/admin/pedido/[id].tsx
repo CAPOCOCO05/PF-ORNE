@@ -73,6 +73,13 @@ function Detalle({pedido}: {pedido: PedidoAdmin}) {
                 </Seccion>
             ) : null}
 
+            {/* F07 M2: se conserva el motivo del ultimo intento aunque ya se haya reprogramado */}
+            {pedido.motivoNoEntrega ? (
+                <Seccion titulo={pedido.estado === 'no_entregado' ? 'No se pudo entregar' : 'Intento de entrega anterior'}>
+                    <Dato etiqueta="Motivo" valor={pedido.motivoNoEntrega} />
+                </Seccion>
+            ) : null}
+
             <Seccion titulo="Pago">
                 <Dato etiqueta="Método" valor={pedido.pago ? METODO_PAGO : '—'} />
                 <Dato etiqueta="Monto" valor={formatearPrecio(pedido.pago?.monto ?? pedido.total)} />

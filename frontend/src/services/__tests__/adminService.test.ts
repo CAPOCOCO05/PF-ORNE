@@ -31,7 +31,7 @@ describe("listarPedidosAdmin", () => {
         const resultado = await listarPedidosAdmin("activos", 0);
 
         expect(supabase.from).toHaveBeenCalledWith("pedidos");
-        expect(consulta.in).toHaveBeenCalledWith("estado", ["pendiente", "confirmado", "en_preparacion", "listo", "en_camino"]);
+        expect(consulta.in).toHaveBeenCalledWith("estado", ["pendiente", "confirmado", "en_preparacion", "listo", "en_camino", "no_entregado"]);
         expect(consulta.order).toHaveBeenCalledWith("fecha_entrega", { ascending: true });
         expect(consulta.order).toHaveBeenCalledWith("hora_entrega", { ascending: true });
         expect(consulta.range).toHaveBeenCalledWith(0, 10);
@@ -96,6 +96,7 @@ describe("obtenerPedidoAdmin", () => {
             id: "ped1", estado: "en_camino", folio: "ORN-7K2QXM", total: 790, creadoEn: "2026-10-17",
             tamanio: "15", niveles: 2, tipoPan: "fresa", relleno: "chocolate", mensaje: "", imagenRuta: null,
             entrega: { ...ENTREGA_VACIA, tipoEntrega: "recoleccion", telefono: "6461234567", fechaEntrega: "2026-10-26", horaEntrega: "10:00" },
+            motivoNoEntrega: null,
             cliente: "Ana",
             repartidor: "Luis",
             pago: { metodo: "tarjeta", monto: 790, estado: "simulado" },
@@ -141,6 +142,15 @@ describe("cambiarEstado", () => {
         await cambiarEstado({ id: "ped1", estadoActual: "listo", destino: "en_camino", repartidorId: "rep1" });
 
         expect(consulta.update).toHaveBeenCalledWith({ estado: "en_camino", repartidor_id: "rep1" });
+    });
+
+    it("reprogramar quita el repartidor en el mismo update (F07 M2)", async () => {
+        const consulta = mockConsulta({ data: [{ id: "ped1" }], error: null });
+
+        await cambiarEstado({ id: "ped1", estadoActual: "no_entregado", destino: "listo", quitarRepartidor: true });
+
+        expect(consulta.update).toHaveBeenCalledWith({ estado: "listo", repartidor_id: null });
+        expect(consulta.eq).toHaveBeenCalledWith("estado", "no_entregado");
     });
 
     it("si otro admin ya lo movio, no se actualiza ninguna fila", async () => {

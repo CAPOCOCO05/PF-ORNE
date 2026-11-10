@@ -8,7 +8,7 @@
 | # | Mejora | Rol | Estado |
 |---|---|---|---|
 | M1 | Diálogos personalizados (reemplazan los `Alert` del dispositivo) | Todos | 🟡 Implementada (falta probar en un dispositivo) |
-| M2 | Pedido no entregado por el repartidor | Repartidor / Admin / Cliente | 🔲 Pendiente |
+| M2 | Pedido no entregado por el repartidor | Repartidor / Admin / Cliente | 🟡 Implementada (falta aplicar `011` en Supabase y probar) |
 | M3 | Filtro por estado dentro de "Activos" en el panel admin | Admin | 🔲 Pendiente |
 | M4 | Publicar y editar pasteles del catálogo desde la app | Admin | 🔲 Pendiente |
 | M5 | Filtros del catálogo del cliente (precio, sabores, relleno…) | Cliente | 🔲 Pendiente |
@@ -150,20 +150,20 @@ Repartidor (lo marca), admin (decide qué sigue), cliente (lo consulta).
   sigue en la lista.
 
 ### Criterios de aceptación
-- [ ] El repartidor puede marcar un pedido `en_camino` como no entregado indicando el motivo.
+- [x] El repartidor puede marcar un pedido `en_camino` como no entregado indicando el motivo.
 - [ ] No puede hacerlo sin motivo ni sobre pedidos que no son suyos o no están en camino (probado en SQL).
-- [ ] El admin ve el motivo y puede reprogramar (vuelve a `listo` sin repartidor) o cancelar.
-- [ ] El cliente ve el estado "No entregado" y el motivo en su pedido.
+- [x] El admin ve el motivo y puede reprogramar (vuelve a `listo` sin repartidor) o cancelar.
+- [x] El cliente ve el estado "No entregado" y el motivo en su pedido.
 
 ### Tareas
-- [ ] Migración `011_no_entregado.sql` (D3).
-- [ ] Actualizar `02-data-model.md` (entidad `Pedido`, diagrama y tabla de estados).
-- [ ] Tipos, `estadosPedido.ts` y `utils/estados.ts` (D4), con pruebas.
-- [ ] `repartidorService.marcarNoEntregado(id, motivo)` con pruebas.
-- [ ] Botón y diálogo de motivo en `repartidor/entrega/[id].tsx`.
-- [ ] Motivo en el detalle del admin y del cliente.
-- [ ] Ampliar `backend/supabase/tests/permisos_repartidor.sql` y `permisos_admin.sql`.
-- [ ] Probar criterios de aceptación.
+- [x] Migración `011_no_entregado.sql` (D3).
+- [x] Actualizar `02-data-model.md` (entidad `Pedido`, diagrama y tabla de estados).
+- [x] Tipos, `estadosPedido.ts` y `utils/estados.ts` (D4), con pruebas.
+- [x] `repartidorService.marcarNoEntregado(id, motivo)` con pruebas.
+- [x] Botón y diálogo de motivo en `repartidor/entrega/[id].tsx` (`DialogoNoEntregado`, sobre el `MarcoDialogo` de M1).
+- [x] Motivo en el detalle del admin y del cliente.
+- [x] Ampliar `backend/supabase/tests/permisos_repartidor.sql` y `permisos_admin.sql` (falta correrlos en Supabase).
+- [ ] Probar criterios de aceptación (pruebas de la app ✅; falta aplicar `011`, correr los scripts de permisos y probar en un dispositivo).
 
 ---
 
@@ -205,7 +205,7 @@ pedidos hay en cada uno, sin salir de la vista de activos.
 - [ ] "Entregados" y "Cancelados" se siguen viendo como hoy.
 
 ### Tareas
-- [ ] `contar_pedidos_por_estado()` en `011` y `adminService.contarPorEstado()` con pruebas.
+- [ ] `contar_pedidos_por_estado()` en `011` (✅ ya incluida en la migración) y `adminService.contarPorEstado()` con pruebas.
 - [ ] `FiltroAdmin` → `{pestania, estados[]}`; actualizar `estadosDeFiltro`/`ordenAscendente` y pruebas.
 - [ ] Componente `FiltrosEstado` con pestañas + chips múltiples con contador.
 - [ ] Ajustar `usePedidosAdmin` y `admin/index.tsx`; actualizar `__tests__/admin/pedidos.test.tsx`.
