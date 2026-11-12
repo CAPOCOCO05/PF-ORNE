@@ -3,8 +3,10 @@ import { useFocusEffect } from "expo-router";
 import { useAuth } from "./AuthContext";
 import { obtenerPastel } from "../services/catalogoService";
 import { guardarBorrador, obtenerBorrador } from "../services/pedidosService";
+import { obtenerDatosCliente } from "../services/perfilService";
 import { DatosEntrega, PasoPedido, PedidoEnCurso } from "../types/pedido.types";
 import { ENTREGA_VACIA } from "../utils/entrega";
+import { completarEntrega, entregaDesdeDatos } from "../utils/datosCliente";
 
 // estado del pedido en construccion, compartido por los pasos del wizard (01-navigation.md)
 
@@ -66,11 +68,28 @@ export function PedidoProvider({children}: {children: React.ReactNode}) {
         setPedidoEstado(pedidoRef.current);
     }, []);
 
+    // F07 M7 D5: pedido nuevo (no borrador) con telefono y direccion del perfil. No bloquea
+    // el wizard: llega en segundo plano y si falla el cliente los escribe como antes
+    const precargarContacto = useCallback(async (miGeneracion: number) => {
+        if (!user) return;
+        const {datos, error} = await obtenerDatosCliente(user.id);
+        if (miGeneracion !== generacion.current) return;
+        if (error || !datos) {
+            if (error) console.warn('precargarContacto:', error);
+            return;
+        }
+        const precarga = entregaDesdeDatos(datos);
+        setPedido((actual) => ({...actual, entrega: completarEntrega(actual.entrega, precarga)}));
+    }, [user, setPedido]);
+
     const cargar = useCallback(async (origen: OrigenPedido) => {
         const miGeneracion = ++generacion.current;
         setPedido(() => PEDIDO_VACIO);
         setErrorCarga(null);
-        if (!origen.pastelId && !origen.borradorId) return PEDIDO_VACIO;
+        if (!origen.pastelId && !origen.borradorId) {
+            void precargarContacto(miGeneracion);
+            return PEDIDO_VACIO;
+        }
 
         setCargando(true);
         const {pedido: inicial, error} = await cargarInicial(origen);
@@ -81,8 +100,10 @@ export function PedidoProvider({children}: {children: React.ReactNode}) {
             return null;
         }
         setPedido(() => inicial);
+        // un borrador ya tiene sus propios datos de entrega
+        if (!origen.borradorId) void precargarContacto(miGeneracion);
         return inicial;
-    }, [setPedido]);
+    }, [setPedido, precargarContacto]);
 
     // se llama al enfocar el paso 1; si el wizard ya esta iniciado (volviendo del paso 2) no hace nada
     const iniciar = useCallback(async (origen: OrigenPedido) => {

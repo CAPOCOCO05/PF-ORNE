@@ -49,6 +49,19 @@ PedidoDetalle {
   precio_estimado: number
 }
 
+DatosCliente {               // NUEVO (F07 M7) — 1 a 1 con el usuario; solo lo ve el dueño
+  usuario_id: uuid           // PK, FK a auth.users
+  telefono: string | null    // 10 dígitos
+  calle: string | null       // la dirección se guarda completa (con pin) o toda en null
+  numero_exterior: string | null
+  numero_interior: string | null
+  colonia: string | null
+  direccion_referencia: string | null
+  direccion_lat: number | null
+  direccion_lng: number | null
+  updated_at: timestamp
+}
+
 Pago {
   id: uuid
   pedido_id: uuid
@@ -97,6 +110,7 @@ Reglas:
 | `pedidos` | Ver/crear los suyos; editar solo borradores; pasar a `pendiente` | Ver todos; cambiar `estado` y `repartidor_id` | Ver los asignados a él; cambiar a `entregado` o `no_entregado` (con motivo) |
 | `pedido_detalle` | Ver/crear/editar el de sus borradores | Ver todos | Ver el de sus entregas |
 | `pagos` | Ver/crear los suyos | Ver todos | — |
+| `datos_cliente` | Ver, crear y editar la suya (sin borrar) (F07 M7) | — | — |
 | `catalogo_pasteles` | Ver activos | Ver todos; crear y editar, sin borrar (F07 M4) | — |
 | Storage `referencias-pasteles` | Subir/ver en su carpeta | Ver todo | — |
 | Storage `catalogo` (público) | Ver (URL pública) | Subir, reemplazar y borrar (F07 M4) | Ver (URL pública) |
@@ -119,6 +133,7 @@ En `backend/supabase/migrations/`, en este orden:
 | `010_repartidor_ve_clientes.sql` | El repartidor ve el nombre del cliente de sus entregas en camino | F06 |
 | `011_no_entregado.sql` | Estado `no_entregado`, `motivo_no_entrega`, política y trigger del repartidor, `contar_pedidos_por_estado()` | F07 M2, M3 |
 | `012_catalogo_admin.sql` | Admin crea y edita pasteles (sin `delete`), nombre único, trigger que calcula `precio_base` con `calcular_precio`, políticas de Storage del bucket `catalogo` | F07 M4 |
+| `013_datos_cliente.sql` | Tabla `datos_cliente` con RLS solo del dueño, llenado inicial desde el último pedido y trigger que la completa al confirmar un pedido | F07 M7 |
 
 ## Catálogo de sabores e imágenes
 

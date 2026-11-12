@@ -23,6 +23,8 @@ jest.mock("../../src/context/AuthContext", () => ({ useAuth: () => ({ user: { id
 jest.mock("../../src/services/catalogoService", () => ({ obtenerPastel: jest.fn() }));
 // los mensajes de pedidosService se usan reales; el cliente de Supabase no se carga
 jest.mock("../../src/services/supabase", () => ({ supabase: {} }));
+// F07 M7: sin datos guardados, el pedido nuevo empieza sin precarga
+jest.mock("../../src/services/perfilService", () => ({ obtenerDatosCliente: jest.fn().mockResolvedValue({ datos: null, error: null }) }));
 jest.mock("../../src/services/pedidosService", () => ({
     ...jest.requireActual("../../src/services/pedidosService"),
     guardarBorrador: jest.fn(),

@@ -180,3 +180,18 @@ export interface FiltrosCatalogo {
     niveles: Niveles[];
     orden: OrdenCatalogo;
 }
+
+// datos de contacto guardados del cliente (F07 M7, tabla datos_cliente)
+export interface DireccionGuardada {
+    calle: string;
+    numeroExterior: string;
+    numeroInterior: string;
+    colonia: string;
+    referencia: string;
+    ubicacion: Coordenadas;
+}
+
+export interface DatosCliente {
+    telefono: string;                       // '' si no hay
+    direccion: DireccionGuardada | null;
+}

@@ -35,6 +35,8 @@ jest.mock("../../src/context/AuthContext", () => ({
 }));
 jest.mock("../../src/services/catalogoService", () => ({ obtenerPastel: jest.fn() }));
 jest.mock("../../src/services/pedidosService", () => ({ guardarBorrador: jest.fn(), obtenerBorrador: jest.fn() }));
+// F07 M7: sin datos guardados, el pedido nuevo empieza sin precarga
+jest.mock("../../src/services/perfilService", () => ({ obtenerDatosCliente: jest.fn().mockResolvedValue({ datos: null, error: null }) }));
 jest.mock("../../src/services/ubicacionService", () => ({
     ...jest.requireActual("../../src/services/ubicacionService"),
     ubicacionInicial: jest.fn(),

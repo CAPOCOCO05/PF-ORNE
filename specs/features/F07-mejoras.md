@@ -12,8 +12,8 @@
 | M3 | Filtro por estado dentro de "Activos" en el panel admin | Admin | ✅ Completa |
 | M4 | Publicar y editar pasteles del catálogo desde la app | Admin | ✅ Completa |
 | M5 | Filtros del catálogo del cliente (precio, sabores, relleno…) | Cliente | 🟡 Implementada (falta probar en un dispositivo) |
-| M6 | Nombre completo del cliente (para el repartidor) | Cliente / Repartidor | 🟡 Implementada (falta editar el nombre en el perfil, va con M7; probar en un dispositivo) |
-| M7 | Perfil del cliente con sus datos de contacto, editable | Cliente | 🔲 Pendiente |
+| M6 | Nombre completo del cliente (para el repartidor) | Cliente / Repartidor | 🟡 Implementada (falta probar en un dispositivo) |
+| M7 | Perfil del cliente con sus datos de contacto, editable | Cliente | 🟡 Implementada (falta aplicar `013`, correr `permisos_datos_cliente.sql` y probar en un dispositivo) |
 
 **Orden sugerido:** M1 → M2 → M3 → M4 → M5. M1 va primero porque M2, M3 y M4 usan
 sus diálogos; M4 va antes que M5 porque fija cómo se calcula `precio_base`, que es
@@ -26,7 +26,7 @@ porque reutiliza su validación del nombre.
 |---|---|---|
 | `011_no_entregado.sql` | Estado `no_entregado`, columna `motivo_no_entrega`, política del repartidor, trigger de transiciones y función `contar_pedidos_por_estado()` | M2, M3 |
 | `012_catalogo_admin.sql` | Políticas `insert`/`update` de `catalogo_pasteles` y de Storage `catalogo` para el admin; trigger que calcula `precio_base` | M4 |
-| `013_datos_cliente.sql` | Tabla `datos_cliente` (teléfono y dirección guardada), RLS solo del dueño, llenado inicial desde el último pedido y actualización al confirmar | M7 |
+| `013_datos_cliente.sql` | Tabla `datos_cliente` (teléfono y dirección guardada), RLS solo del dueño, llenado inicial desde el último pedido y trigger que la completa al confirmar | M7 |
 
 ---
 
@@ -420,7 +420,7 @@ Cliente (lo captura), repartidor y admin (lo consultan).
 - [x] `authService.actualizarNombre()` y refrescar `perfil` en `AuthContext`, con pruebas.
 - [x] Campo condicional en `pedido/nuevo/entrega.tsx` y su prueba.
 - [x] Actualizar F00 (datos de entrada y validaciones del registro).
-- [ ] Editar el nombre desde el perfil (se hace en la pantalla de edición de M7).
+- [x] Editar el nombre desde el perfil (en la pantalla de edición de M7).
 - [ ] Probar criterios de aceptación.
 
 ---
@@ -476,9 +476,11 @@ Cliente.
 - **D3. Llenado inicial (en `013`).** Para cada cliente con pedidos no borrador se
   copian el teléfono y la dirección del **pedido más reciente a domicilio**; si
   solo tiene de recolección, solo el teléfono.
-- **D4. Actualización al confirmar.** `confirmar_pedido` (de `008`) se redefine en
-  `013` para guardar en `datos_cliente` el teléfono del pedido y, si es a
-  domicilio, su dirección, **solo en los campos que estén vacíos**. Así el primer
+- **D4. Actualización al confirmar.** Un trigger de `013` en `pedidos` (cuando un
+  borrador pasa a `pendiente`, que solo hace `confirmar_pedido` de `008`) guarda en
+  `datos_cliente` el teléfono del pedido y, si es a domicilio, su dirección,
+  **solo en los campos que estén vacíos** (la dirección cuenta como un bloque).
+  Se usa trigger en vez de redefinir `confirmar_pedido` para no duplicar su lógica. Así el primer
   pedido llena el perfil, pero un cambio puntual (enviar a otra dirección una vez)
   no sobrescribe lo que el cliente editó a mano.
 - **D5. Precarga en el wizard.** Al crear un pedido nuevo (no al continuar un
@@ -487,6 +489,13 @@ Cliente.
   precarga igual y F02 muestra su error habitual.
 - **D6. Correo no editable.** Cambiar el correo implica reconfirmarlo con Supabase
   Auth; queda fuera de esta mejora.
+- **D7. Teléfono opcional en el perfil.** Puede quedar vacío; si se escribe debe
+  tener 10 dígitos. La dirección, si se agrega, debe estar completa, con pin y
+  dentro de la zona de 15 km (mismas reglas de F02). En la base, un `check` exige
+  la dirección completa o toda vacía.
+- **D8. Precarga en segundo plano.** La consulta de `datos_cliente` no bloquea el
+  wizard; si falla, el cliente escribe sus datos como antes. Solo llena campos
+  vacíos, así no pisa lo que el cliente ya escribió.
 
 ### Casos de error
 - Error al cargar el perfil → mensaje + "Reintentar" (F05).
@@ -505,11 +514,12 @@ Cliente.
       `datos_cliente` (probado en SQL).
 
 ### Tareas
-- [ ] Migración `013_datos_cliente.sql` (D1, D3, D4).
-- [ ] Actualizar `02-data-model.md` (entidad `DatosCliente`, permisos) y `01-navigation.md` (`perfil/editar`).
-- [ ] `src/services/perfilService.ts`: `obtenerDatosCliente`, `guardarDatosCliente` (+ nombre), con pruebas.
-- [ ] Hook `useDatosCliente`.
-- [ ] `(cliente)/perfil.tsx` con secciones y `(cliente)/perfil/editar.tsx`.
-- [ ] Precarga en `PedidoContext` (D5), con pruebas.
-- [ ] Script `backend/supabase/tests/permisos_datos_cliente.sql`.
-- [ ] Probar criterios de aceptación.
+- [x] Migración `013_datos_cliente.sql` (D1, D3, D4).
+- [x] Actualizar `02-data-model.md` (entidad `DatosCliente`, permisos) y `01-navigation.md` (`perfil/editar`).
+- [x] `src/services/perfilService.ts`: `obtenerDatosCliente`, `guardarDatosCliente`, con pruebas (el nombre lo guarda `actualizarNombre` de M6).
+- [x] Reglas del formulario en `utils/datosCliente.ts`, con pruebas.
+- [x] Hook `useDatosCliente`.
+- [x] `(cliente)/perfil.tsx` con secciones y `(cliente)/perfil/editar.tsx`, con pruebas (`__tests__/cliente/perfil.test.tsx`).
+- [x] Precarga en `PedidoContext` (D5), con pruebas.
+- [x] Script `backend/supabase/tests/permisos_datos_cliente.sql` (falta correrlo en Supabase).
+- [ ] Probar criterios de aceptación (pruebas de la app ✅; falta aplicar `013`, correr el script de permisos y probar en un dispositivo).

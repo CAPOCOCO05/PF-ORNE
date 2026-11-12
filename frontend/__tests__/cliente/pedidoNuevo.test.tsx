@@ -26,6 +26,8 @@ jest.mock("expo-image-picker", () => ({
 }));
 jest.mock("../../src/context/AuthContext", () => ({ useAuth: () => ({ user: { id: "u1" } }) }));
 jest.mock("../../src/services/catalogoService", () => ({ obtenerPastel: jest.fn() }));
+// F07 M7: sin datos guardados, el pedido nuevo empieza sin precarga
+jest.mock("../../src/services/perfilService", () => ({ obtenerDatosCliente: jest.fn().mockResolvedValue({ datos: null, error: null }) }));
 jest.mock("../../src/services/pedidosService", () => ({
     guardarBorrador: jest.fn(),
     obtenerBorrador: jest.fn(),

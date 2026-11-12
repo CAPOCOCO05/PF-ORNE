@@ -18,7 +18,9 @@ app/
 │   ├── _layout.tsx            # Guardia de rol + Drawer con encabezado ORNE
 │   ├── home.tsx               # F01 Catálogo base (paginado) — pantalla de inicio
 │   ├── pedidos.tsx            # Mis pedidos (incluye borradores)
-│   ├── perfil.tsx             # Datos de cuenta, cerrar sesión
+│   ├── perfil.tsx             # F07 M7 Datos personales, dirección guardada, cerrar sesión
+│   ├── perfil/
+│   │   └── editar.tsx         # F07 M7 Editar nombre, teléfono y dirección (no está en el menú)
 │   └── pedido/
 │       ├── nuevo/
 │       │   ├── _layout.tsx        # Stack + PedidoProvider (estado del wizard)
