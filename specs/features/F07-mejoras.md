@@ -11,7 +11,7 @@
 | M2 | Pedido no entregado por el repartidor | Repartidor / Admin / Cliente | ✅ Completa |
 | M3 | Filtro por estado dentro de "Activos" en el panel admin | Admin | ✅ Completa |
 | M4 | Publicar y editar pasteles del catálogo desde la app | Admin | ✅ Completa |
-| M5 | Filtros del catálogo del cliente (precio, sabores, relleno…) | Cliente | 🟡 Implementada (falta probar en un dispositivo) |
+| M5 | Filtros del catálogo del cliente (precio, sabores, relleno…) | Cliente | ✅ Completa |
 | M6 | Nombre completo del cliente (para el repartidor) | Cliente / Repartidor | ✅ Completa |
 | M7 | Perfil del cliente con sus datos de contacto, editable | Cliente | ✅ Completa |
 
@@ -342,10 +342,10 @@ sabor de pan, relleno, tamaño y niveles.
 - Error de red → mensaje + "Reintentar" (F05), conservando los filtros elegidos.
 
 ### Criterios de aceptación
-- [ ] El cliente puede filtrar por precio, pan, relleno, tamaño y niveles, combinándolos.
-- [ ] Puede ordenar por precio y la paginación sigue funcionando sin repetir pasteles.
-- [ ] Ve qué filtros tiene aplicados y puede quitarlos uno por uno o todos.
-- [ ] Sin resultados se muestra un mensaje distinto al del catálogo vacío.
+- [x] El cliente puede filtrar por precio, pan, relleno, tamaño y niveles, combinándolos.
+- [x] Puede ordenar por precio y la paginación sigue funcionando sin repetir pasteles.
+- [x] Ve qué filtros tiene aplicados y puede quitarlos uno por uno o todos.
+- [x] Sin resultados se muestra un mensaje distinto al del catálogo vacío.
 
 ### Tareas
 - [x] `src/constants/filtrosCatalogo.ts` y tipo `FiltrosCatalogo`.
@@ -354,7 +354,7 @@ sabor de pan, relleno, tamaño y niveles.
 - [x] `useCatalogo` recibe filtros y reinicia la paginación al cambiarlos.
 - [x] Componentes `BarraFiltros`, `PanelFiltros`, `FiltrosAplicados` y `ChipFiltro` en `src/components/catalogo/`, integrados en `home.tsx`.
 - [x] Actualizar `__tests__/cliente/home.test.tsx`.
-- [ ] Probar criterios de aceptación (pruebas de la app ✅; falta probar en un dispositivo).
+- [x] Probar criterios de aceptación.
 
 ---
 
