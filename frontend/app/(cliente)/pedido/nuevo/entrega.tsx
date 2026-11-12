@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import Input from "../../../../src/components/Input";
@@ -9,10 +9,13 @@ import SelectorOpciones from "../../../../src/components/pedido/SelectorOpciones
 import { BLOQUES_HORARIO } from "../../../../src/constants/horarios";
 import { SUCURSAL } from "../../../../src/constants/sucursal";
 import { usePedido } from "../../../../src/context/PedidoContext";
+import { useAuth } from "../../../../src/context/AuthContext";
+import { useDialogo } from "../../../../src/context/DialogoContext";
 import { RUTA_PASO, usePasoPedido } from "../../../../src/hooks/usePasoPedido";
 import { COLORS } from "../../../../src/theme/colors";
 import { TipoEntrega } from "../../../../src/types/pedido.types";
 import { hoyLocal, mensajeAnticipacion, validarEntrega } from "../../../../src/utils/entrega";
+import { MAX_NOMBRE, normalizarNombre, validarNombreCompleto } from "../../../../src/utils/validaciones";
 
 const TIPOS_ENTREGA: {valor: TipoEntrega; texto: string}[] = [
     {valor: 'domicilio', texto: 'Domicilio'},
@@ -27,11 +30,16 @@ export default function PasoEntrega() {
     const {entrega} = pedido;
     const hoy = useMemo(() => hoyLocal(), []);
 
-    const faltantes = validarEntrega(entrega, pedido.niveles, hoy);
+    const {pideNombre, nombre, setNombre, errorNombre, guardarNombre} = useNombreQuienRecibe(entrega.tipoEntrega === 'domicilio');
+
+    const faltantes = {...validarEntrega(entrega, pedido.niveles, hoy), ...(errorNombre ? {nombre: errorNombre} : {})};
     // como en F01, los errores se marcan hasta presionar "Siguiente" (D4)
     const errores = intentoAvanzar ? faltantes : {};
 
-    const terminar = () => siguiente(() => router.push(RUTA_PASO[5]), faltantes);
+    // primero se guarda el borrador; despues, si hacia falta, el nombre en el perfil (F07 M6)
+    const terminar = () => siguiente(async () => {
+        if (await guardarNombre()) router.push(RUTA_PASO[5]);
+    }, faltantes);
 
     return (
         <PantallaPaso paso={4} textoAtras="Atrás" onAtras={() => router.back()} onSiguiente={terminar} guardando={guardando}>
@@ -49,6 +57,20 @@ export default function PasoEntrega() {
             {entrega.tipoEntrega === 'recoleccion' ? <TarjetaSucursal /> : null}
 
             <View style={styles.seccion}>
+                {pideNombre ? (
+                    <Input
+                        etiqueta="Nombre completo de quien recibe"
+                        value={nombre}
+                        onChangeText={setNombre}
+                        placeholder="Nombre y apellidos"
+                        ayuda="Lo usará el repartidor para entregarte tu pedido"
+                        maxLength={MAX_NOMBRE}
+                        autoCapitalize="words"
+                        autoComplete="name"
+                        textContentType="name"
+                        error={errores.nombre}
+                    />
+                ) : null}
                 <Input
                     etiqueta="Teléfono de contacto"
                     value={entrega.telefono}
@@ -82,6 +104,27 @@ export default function PasoEntrega() {
             </View>
         </PantallaPaso>
     );
+}
+
+// F07 M6: cuentas antiguas con nombre incompleto lo completan al pedir a domicilio
+// (en sucursal no aplica, D3). Al avanzar se guarda en el perfil
+function useNombreQuienRecibe(esDomicilio: boolean) {
+    const {perfil, actualizarNombre} = useAuth();
+    const {avisar} = useDialogo();
+    const [nombre, setNombre] = useState(perfil?.nombre ?? '');
+    const pideNombre = esDomicilio && !!perfil && validarNombreCompleto(perfil.nombre) !== undefined;
+    const errorNombre = pideNombre ? validarNombreCompleto(nombre) : undefined;
+
+    // true si se puede seguir: no hacia falta o se guardo; si falla avisa y se queda en el paso
+    const guardarNombre = async (): Promise<boolean> => {
+        if (!pideNombre) return true;
+        const {error} = await actualizarNombre(normalizarNombre(nombre));
+        if (!error) return true;
+        await avisar({tipo: 'error', titulo: 'No se pudo guardar tu nombre', mensaje: error});
+        return false;
+    };
+
+    return {pideNombre, nombre, setNombre, errorNombre, guardarNombre};
 }
 
 // recoleccion: direccion fija, sin mapa (F02 flujo 4, D6)

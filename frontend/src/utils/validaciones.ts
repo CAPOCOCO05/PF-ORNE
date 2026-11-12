@@ -1,18 +1,26 @@
 // validaciones de formularios de autenticacion (F00 / F05)
 
 export const MIN_CONTRASENA = 6; // regla por defecto de Supabase Auth
+export const MAX_NOMBRE = 80; // F07 M6
 
 export const MENSAJES_VALIDACION = {
     CORREO_VACIO: 'Ingresa tu correo',
     CORREO_INVALIDO: 'Ingresa un correo válido',
     CONTRASENA_VACIA: 'Ingresa tu contraseña',
     CONTRASENA_CORTA: `La contraseña debe tener al menos ${MIN_CONTRASENA} caracteres`,
-    NOMBRE_VACIO: 'Ingresa tu nombre',
+    NOMBRE_VACIO: 'Ingresa tu nombre completo',
+    NOMBRE_INCOMPLETO: 'Escribe tu nombre y al menos un apellido',
+    NOMBRE_CARACTERES: 'El nombre solo puede tener letras y espacios',
+    NOMBRE_LARGO: `El nombre no puede tener más de ${MAX_NOMBRE} caracteres`,
     CONFIRMAR_VACIO: 'Confirma tu contraseña',
     NO_COINCIDEN: 'Las contraseñas no coinciden',
 } as const;
 
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// letras (con acentos, ñ y ü), espacios, apostrofo y guion; rango explicito en vez de
+// \p{L} para no depender del soporte de Unicode del motor JS
+const REGEX_NOMBRE = /^[A-Za-zÀ-ÖØ-öø-ÿ' -]+$/;
+const REGEX_LETRA = /[A-Za-zÀ-ÖØ-öø-ÿ]/g;
 
 export interface DatosLogin {
     correo: string;
@@ -34,6 +42,22 @@ export function validarCorreo(correo: string): string | undefined {
     return undefined;
 }
 
+// trim y espacios repetidos colapsados: asi se guarda en perfiles.nombre (F07 M6)
+export function normalizarNombre(nombre: string): string {
+    return nombre.trim().replace(/\s+/g, ' ');
+}
+
+// nombre y al menos un apellido: dos o mas palabras de 2+ letras (F07 M6, D4)
+export function validarNombreCompleto(nombre: string): string | undefined {
+    const limpio = normalizarNombre(nombre);
+    if (!limpio) return MENSAJES_VALIDACION.NOMBRE_VACIO;
+    if (!REGEX_NOMBRE.test(limpio)) return MENSAJES_VALIDACION.NOMBRE_CARACTERES;
+    if (limpio.length > MAX_NOMBRE) return MENSAJES_VALIDACION.NOMBRE_LARGO;
+    const palabras = limpio.split(' ').filter((p) => (p.match(REGEX_LETRA) ?? []).length >= 2);
+    if (palabras.length < 2) return MENSAJES_VALIDACION.NOMBRE_INCOMPLETO;
+    return undefined;
+}
+
 export function validarLogin({correo, contrasena}: DatosLogin): ErroresFormulario<DatosLogin> {
     const errores: ErroresFormulario<DatosLogin> = {};
     const errorCorreo = validarCorreo(correo);
@@ -44,7 +68,8 @@ export function validarLogin({correo, contrasena}: DatosLogin): ErroresFormulari
 
 export function validarRegistro(datos: DatosRegistro): ErroresFormulario<DatosRegistro> {
     const errores: ErroresFormulario<DatosRegistro> = validarLogin(datos);
-    if (!datos.nombre.trim()) errores.nombre = MENSAJES_VALIDACION.NOMBRE_VACIO;
+    const errorNombre = validarNombreCompleto(datos.nombre);
+    if (errorNombre) errores.nombre = errorNombre;
     if (datos.contrasena && datos.contrasena.length < MIN_CONTRASENA) {
         errores.contrasena = MENSAJES_VALIDACION.CONTRASENA_CORTA;
     }

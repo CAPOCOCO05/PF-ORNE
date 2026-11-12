@@ -36,7 +36,7 @@ botón **REGISTRARME** y enlace "¿Ya tienes cuenta? **Inicia sesión**").
 ## Datos de entrada
 - correo (obligatorio)
 - contraseña (obligatorio)
-- nombre (obligatorio, solo en registro)
+- nombre completo (obligatorio, solo en registro; máx. 80 caracteres — F07 M6)
 - confirmar contraseña (obligatorio, solo en registro)
 
 ## Flujo principal — Login
@@ -63,8 +63,10 @@ Se muestran en rojo bajo el campo, al salir de él o al presionar el botón (F05
 - Correo y contraseña no pueden estar vacíos.
 - Formato de correo válido.
 - Contraseña mínimo 6 caracteres (regla por defecto de Supabase Auth).
-- Registro: nombre no vacío (se aplica `trim()`); la confirmación debe coincidir
-  con la contraseña.
+- Registro: nombre completo con `validarNombreCompleto()` (F07 M6): se aplica
+  `trim()` y se colapsan los espacios; al menos dos palabras de 2+ letras; solo
+  letras (con acentos y ñ), espacios, apóstrofo y guion. La confirmación debe
+  coincidir con la contraseña.
 - Mientras se procesa, el botón muestra un spinner y no se puede presionar otra vez.
 
 ## Reglas de negocio

@@ -8,6 +8,7 @@ import { buscarDireccion, direccionDesdeCoordenadas, MENSAJES_UBICACION, ubicaci
 import { PedidoEnCurso } from "../../src/types/pedido.types";
 import { MENSAJES_ENTREGA, sumarDias } from "../../src/utils/entrega";
 import { MENSAJES_PEDIDO } from "../../src/utils/pedido";
+import { MENSAJES_VALIDACION } from "../../src/utils/validaciones";
 
 const mockPush = jest.fn();
 const mockBack = jest.fn();
@@ -27,7 +28,11 @@ jest.mock("react-native-maps", () => {
     ));
     return { __esModule: true, default: MapView, Marker: () => null, Circle: () => null };
 });
-jest.mock("../../src/context/AuthContext", () => ({ useAuth: () => ({ user: { id: "u1" } }) }));
+const mockActualizarNombre = jest.fn();
+let mockPerfil: { id: string; nombre: string; rol: string } | null = null;
+jest.mock("../../src/context/AuthContext", () => ({
+    useAuth: () => ({ user: { id: "u1" }, perfil: mockPerfil, actualizarNombre: mockActualizarNombre }),
+}));
 jest.mock("../../src/services/catalogoService", () => ({ obtenerPastel: jest.fn() }));
 jest.mock("../../src/services/pedidosService", () => ({ guardarBorrador: jest.fn(), obtenerBorrador: jest.fn() }));
 jest.mock("../../src/services/ubicacionService", () => ({
@@ -70,6 +75,8 @@ async function elegirFechaYHorario() {
 
 beforeEach(() => {
     jest.clearAllMocks();
+    mockPerfil = { id: "u1", nombre: "Ana López", rol: "cliente" };
+    mockActualizarNombre.mockResolvedValue({ error: null });
     (guardarBorrador as jest.Mock).mockResolvedValue({ id: "ped1", imagenRuta: null, error: null });
     (ubicacionInicial as jest.Mock).mockResolvedValue({ coordenadas: SUCURSAL.coordenadas, esDelUsuario: false });
     (direccionDesdeCoordenadas as jest.Mock).mockResolvedValue({
@@ -164,5 +171,69 @@ describe("Paso 4: entrega", () => {
         await fireEvent.press(screen.getByText("Siguiente"));
 
         expect(screen.getByText(MENSAJES_ENTREGA.TELEFONO)).toBeTruthy();
+    });
+});
+
+describe("Paso 4: nombre completo de quien recibe (F07 M6)", () => {
+    // domicilio completo con pin, telefono, fecha y horario
+    async function llenarDomicilio() {
+        await fireEvent.press(screen.getByLabelText("Tipo de entrega Domicilio"));
+        await fireEvent(screen.getByTestId("mapa-entrega"), "touchEnd");
+        await waitFor(() => expect(screen.getByLabelText("Calle").props.value).toBe("Calle Primera"));
+        await fireEvent.changeText(screen.getByLabelText("Teléfono de contacto"), "6461234567");
+        await elegirFechaYHorario();
+    }
+
+    it("con nombre completo en el perfil no se pide", async () => {
+        await renderEntrega();
+        await fireEvent.press(screen.getByLabelText("Tipo de entrega Domicilio"));
+
+        expect(screen.queryByLabelText("Nombre completo de quien recibe")).toBeNull();
+    });
+
+    it("nombre incompleto en sucursal: no se pide (D3)", async () => {
+        mockPerfil = { id: "u1", nombre: "Ana", rol: "cliente" };
+        await renderEntrega();
+        await fireEvent.press(screen.getByLabelText("Tipo de entrega Sucursal"));
+
+        expect(screen.queryByLabelText("Nombre completo de quien recibe")).toBeNull();
+    });
+
+    it("nombre incompleto a domicilio: precargado, no avanza sin corregirlo", async () => {
+        mockPerfil = { id: "u1", nombre: "Ana", rol: "cliente" };
+        await renderEntrega();
+        await llenarDomicilio();
+
+        expect(screen.getByLabelText("Nombre completo de quien recibe").props.value).toBe("Ana");
+        await fireEvent.press(screen.getByText("Siguiente"));
+
+        expect(screen.getByText(MENSAJES_VALIDACION.NOMBRE_INCOMPLETO)).toBeTruthy();
+        expect(guardarBorrador).not.toHaveBeenCalled();
+        expect(mockActualizarNombre).not.toHaveBeenCalled();
+    });
+
+    it("al corregirlo se guarda en el perfil y avanza al pago", async () => {
+        mockPerfil = { id: "u1", nombre: "Ana", rol: "cliente" };
+        await renderEntrega();
+        await llenarDomicilio();
+
+        await fireEvent.changeText(screen.getByLabelText("Nombre completo de quien recibe"), " Ana   López ");
+        await fireEvent.press(screen.getByText("Siguiente"));
+
+        await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/pedido/nuevo/pago"));
+        expect(mockActualizarNombre).toHaveBeenCalledWith("Ana López");
+    });
+
+    it("si no se puede guardar el nombre avisa y no avanza", async () => {
+        mockPerfil = { id: "u1", nombre: "Ana", rol: "cliente" };
+        mockActualizarNombre.mockResolvedValue({ error: "Error de conexión, inténtalo de nuevo" });
+        await renderEntrega();
+        await llenarDomicilio();
+
+        await fireEvent.changeText(screen.getByLabelText("Nombre completo de quien recibe"), "Ana López");
+        await fireEvent.press(screen.getByText("Siguiente"));
+
+        expect(await screen.findByText("No se pudo guardar tu nombre")).toBeTruthy();
+        expect(mockPush).not.toHaveBeenCalled();
     });
 });

@@ -68,6 +68,6 @@ describe("textos", () => {
     it("niveles en singular y plural; orden por id", () => {
         expect(textoNiveles(1)).toBe('1 nivel');
         expect(textoNiveles(3)).toBe('3 niveles');
-        expect(textoOrden('precioDesc')).toBe('Precio: mayor a menor');
+        expect(textoOrden('precioDesc')).toBe('Mayor a Menor');
     });
 });

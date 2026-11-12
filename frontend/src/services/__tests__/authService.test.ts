@@ -1,4 +1,5 @@
-import { getPerfil, signIn, signUp } from "../authService";
+import { actualizarNombre, getPerfil, signIn, signUp } from "../authService";
+import { MENSAJES_DATOS } from "../erroresDatos";
 import { MENSAJES_AUTH } from "../authErrors";
 import { supabase } from "../supabase";
 
@@ -84,5 +85,29 @@ describe("signUp", () => {
         });
 
         expect(await signUp(datos)).toEqual({ error: MENSAJES_AUTH.CORREO_REGISTRADO, requiereConfirmacion: false });
+    });
+});
+
+describe("actualizarNombre (F07 M6)", () => {
+    function mockUpdate(respuesta: {error: {message: string; code: string} | null}) {
+        const eq = jest.fn().mockResolvedValue(respuesta);
+        const update = jest.fn().mockReturnValue({ eq });
+        (supabase.from as jest.Mock).mockReturnValue({ update });
+        return { update, eq };
+    }
+
+    it("actualiza solo el nombre del perfil del usuario", async () => {
+        const { update, eq } = mockUpdate({ error: null });
+
+        expect(await actualizarNombre("u1", "Ana López")).toEqual({ error: null });
+        expect(supabase.from).toHaveBeenCalledWith("perfiles");
+        expect(update).toHaveBeenCalledWith({ nombre: "Ana López" });
+        expect(eq).toHaveBeenCalledWith("id", "u1");
+    });
+
+    it("error de red: mensaje de conexion", async () => {
+        mockUpdate({ error: { message: "TypeError: Network request failed", code: "" } });
+
+        expect(await actualizarNombre("u1", "Ana López")).toEqual({ error: MENSAJES_DATOS.CONEXION });
     });
 });

@@ -1,6 +1,7 @@
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 import { traducirErrorAuth } from "./authErrors";
+import { traducirErrorDatos } from "./erroresDatos";
 import { Perfil, SignInData, SignUpData } from "../types/auth.types";
 
 // capa de acceso a Supabase Auth: los componentes y contextos no llaman a supabase directamente
@@ -53,4 +54,14 @@ export async function getPerfil(userId: string): Promise<{perfil: Perfil | null;
         return {perfil: null, error: error.message};
     }
     return {perfil: data, error: null};
+}
+
+// el cliente solo puede actualizar la columna nombre de su propio perfil (004); F07 M6 D1.
+// Se espera el nombre ya validado y normalizado (validarNombreCompleto / normalizarNombre)
+export async function actualizarNombre(userId: string, nombre: string): Promise<{error: string | null}> {
+    const {error} = await supabase
+        .from('perfiles')
+        .update({nombre})
+        .eq('id', userId);
+    return {error: error ? traducirErrorDatos(error) : null};
 }

@@ -12,7 +12,7 @@
 | M3 | Filtro por estado dentro de "Activos" en el panel admin | Admin | ✅ Completa |
 | M4 | Publicar y editar pasteles del catálogo desde la app | Admin | ✅ Completa |
 | M5 | Filtros del catálogo del cliente (precio, sabores, relleno…) | Cliente | 🟡 Implementada (falta probar en un dispositivo) |
-| M6 | Nombre completo del cliente (para el repartidor) | Cliente / Repartidor | 🔲 Pendiente |
+| M6 | Nombre completo del cliente (para el repartidor) | Cliente / Repartidor | 🟡 Implementada (falta editar el nombre en el perfil, va con M7; probar en un dispositivo) |
 | M7 | Perfil del cliente con sus datos de contacto, editable | Cliente | 🔲 Pendiente |
 
 **Orden sugerido:** M1 → M2 → M3 → M4 → M5. M1 va primero porque M2, M3 y M4 usan
@@ -389,6 +389,8 @@ Cliente (lo captura), repartidor y admin (lo consultan).
   - Vacío → "Ingresa tu nombre completo"
   - Una sola palabra → "Escribe tu nombre y al menos un apellido"
   - Caracteres no válidos → "El nombre solo puede tener letras y espacios"
+  - Más de 80 caracteres → "El nombre no puede tener más de 80 caracteres" (el
+    campo además limita la captura con `maxLength`)
 
 ### Decisiones
 - **D1. Se guarda en `perfiles.nombre`.** No se agrega columna nueva: es el dato
@@ -412,11 +414,13 @@ Cliente (lo captura), repartidor y admin (lo consultan).
 - [ ] El repartidor ve el nombre completo en "Mis entregas" y en el detalle.
 
 ### Tareas
-- [ ] `validarNombreCompleto()` y mensajes en `utils/validaciones.ts`, con pruebas.
-- [ ] Ajustar `register.tsx` (etiqueta, placeholder, ayuda, validación) y su prueba.
-- [ ] `authService.actualizarNombre()` y refrescar `perfil` en `AuthContext`, con pruebas.
-- [ ] Campo condicional en `pedido/nuevo/entrega.tsx` y su prueba.
-- [ ] Actualizar F00 (datos de entrada y validaciones del registro).
+- [x] `validarNombreCompleto()` y mensajes en `utils/validaciones.ts`, con pruebas.
+- [x] Ajustar `register.tsx` (etiqueta, placeholder, ayuda, validación) y su prueba
+      (`__tests__/auth/register.test.tsx`; `Input` recibe la prop `ayuda`).
+- [x] `authService.actualizarNombre()` y refrescar `perfil` en `AuthContext`, con pruebas.
+- [x] Campo condicional en `pedido/nuevo/entrega.tsx` y su prueba.
+- [x] Actualizar F00 (datos de entrada y validaciones del registro).
+- [ ] Editar el nombre desde el perfil (se hace en la pantalla de edición de M7).
 - [ ] Probar criterios de aceptación.
 
 ---

@@ -94,7 +94,7 @@ describe("Home: filtros del catalogo (F07 M5)", () => {
 
         expect(ultimosFiltros()).toEqual(FILTROS_VACIOS);
         expect(screen.getByText("Filtrar")).toBeTruthy();
-        expect(screen.getByText("Ordenar: Nombre")).toBeTruthy();
+        expect(screen.getByText("Ordenar: Precio")).toBeTruthy();
         expect(screen.queryByTestId("panel-filtros")).toBeNull();
     });
 
@@ -153,11 +153,11 @@ describe("Home: filtros del catalogo (F07 M5)", () => {
         mockCatalogo({ pasteles: [PASTEL] });
         await render(<Home />);
 
-        await fireEvent.press(screen.getByText("Ordenar: Nombre"));
-        await fireEvent.press(screen.getByLabelText("Precio: mayor a menor"));
+        await fireEvent.press(screen.getByText("Ordenar: Precio"));
+        await fireEvent.press(screen.getByLabelText("Mayor a Menor"));
 
         expect(ultimosFiltros()).toEqual({ ...FILTROS_VACIOS, orden: "precioDesc" });
-        expect(screen.getByText("Ordenar: Precio: mayor a menor")).toBeTruthy();
+        expect(screen.getByText("Ordenar: Mayor a Menor")).toBeTruthy();
     });
 
     it("sin resultados con filtros: mensaje distinto y 'Limpiar filtros'", async () => {

@@ -16,6 +16,7 @@ interface AuthContextType {
     signIn: (data: SignInData) => Promise<{error: string | null}>;
     signOut: () => Promise<void>;
     reintentarPerfil: () => void;
+    actualizarNombre: (nombre: string) => Promise<{error: string | null}>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined); // se mantiene undefined para que no se pueda usar fuera del provider
@@ -90,6 +91,14 @@ export function AuthProvider({children}: {children: React.ReactNode}){ // provee
         return authService.signOut();
     };
 
+    // guarda el nombre completo y lo refleja en el perfil sin volver a consultarlo (F07 M6)
+    const actualizarNombre = async (nombre: string) => {
+        if (!userId) return {error: ERROR_SIN_PERFIL};
+        const {error} = await authService.actualizarNombre(userId, nombre);
+        if (!error) setPerfil((actual) => actual ? {...actual, nombre} : actual);
+        return {error};
+    };
+
     const reintentarPerfil = () => {
         setPerfilCargadoPara(null);
         setIntentoPerfil((n) => n + 1);
@@ -100,7 +109,7 @@ export function AuthProvider({children}: {children: React.ReactNode}){ // provee
     const loading = sessionLoading || (userId !== null && perfilCargadoPara !== userId);
 
     return(
-        <AuthContext.Provider value={{user, session, perfil, loading, authError, signUp, signIn, signOut, reintentarPerfil}}>
+        <AuthContext.Provider value={{user, session, perfil, loading, authError, signUp, signIn, signOut, reintentarPerfil, actualizarNombre}}>
             {children}
         </AuthContext.Provider>
     );

@@ -7,7 +7,7 @@ import Boton from '../../src/components/Boton';
 import Input from '../../src/components/Input';
 import PantallaAuth from '../../src/components/PantallaAuth';
 import { COLORS } from '../../src/theme/colors';
-import { DatosRegistro, tieneErrores, validarRegistro } from '../../src/utils/validaciones';
+import { DatosRegistro, MAX_NOMBRE, normalizarNombre, tieneErrores, validarRegistro } from '../../src/utils/validaciones';
 
 const DATOS_VACIOS: DatosRegistro = {nombre: '', correo: '', contrasena: '', confirmar: ''};
 
@@ -37,7 +37,7 @@ export default function Register() {
 
         setLoading(true);
         const {error, requiereConfirmacion} = await signUp({
-            nombre: datos.nombre.trim(),
+            nombre: normalizarNombre(datos.nombre),
             email: datos.correo.trim(),
             password: datos.contrasena,
         });
@@ -66,12 +66,14 @@ export default function Register() {
     return (
         <PantallaAuth pie={pie} mensajeError={errorEnvio}>
             <Input
-                etiqueta="Nombre"
-                placeholder="Tu nombre"
+                etiqueta="Nombre completo"
+                placeholder="Nombre y apellidos"
+                ayuda="Lo usará el repartidor para entregarte tu pedido"
                 value={datos.nombre}
                 onChangeText={cambiar('nombre')}
                 onBlur={tocar('nombre')}
                 error={errorDe('nombre')}
+                maxLength={MAX_NOMBRE}
                 autoCapitalize="words"
                 autoComplete="name"
                 textContentType="name"

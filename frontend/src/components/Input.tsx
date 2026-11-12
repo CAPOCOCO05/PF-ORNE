@@ -5,9 +5,10 @@ interface InputProps extends TextInputProps {
     etiqueta: string;
     error?: string | null; // se muestra en rojo bajo el campo (F05)
     contador?: {actual: number; maximo: number}; // ej. mensaje de decoracion 123/500 (F01)
+    ayuda?: string; // texto gris bajo el campo; el error lo reemplaza (F07 M6)
 }
 
-export default function Input({etiqueta, error, contador, style, ...textInputProps}: InputProps) {
+export default function Input({etiqueta, error, contador, ayuda, style, ...textInputProps}: InputProps) {
     return (
         <View style={styles.contenedor}>
             <Text style={styles.etiqueta}>{etiqueta}</Text>
@@ -18,7 +19,9 @@ export default function Input({etiqueta, error, contador, style, ...textInputPro
                 style={[styles.input, error ? styles.inputError : null, style]}
             />
             <View style={styles.pie}>
-                {error ? <Text style={styles.error}>{error}</Text> : <View />}
+                {error
+                    ? <Text style={styles.error}>{error}</Text>
+                    : ayuda ? <Text style={styles.ayuda}>{ayuda}</Text> : <View />}
                 {contador && (
                     <Text style={styles.contador}>{contador.actual}/{contador.maximo}</Text>
                 )}
@@ -61,6 +64,11 @@ const styles = StyleSheet.create({
     },
     error: {
         color: COLORS.ERROR,
+        fontSize: 12,
+        flexShrink: 1,
+    },
+    ayuda: {
+        color: COLORS.TEXTO_SUAVE,
         fontSize: 12,
         flexShrink: 1,
     },

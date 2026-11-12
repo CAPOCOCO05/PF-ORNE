@@ -63,7 +63,7 @@ export default function PasoDecoracion() {
             <TextInput
                 value={pedido.mensaje}
                 onChangeText={(texto) => actualizar({mensaje: limitarMensaje(texto)})}
-                placeholder="Ej. «Feliz cumpleaños, Ana» con flores rosas"
+                placeholder="Ej. Feliz cumpleaños, Ana. Con flores rosas"
                 placeholderTextColor={COLORS.TEXTO_SUAVE}
                 multiline
                 style={styles.mensaje}

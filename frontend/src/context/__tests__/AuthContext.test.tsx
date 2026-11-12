@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react-native";
+import { act, renderHook, waitFor } from "@testing-library/react-native";
 import { Session } from "@supabase/supabase-js";
 import { AuthProvider, useAuth, ERROR_CONEXION, ERROR_SIN_PERFIL } from "../AuthContext";
 import * as authService from "../../services/authService";
@@ -65,5 +65,34 @@ describe("AuthContext", () => {
         expect(result.current.loading).toBe(false);
         expect(result.current.session).toBe(sesion);
         expect(servicio.signOut).not.toHaveBeenCalled();
+    });
+
+    it("actualizarNombre guarda y refleja el nombre en el perfil (F07 M6)", async () => {
+        servicio.getSession.mockResolvedValue(sesion);
+        servicio.getPerfil.mockResolvedValue({ perfil: { id: "u1", nombre: "Ana", rol: "cliente" }, error: null });
+        servicio.actualizarNombre.mockResolvedValue({ error: null });
+        const { result } = await renderAuth();
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        let respuesta: { error: string | null } = { error: "x" };
+        await act(async () => { respuesta = await result.current.actualizarNombre("Ana López"); });
+
+        expect(respuesta.error).toBeNull();
+        expect(servicio.actualizarNombre).toHaveBeenCalledWith("u1", "Ana López");
+        expect(result.current.perfil?.nombre).toBe("Ana López");
+    });
+
+    it("actualizarNombre con error conserva el nombre anterior", async () => {
+        servicio.getSession.mockResolvedValue(sesion);
+        servicio.getPerfil.mockResolvedValue({ perfil: { id: "u1", nombre: "Ana", rol: "cliente" }, error: null });
+        servicio.actualizarNombre.mockResolvedValue({ error: ERROR_CONEXION });
+        const { result } = await renderAuth();
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        let respuesta: { error: string | null } = { error: null };
+        await act(async () => { respuesta = await result.current.actualizarNombre("Ana López"); });
+
+        expect(respuesta.error).toBe(ERROR_CONEXION);
+        expect(result.current.perfil?.nombre).toBe("Ana");
     });
 });
