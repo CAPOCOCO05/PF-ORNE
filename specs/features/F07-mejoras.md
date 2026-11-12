@@ -12,8 +12,8 @@
 | M3 | Filtro por estado dentro de "Activos" en el panel admin | Admin | ✅ Completa |
 | M4 | Publicar y editar pasteles del catálogo desde la app | Admin | ✅ Completa |
 | M5 | Filtros del catálogo del cliente (precio, sabores, relleno…) | Cliente | 🟡 Implementada (falta probar en un dispositivo) |
-| M6 | Nombre completo del cliente (para el repartidor) | Cliente / Repartidor | 🟡 Implementada (falta probar en un dispositivo) |
-| M7 | Perfil del cliente con sus datos de contacto, editable | Cliente | 🟡 Implementada (falta aplicar `013`, correr `permisos_datos_cliente.sql` y probar en un dispositivo) |
+| M6 | Nombre completo del cliente (para el repartidor) | Cliente / Repartidor | ✅ Completa |
+| M7 | Perfil del cliente con sus datos de contacto, editable | Cliente | ✅ Completa |
 
 **Orden sugerido:** M1 → M2 → M3 → M4 → M5. M1 va primero porque M2, M3 y M4 usan
 sus diálogos; M4 va antes que M5 porque fija cómo se calcula `precio_base`, que es
@@ -407,11 +407,11 @@ Cliente (lo captura), repartidor y admin (lo consultan).
   `utils/validaciones.ts` la usan registro, perfil y entrega.
 
 ### Criterios de aceptación
-- [ ] No se puede registrar una cuenta con una sola palabra como nombre.
-- [ ] El cliente puede editar su nombre desde su perfil.
-- [ ] Un cliente con nombre incompleto no puede avanzar en una entrega a domicilio
+- [x] No se puede registrar una cuenta con una sola palabra como nombre.
+- [x] El cliente puede editar su nombre desde su perfil.
+- [x] Un cliente con nombre incompleto no puede avanzar en una entrega a domicilio
       sin completarlo, y el cambio queda guardado en su perfil.
-- [ ] El repartidor ve el nombre completo en "Mis entregas" y en el detalle.
+- [x] El repartidor ve el nombre completo en "Mis entregas" y en el detalle.
 
 ### Tareas
 - [x] `validarNombreCompleto()` y mensajes en `utils/validaciones.ts`, con pruebas.
@@ -421,7 +421,7 @@ Cliente (lo captura), repartidor y admin (lo consultan).
 - [x] Campo condicional en `pedido/nuevo/entrega.tsx` y su prueba.
 - [x] Actualizar F00 (datos de entrada y validaciones del registro).
 - [x] Editar el nombre desde el perfil (en la pantalla de edición de M7).
-- [ ] Probar criterios de aceptación.
+- [x] Probar criterios de aceptación.
 
 ---
 
@@ -503,14 +503,14 @@ Cliente.
 - Campo inválido → mensaje junto al campo, inmediato (F05).
 
 ### Criterios de aceptación
-- [ ] Un cliente con pedidos anteriores ve en su perfil su nombre completo,
+- [x] Un cliente con pedidos anteriores ve en su perfil su nombre completo,
       teléfono y la dirección de su último pedido a domicilio.
-- [ ] Puede editar nombre, teléfono y dirección, y los cambios se conservan al
+- [x] Puede editar nombre, teléfono y dirección, y los cambios se conservan al
       cerrar y abrir la app.
-- [ ] Un pedido nuevo aparece con teléfono y dirección precargados, y cambiarlos
+- [x] Un pedido nuevo aparece con teléfono y dirección precargados, y cambiarlos
       en ese pedido no modifica el perfil.
-- [ ] Editar el perfil no cambia los pedidos ya confirmados.
-- [ ] Ningún otro usuario (otro cliente, admin o repartidor) puede leer
+- [x] Editar el perfil no cambia los pedidos ya confirmados.
+- [x] Ningún otro usuario (otro cliente, admin o repartidor) puede leer
       `datos_cliente` (probado en SQL).
 
 ### Tareas
@@ -521,5 +521,5 @@ Cliente.
 - [x] Hook `useDatosCliente`.
 - [x] `(cliente)/perfil.tsx` con secciones y `(cliente)/perfil/editar.tsx`, con pruebas (`__tests__/cliente/perfil.test.tsx`).
 - [x] Precarga en `PedidoContext` (D5), con pruebas.
-- [x] Script `backend/supabase/tests/permisos_datos_cliente.sql` (falta correrlo en Supabase).
-- [ ] Probar criterios de aceptación (pruebas de la app ✅; falta aplicar `013`, correr el script de permisos y probar en un dispositivo).
+- [x] Script `backend/supabase/tests/permisos_datos_cliente.sql`.
+- [x] Probar criterios de aceptación.
