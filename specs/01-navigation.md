@@ -34,6 +34,9 @@ app/
 │   ├── _layout.tsx            # Guardia de rol + Drawer
 │   ├── index.tsx              # F04 Lista de todos los pedidos (filtro por estado)
 │   ├── pedido/[id].tsx        # F04 Detalle + cambiar estado + asignar repartidor
+│   ├── catalogo/
+│   │   ├── index.tsx          # F07 M4 Pasteles publicados y ocultos + "Nuevo pastel"
+│   │   └── [id].tsx           # F07 M4 Alta ('nuevo') o edición, con vista previa
 │   └── perfil.tsx
 │
 └── repartidor/                # Rol repartidor — URLs /repartidor/...
@@ -72,9 +75,9 @@ En lugar de una barra de pestañas se usa un **Drawer** (menú lateral):
 | Cliente | Admin | Repartidor |
 |---|---|---|
 | Catálogo | Pedidos | Mis entregas |
-| Mis pedidos | Perfil | Perfil |
-| Perfil | Cerrar sesión | Cerrar sesión |
-| Cerrar sesión | | |
+| Mis pedidos | Catálogo (F07 M4) | Perfil |
+| Perfil | Perfil | Cerrar sesión |
+| Cerrar sesión | Cerrar sesión | |
 
 - Las pantallas del wizard (`pedido/nuevo/*`) y los detalles (`[id].tsx`) no
   aparecen en el menú.
@@ -99,5 +102,6 @@ pedido/nuevo/*              → todas comparten el mismo pedido_id
                                recuperado si viene de "Continuar pedido")
 pedidos                     → pedido/[id]            (viaja: id del pedido)
 admin                       → admin/pedido/[id]      (viaja: id del pedido)
+admin/catalogo              → admin/catalogo/[id]    (viaja: id del pastel, o 'nuevo')
 repartidor                  → repartidor/entrega/[id] (viaja: id del pedido)
 ```

@@ -97,8 +97,9 @@ Reglas:
 | `pedidos` | Ver/crear los suyos; editar solo borradores; pasar a `pendiente` | Ver todos; cambiar `estado` y `repartidor_id` | Ver los asignados a él; cambiar a `entregado` o `no_entregado` (con motivo) |
 | `pedido_detalle` | Ver/crear/editar el de sus borradores | Ver todos | Ver el de sus entregas |
 | `pagos` | Ver/crear los suyos | Ver todos | — |
-| `catalogo_pasteles` | Ver activos | Ver todos | — |
+| `catalogo_pasteles` | Ver activos | Ver todos; crear y editar, sin borrar (F07 M4) | — |
 | Storage `referencias-pasteles` | Subir/ver en su carpeta | Ver todo | — |
+| Storage `catalogo` (público) | Ver (URL pública) | Subir, reemplazar y borrar (F07 M4) | Ver (URL pública) |
 
 Las políticas usan una función `mi_rol()` (`security definer`) que lee el rol del
 usuario actual desde `perfiles`, para no repetir la consulta en cada política.
@@ -117,6 +118,7 @@ En `backend/supabase/migrations/`, en este orden:
 | `009_validar_repartidor.sql` | El trigger de transiciones exige que `repartidor_id` sea un perfil con rol `repartidor` | F04 |
 | `010_repartidor_ve_clientes.sql` | El repartidor ve el nombre del cliente de sus entregas en camino | F06 |
 | `011_no_entregado.sql` | Estado `no_entregado`, `motivo_no_entrega`, política y trigger del repartidor, `contar_pedidos_por_estado()` | F07 M2, M3 |
+| `012_catalogo_admin.sql` | Admin crea y edita pasteles (sin `delete`), nombre único, trigger que calcula `precio_base` con `calcular_precio`, políticas de Storage del bucket `catalogo` | F07 M4 |
 
 ## Catálogo de sabores e imágenes
 
@@ -165,6 +167,8 @@ create table catalogo_pasteles (
 );
 ```
 
-Esta tabla **sí** necesita RLS de solo lectura (cualquier usuario con sesión ve el
-catálogo activo; nadie más que un admin lo edita, y por ahora se edita desde el
-Dashboard de Supabase).
+Esta tabla **sí** necesita RLS: cualquier usuario con sesión ve el catálogo activo
+y solo el admin lo crea y edita, desde la app (F07 M4, `012`). `precio_base` lo
+calcula un trigger con `calcular_precio`, así que siempre coincide con lo que cobra
+el wizard; el nombre es único sin distinguir mayúsculas. No se borran pasteles:
+se ocultan con `activo = false`.

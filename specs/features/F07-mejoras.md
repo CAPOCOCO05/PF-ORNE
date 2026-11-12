@@ -7,10 +7,10 @@
 
 | # | Mejora | Rol | Estado |
 |---|---|---|---|
-| M1 | Diálogos personalizados (reemplazan los `Alert` del dispositivo) | Todos | 🟡 Implementada (falta probar en un dispositivo) |
-| M2 | Pedido no entregado por el repartidor | Repartidor / Admin / Cliente | 🟡 Implementada, `011` aplicada (falta probar en un dispositivo) |
-| M3 | Filtro por estado dentro de "Activos" en el panel admin | Admin | 🟡 Implementada (falta probar en un dispositivo) |
-| M4 | Publicar y editar pasteles del catálogo desde la app | Admin | 🔲 Pendiente |
+| M1 | Diálogos personalizados (reemplazan los `Alert` del dispositivo) | Todos | ✅ Completa |
+| M2 | Pedido no entregado por el repartidor | Repartidor / Admin / Cliente | ✅ Completa |
+| M3 | Filtro por estado dentro de "Activos" en el panel admin | Admin | ✅ Completa |
+| M4 | Publicar y editar pasteles del catálogo desde la app | Admin | ✅ Completa |
 | M5 | Filtros del catálogo del cliente (precio, sabores, relleno…) | Cliente | 🔲 Pendiente |
 | M6 | Nombre completo del cliente (para el repartidor) | Cliente / Repartidor | 🔲 Pendiente |
 | M7 | Perfil del cliente con sus datos de contacto, editable | Cliente | 🔲 Pendiente |
@@ -75,7 +75,7 @@ pedidos, wizard, acciones del admin y entrega del repartidor). Todas se migran.
 
 ### Criterios de aceptación
 - [x] No queda ninguna llamada a `Alert.alert` en `app/` ni en `src/`.
-- [ ] Los diálogos usan la paleta de `00-project.md` y se ven igual en Android e iOS.
+- [x] Los diálogos usan la paleta de `00-project.md` y se ven igual en Android e iOS.
 - [x] Las acciones destructivas se distinguen visualmente y su botón describe la acción.
 - [x] El botón "atrás" de Android cierra el diálogo sin ejecutar la acción.
 
@@ -83,7 +83,7 @@ pedidos, wizard, acciones del admin y entrega del repartidor). Todas se migran.
 - [x] `src/components/Dialogo.tsx` (presentación) y `src/context/DialogoContext.tsx` (provider + `useDialogo`), con pruebas.
 - [x] Montar `DialogoProvider` en `app/_layout.tsx`.
 - [x] Migrar las 17 llamadas a `Alert.alert` y ajustar sus pruebas (las pruebas usan el provider real vía `src/test-utils/renderConDialogo.tsx` y presionan los botones del diálogo).
-- [ ] Probar criterios de aceptación (pruebas de la app ✅; falta revisar el diseño en Android e iOS).
+- [x] Probar criterios de aceptación (pruebas de la app y en dispositivo ✅).
 
 ---
 
@@ -163,7 +163,7 @@ Repartidor (lo marca), admin (decide qué sigue), cliente (lo consulta).
 - [x] Botón y diálogo de motivo en `repartidor/entrega/[id].tsx` (`DialogoNoEntregado`, sobre el `MarcoDialogo` de M1).
 - [x] Motivo en el detalle del admin y del cliente.
 - [x] Ampliar `backend/supabase/tests/permisos_repartidor.sql` y `permisos_admin.sql` (corridos en Supabase: OK).
-- [ ] Probar criterios de aceptación (pruebas de la app ✅; `011` aplicada y permisos SQL OK; falta probar en un dispositivo).
+- [x] Probar criterios de aceptación (pruebas de la app, permisos SQL y dispositivo ✅).
 
 ---
 
@@ -211,7 +211,7 @@ pedidos hay en cada uno, sin salir de la vista de activos.
 - [x] `FiltroAdmin` → `{pestania, estados[]}`; actualizar `estadosDeFiltro`/`ordenAscendente` (+ `alternarEstado`) y pruebas.
 - [x] Componente `FiltrosEstado` con pestañas + chips múltiples con contador.
 - [x] Ajustar `usePedidosAdmin` y `admin/index.tsx`; actualizar `__tests__/admin/pedidos.test.tsx`.
-- [ ] Probar criterios de aceptación (pruebas de la app ✅; falta probar en un dispositivo).
+- [x] Probar criterios de aceptación (pruebas de la app y dispositivo ✅).
 
 ---
 
@@ -255,11 +255,18 @@ desde la app, sin entrar al Dashboard de Supabase.
 - **D3. Permisos (`012_catalogo_admin.sql`).** Políticas `insert` y `update` en
   `catalogo_pasteles` solo para `mi_rol() = 'admin'`; políticas de Storage para que
   el admin suba/reemplace archivos en el bucket `catalogo`. Nombre del archivo:
-  `<id del pastel>-<timestamp>.<ext>` (evita caché de imágenes viejas).
+  `pastel-<timestamp>-<aleatorio>.<ext>` (evita caché de imágenes viejas). Se usa
+  en vez de `<id>-<timestamp>` porque la imagen se sube antes de guardar y un
+  pastel nuevo aún no tiene id. ✅ Confirmado.
 - **D4. Imagen anterior.** Al reemplazar la imagen se intenta borrar la anterior;
   si falla, no se bloquea el guardado (queda huérfana, se registra en consola).
 - **D5. Paginación.** Lista del admin con el mismo patrón de 10 en 10 de F01 D6,
   ordenada por nombre.
+- **D6. Niveles según tamaño. ✅ Confirmado.** El formulario aplica el mismo máximo
+  de niveles por tamaño que el wizard (`NIVELES_MAX`), para que un pastel del
+  catálogo siempre se pueda pedir tal como se publicó.
+- **D7. Nombre único en la base.** Índice único sobre `lower(btrim(nombre))` en
+  `012`; la app traduce el error `23505` a "Ya existe un pastel con ese nombre".
 
 ### Casos de error
 - Campo obligatorio vacío o nombre repetido → mensaje junto al campo (F05).
@@ -268,19 +275,19 @@ desde la app, sin entrar al Dashboard de Supabase.
 - Error de red al guardar → diálogo de error con "Reintentar" (F05).
 
 ### Criterios de aceptación
-- [ ] El admin puede crear un pastel con imagen y aparece en el catálogo del cliente.
-- [ ] Puede editarlo y ocultarlo; un pastel oculto no aparece al cliente.
-- [ ] El precio de la tarjeta coincide con el que calcula el wizard para esa configuración.
-- [ ] Un cliente o repartidor no puede crear ni editar pasteles (probado en SQL).
+- [x] El admin puede crear un pastel con imagen y aparece en el catálogo del cliente.
+- [x] Puede editarlo y ocultarlo; un pastel oculto no aparece al cliente.
+- [x] El precio de la tarjeta coincide con el que calcula el wizard para esa configuración.
+- [x] Un cliente o repartidor no puede crear ni editar pasteles (probado en SQL).
 
 ### Tareas
-- [ ] Migración `012_catalogo_admin.sql` (D2, D3).
-- [ ] Actualizar `02-data-model.md` (permisos de `catalogo_pasteles` y Storage) y `01-navigation.md`.
-- [ ] `catalogoService`: `listarCatalogoAdmin`, `guardarPastel`, `subirImagenCatalogo`, con pruebas.
-- [ ] `admin/catalogo/index.tsx`, `admin/catalogo/[id].tsx` y opción en el menú.
-- [ ] Validaciones del formulario en `utils/validaciones.ts`, con pruebas.
-- [ ] Ampliar `backend/supabase/tests/permisos_admin.sql`.
-- [ ] Probar criterios de aceptación.
+- [x] Migración `012_catalogo_admin.sql` (D2, D3, D7).
+- [x] Actualizar `02-data-model.md` (permisos de `catalogo_pasteles` y Storage) y `01-navigation.md`.
+- [x] `catalogoService`: `listarCatalogoAdmin`, `obtenerPastelAdmin`, `guardarPastel`, `subirImagenCatalogo`, con pruebas.
+- [x] `admin/catalogo/index.tsx`, `admin/catalogo/[id].tsx` y opción en el menú.
+- [x] Validaciones del formulario en `utils/catalogo.ts` (`validarPastel`), con pruebas.
+- [x] Script `backend/supabase/tests/permisos_catalogo.sql` (cliente, repartidor y admin).
+- [x] Probar criterios de aceptación.
 
 ---
 

@@ -30,6 +30,7 @@ Se aplican **en orden**:
 | `009_validar_repartidor.sql` | El trigger de transiciones solo acepta como `repartidor_id` a perfiles con rol `repartidor` | F04 |
 | `010_repartidor_ve_clientes.sql` | Política para que el repartidor vea el nombre del cliente de sus entregas en camino | F06 |
 | `011_no_entregado.sql` | Estado `no_entregado` con `motivo_no_entrega`, trigger y política del repartidor; función `contar_pedidos_por_estado()` | F07 M2, M3 |
+| `012_catalogo_admin.sql` | El admin crea y edita pasteles del catálogo (sin borrar); nombre único; trigger que calcula `precio_base`; políticas del bucket `catalogo` | F07 M4 |
 
 ## Pruebas de permisos
 
@@ -40,6 +41,7 @@ muestran una tabla con `OK` / `FALLA` por prueba.
 | Script | Qué prueba | Feature |
 |---|---|---|
 | `permisos_admin.sql` | Otro cliente, el dueño y un repartidor no ven ni cambian el pedido; el admin solo avanza por transiciones válidas y `en_camino` exige repartidor | F04 |
+| `permisos_catalogo.sql` | Cliente y repartidor no crean, editan ni suben imágenes al catálogo; el admin crea, edita y oculta (no borra), el precio lo calcula la base y el nombre no se repite | F07 M4 |
 | `permisos_repartidor.sql` | El repartidor ve solo su entrega (detalle y nombre del cliente, sin pagos), no ve ni cambia pedidos ajenos y solo puede pasar `en_camino → entregado` | F06 |
 
 El modelo completo, el ciclo de estados y los permisos por rol están en

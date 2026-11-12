@@ -47,6 +47,25 @@ export interface PastelCatalogo {
     relleno: RellenoId;
 }
 
+// pastel visto por el admin: incluye los ocultos (F07 M4)
+export interface PastelAdmin extends PastelCatalogo {
+    activo: boolean;
+}
+
+// formulario de alta y edicion de un pastel del catalogo (F07 M4); precio_base no
+// se captura: lo calcula la base (012)
+export interface FormularioPastel {
+    nombre: string;
+    descripcion: string;
+    tamanio: Tamanio | null;
+    niveles: Niveles | null;
+    tipoPan: SaborPanId | null;
+    relleno: RellenoId | null;
+    activo: boolean;
+    imagenUrl: string | null;           // la que ya esta publicada
+    imagenLocal: ImagenLocal | null;    // nueva por subir
+}
+
 // imagen elegida en la galeria, aun sin subir (D9)
 export interface ImagenLocal {
     uri: string;

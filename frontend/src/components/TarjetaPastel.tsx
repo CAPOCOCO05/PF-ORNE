@@ -3,13 +3,16 @@ import { formatearPrecio } from "../constants/precios";
 import { COLORS } from "../theme/colors";
 import { PastelCatalogo } from "../types/pedido.types";
 
-interface TarjetaPastelProps {
-    pastel: PastelCatalogo;
-    onPedir: (pastel: PastelCatalogo) => void;
+// lo que muestra la tarjeta; la vista previa del admin (F07 M4) no tiene un pastel completo
+type DatosTarjeta = Pick<PastelCatalogo, 'nombre' | 'descripcion' | 'imagen_url' | 'precio_base'>;
+
+interface TarjetaPastelProps<P extends DatosTarjeta> {
+    pastel: P;
+    onPedir?: (pastel: P) => void;  // sin onPedir no se muestra el boton (vista previa)
 }
 
 // tarjeta del catalogo: imagen, precio, detalles y "Pedir" (design/pantalla_principal_catalogo.png)
-export default function TarjetaPastel({pastel, onPedir}: TarjetaPastelProps) {
+export default function TarjetaPastel<P extends DatosTarjeta>({pastel, onPedir}: TarjetaPastelProps<P>) {
     return (
         <View style={styles.tarjeta}>
             <View style={styles.marcoImagen}>
@@ -25,14 +28,14 @@ export default function TarjetaPastel({pastel, onPedir}: TarjetaPastelProps) {
             {pastel.descripcion ? (
                 <Text style={styles.descripcion} numberOfLines={2}>{pastel.descripcion}</Text>
             ) : null}
-            <Pressable
+            {onPedir ? <Pressable
                 onPress={() => onPedir(pastel)}
                 accessibilityRole="button"
                 accessibilityLabel={`Pedir ${pastel.nombre}`}
                 style={({pressed}) => [styles.botonPedir, pressed && styles.presionado]}
             >
                 <Text style={styles.textoPedir}>Pedir</Text>
-            </Pressable>
+            </Pressable> : null}
         </View>
     );
 }
