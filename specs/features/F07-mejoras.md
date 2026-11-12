@@ -11,7 +11,7 @@
 | M2 | Pedido no entregado por el repartidor | Repartidor / Admin / Cliente | ✅ Completa |
 | M3 | Filtro por estado dentro de "Activos" en el panel admin | Admin | ✅ Completa |
 | M4 | Publicar y editar pasteles del catálogo desde la app | Admin | ✅ Completa |
-| M5 | Filtros del catálogo del cliente (precio, sabores, relleno…) | Cliente | 🔲 Pendiente |
+| M5 | Filtros del catálogo del cliente (precio, sabores, relleno…) | Cliente | 🟡 Implementada (falta probar en un dispositivo) |
 | M6 | Nombre completo del cliente (para el repartidor) | Cliente / Repartidor | 🔲 Pendiente |
 | M7 | Perfil del cliente con sus datos de contacto, editable | Cliente | 🔲 Pendiente |
 
@@ -298,16 +298,22 @@ Que el cliente encuentre más rápido un pastel filtrando el catálogo por preci
 sabor de pan, relleno, tamaño y niveles.
 
 ### Diseño
-- En `home.tsx`, junto a "Crear pedido", un botón **"Filtrar"** con un indicador del
-  número de filtros activos.
-- Abre un panel inferior (modal con el estilo de M1) con secciones de chips:
+- En `home.tsx`, debajo de "Crear pedido", una barra compacta con dos botones
+  desplegables: **"Filtrar ▾"** (con el número de filtros activos, p. ej.
+  "Filtrar (3)") y **"Ordenar: Nombre ▾"**. ✅ Confirmado (2026-11-12): en lugar
+  del panel inferior (modal) se usan desplegables que se abren debajo de la barra,
+  para no cubrir el catálogo.
+- "Filtrar" despliega un panel con una fila de chips por sección (con
+  desplazamiento horizontal para que el panel sea bajo):
   - **Precio:** Hasta $500 · $500–$800 · $800–$1,200 · Más de $1,200 (una opción).
   - **Pan:** los 6 sabores (varias opciones).
   - **Relleno:** los 5 rellenos (varias opciones).
   - **Tamaño:** 10, 15, 20, 30 personas (varias opciones).
   - **Niveles:** 1, 2, 3, 4 (varias opciones).
-  - **Ordenar por:** Nombre (por defecto) · Precio menor a mayor · Precio mayor a menor.
-- Botones "Limpiar" (secundario) y "Ver resultados" (principal).
+- "Ordenar" despliega una lista corta: Nombre (por defecto) · Precio: menor a
+  mayor · Precio: mayor a menor; al elegir se aplica y se cierra.
+- En el panel de filtros: "Limpiar" (enlace) y "Ver resultados" (principal). Lo
+  elegido es un borrador hasta presionar "Ver resultados" (no consulta en cada toque).
 - Debajo del encabezado se muestran los filtros aplicados como chips con "×" para
   quitarlos uno por uno.
 
@@ -319,13 +325,16 @@ sabor de pan, relleno, tamaño y niveles.
 - **D2. Rangos de precio. ✅ Confirmado (provisionales).** Se ajustarán cuando se
   definan los montos finales de F01 D7; por eso viven en
   `src/constants/filtrosCatalogo.ts` y no en el código de la pantalla. Filtran sobre `precio_base`
-  (que con M4 D2 coincide con el precio real).
+  (que con M4 D2 coincide con el precio real). Cada límite superior es inclusivo
+  ("Hasta $500" incluye $500; "$500–$800" es más de $500 y hasta $800).
 - **D3. Combinación.** Dentro de una sección las opciones se suman (O); entre
   secciones se acotan (Y). Ej.: pan Chocolate o Vainilla **y** relleno Cajeta.
 - **D4. Persistencia.** Los filtros se conservan al ir al wizard y regresar; se
   reinician al cerrar sesión. No se guardan en el dispositivo.
 - **D5. Orden estable.** Al ordenar por precio se agrega `nombre` e `id` como
   desempate para que la paginación no repita ni salte pasteles.
+- **D6. Respuestas viejas.** Si los filtros cambian mientras carga una página, la
+  respuesta anterior se descarta (`useCatalogo` lleva un contador de solicitudes).
 
 ### Casos de error
 - Sin resultados → "No hay pasteles con esos filtros" + botón "Limpiar filtros"
@@ -339,12 +348,13 @@ sabor de pan, relleno, tamaño y niveles.
 - [ ] Sin resultados se muestra un mensaje distinto al del catálogo vacío.
 
 ### Tareas
-- [ ] `src/constants/filtrosCatalogo.ts` y tipo `FiltrosCatalogo`.
-- [ ] `listarCatalogo(pagina, filtros)` con pruebas por cada filtro y el orden.
-- [ ] `useCatalogo` recibe filtros y reinicia la paginación al cambiarlos.
-- [ ] Componente `PanelFiltros` y chips de filtros aplicados en `home.tsx`.
-- [ ] Actualizar `__tests__/cliente/home.test.tsx`.
-- [ ] Probar criterios de aceptación.
+- [x] `src/constants/filtrosCatalogo.ts` y tipo `FiltrosCatalogo`.
+- [x] Utilidades en `utils/filtrosCatalogo.ts` (contar, chips aplicados, quitar, limpiar), con pruebas.
+- [x] `listarCatalogo(pagina, filtros)` con pruebas por cada filtro y el orden.
+- [x] `useCatalogo` recibe filtros y reinicia la paginación al cambiarlos.
+- [x] Componentes `BarraFiltros`, `PanelFiltros`, `FiltrosAplicados` y `ChipFiltro` en `src/components/catalogo/`, integrados en `home.tsx`.
+- [x] Actualizar `__tests__/cliente/home.test.tsx`.
+- [ ] Probar criterios de aceptación (pruebas de la app ✅; falta probar en un dispositivo).
 
 ---
 

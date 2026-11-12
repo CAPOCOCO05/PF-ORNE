@@ -167,3 +167,16 @@ export interface EntregaRepartidor {
     niveles: Niveles | null;
     entrega: DatosEntrega;
 }
+
+// filtros del catalogo del cliente (F07 M5)
+export type RangoPrecioId = 'hasta500' | '500a800' | '800a1200' | 'mas1200';
+export type OrdenCatalogo = 'nombre' | 'precioAsc' | 'precioDesc';
+
+export interface FiltrosCatalogo {
+    precio: RangoPrecioId | null;   // una sola opcion
+    panes: SaborPanId[];            // varias: se suman (O) dentro de la seccion (D3)
+    rellenos: RellenoId[];
+    tamanios: Tamanio[];
+    niveles: Niveles[];
+    orden: OrdenCatalogo;
+}

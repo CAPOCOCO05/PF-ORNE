@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import Home from "../../app/(cliente)/home";
 import { useCatalogo } from "../../src/hooks/useCatalogo";
+import { FILTROS_VACIOS } from "../../src/constants/filtrosCatalogo";
 
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
@@ -80,5 +81,97 @@ describe("Home (catalogo)", () => {
         await render(<Home />);
 
         expect(screen.getByText("No hay más pasteles")).toBeTruthy();
+    });
+});
+
+describe("Home: filtros del catalogo (F07 M5)", () => {
+    // filtros con los que se llamo al hook en el ultimo render
+    const ultimosFiltros = () => (useCatalogo as jest.Mock).mock.calls.at(-1)?.[0];
+
+    it("al inicio no hay filtros y el desplegable esta cerrado", async () => {
+        mockCatalogo({ pasteles: [PASTEL] });
+        await render(<Home />);
+
+        expect(ultimosFiltros()).toEqual(FILTROS_VACIOS);
+        expect(screen.getByText("Filtrar")).toBeTruthy();
+        expect(screen.getByText("Ordenar: Nombre")).toBeTruthy();
+        expect(screen.queryByTestId("panel-filtros")).toBeNull();
+    });
+
+    it("elige filtros de varias secciones y los aplica con 'Ver resultados'", async () => {
+        mockCatalogo({ pasteles: [PASTEL] });
+        await render(<Home />);
+
+        await fireEvent.press(screen.getByText("Filtrar"));
+        await fireEvent.press(screen.getByLabelText("Precio $500–$800"));
+        await fireEvent.press(screen.getByLabelText("Pan Chocolate"));
+        await fireEvent.press(screen.getByLabelText("Pan Vainilla"));
+        await fireEvent.press(screen.getByLabelText("Relleno Cajeta"));
+        expect(ultimosFiltros()).toEqual(FILTROS_VACIOS); // aun es borrador
+
+        await fireEvent.press(screen.getByText("Ver resultados"));
+
+        expect(ultimosFiltros()).toEqual({
+            ...FILTROS_VACIOS, precio: "500a800", panes: ["chocolate", "vainilla"], rellenos: ["cajeta"],
+        });
+        expect(screen.queryByTestId("panel-filtros")).toBeNull();
+        expect(screen.getByText("Filtrar (4)")).toBeTruthy();
+        expect(screen.getByText("Pan: Chocolate")).toBeTruthy();
+    });
+
+    it("quita un filtro con su chip y todos con 'Quitar todos'", async () => {
+        mockCatalogo({ pasteles: [PASTEL] });
+        await render(<Home />);
+        await fireEvent.press(screen.getByText("Filtrar"));
+        await fireEvent.press(screen.getByLabelText("Tamaño 15 personas"));
+        await fireEvent.press(screen.getByLabelText("Niveles 2 niveles"));
+        await fireEvent.press(screen.getByText("Ver resultados"));
+
+        await fireEvent.press(screen.getByLabelText("Quitar filtro 15 personas"));
+        expect(ultimosFiltros()).toEqual({ ...FILTROS_VACIOS, niveles: [2] });
+
+        await fireEvent.press(screen.getByText("Filtrar (1)"));
+        await fireEvent.press(screen.getByLabelText("Pan Fresa"));
+        await fireEvent.press(screen.getByText("Ver resultados"));
+        await fireEvent.press(screen.getByText("Quitar todos"));
+        expect(ultimosFiltros()).toEqual(FILTROS_VACIOS);
+    });
+
+    it("'Limpiar' en el desplegable desmarca todo antes de aplicar", async () => {
+        mockCatalogo({ pasteles: [PASTEL] });
+        await render(<Home />);
+        await fireEvent.press(screen.getByText("Filtrar"));
+        await fireEvent.press(screen.getByLabelText("Pan Fresa"));
+
+        await fireEvent.press(screen.getByText("Limpiar"));
+        await fireEvent.press(screen.getByText("Ver resultados"));
+
+        expect(ultimosFiltros()).toEqual(FILTROS_VACIOS);
+    });
+
+    it("ordena por precio desde su desplegable", async () => {
+        mockCatalogo({ pasteles: [PASTEL] });
+        await render(<Home />);
+
+        await fireEvent.press(screen.getByText("Ordenar: Nombre"));
+        await fireEvent.press(screen.getByLabelText("Precio: mayor a menor"));
+
+        expect(ultimosFiltros()).toEqual({ ...FILTROS_VACIOS, orden: "precioDesc" });
+        expect(screen.getByText("Ordenar: Precio: mayor a menor")).toBeTruthy();
+    });
+
+    it("sin resultados con filtros: mensaje distinto y 'Limpiar filtros'", async () => {
+        mockCatalogo({ hayMas: false });
+        await render(<Home />);
+        await fireEvent.press(screen.getByText("Filtrar"));
+        await fireEvent.press(screen.getByLabelText("Pan Fresa"));
+        await fireEvent.press(screen.getByText("Ver resultados"));
+
+        expect(screen.getByText("No hay pasteles con esos filtros")).toBeTruthy();
+        expect(screen.queryByText("Aún no hay pasteles en el catálogo")).toBeNull();
+
+        await fireEvent.press(screen.getByText("Limpiar filtros"));
+        expect(ultimosFiltros()).toEqual(FILTROS_VACIOS);
+        expect(screen.getByText("Aún no hay pasteles en el catálogo")).toBeTruthy();
     });
 });

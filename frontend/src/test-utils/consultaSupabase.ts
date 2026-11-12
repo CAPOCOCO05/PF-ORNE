@@ -1,7 +1,7 @@
 // simula una consulta encadenada de supabase-js (from().select().eq()...) para las pruebas:
 // cada metodo devuelve la misma consulta y al esperarla (o con single/maybeSingle) resuelve `respuesta`
 
-const METODOS_CADENA = ['select', 'insert', 'update', 'upsert', 'delete', 'eq', 'in', 'order', 'range'] as const;
+const METODOS_CADENA = ['select', 'insert', 'update', 'upsert', 'delete', 'eq', 'in', 'gt', 'lte', 'order', 'range'] as const;
 
 type MetodoCadena = typeof METODOS_CADENA[number];
 

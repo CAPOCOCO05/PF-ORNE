@@ -1,17 +1,25 @@
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
 import { useRouter } from "expo-router";
 import Boton from "../../src/components/Boton";
 import TarjetaPastel from "../../src/components/TarjetaPastel";
+import BarraFiltros from "../../src/components/catalogo/BarraFiltros";
+import { FILTROS_VACIOS } from "../../src/constants/filtrosCatalogo";
 import { useCatalogo } from "../../src/hooks/useCatalogo";
 import { COLORS } from "../../src/theme/colors";
-import { PastelCatalogo } from "../../src/types/pedido.types";
+import { FiltrosCatalogo, PastelCatalogo } from "../../src/types/pedido.types";
+import { hayFiltros, limpiarFiltros } from "../../src/utils/filtrosCatalogo";
 
 const MENSAJE_CATALOGO_VACIO = 'Aún no hay pasteles en el catálogo';
+const MENSAJE_SIN_RESULTADOS = 'No hay pasteles con esos filtros';
 
 // F01: catalogo base paginado — pantalla de inicio del cliente (design/pantalla_principal_catalogo.png)
 export default function Home() {
     const router = useRouter();
-    const {pasteles, hayMas, cargando, error, cargarMas, reintentar, recargar} = useCatalogo();
+    // F07 M5 D4: la pantalla sigue montada al ir al wizard (Drawer), asi los filtros se
+    // conservan; al cerrar sesion se desmonta la seccion y se reinician
+    const [filtros, setFiltros] = useState<FiltrosCatalogo>(FILTROS_VACIOS);
+    const {pasteles, hayMas, cargando, error, cargarMas, reintentar, recargar} = useCatalogo(filtros);
     const primeraCarga = pasteles.length === 0;
 
     // "Pedir" precarga el wizard con la configuracion del pastel; "Crear pedido" lo abre vacio (D6)
@@ -22,14 +30,25 @@ export default function Home() {
         <View style={styles.encabezado}>
             <Text style={styles.titulo}>Catálogo</Text>
             <Boton titulo="Crear pedido" onPress={crearPedido} style={styles.botonCrear} />
+            <BarraFiltros filtros={filtros} onCambiar={setFiltros} />
         </View>
     );
 
-    // lista vacia: cargando la primera pagina, error o catalogo sin pasteles
+    // lista vacia: cargando la primera pagina, error, sin resultados con filtros o catalogo sin pasteles
     const vacio = cargando ? (
         <ActivityIndicator testID="catalogo-cargando" color={COLORS.BOTON_PRINCIPAL} style={styles.estado} />
     ) : error ? (
         <AvisoError mensaje={error} onReintentar={reintentar} />
+    ) : hayFiltros(filtros) ? (
+        <View style={styles.estado}>
+            <Text style={styles.textoEstado}>{MENSAJE_SIN_RESULTADOS}</Text>
+            <Boton
+                titulo="Limpiar filtros"
+                variante="secundario"
+                onPress={() => setFiltros(limpiarFiltros(filtros))}
+                style={styles.botonReintentar}
+            />
+        </View>
     ) : (
         <Text style={[styles.estado, styles.textoEstado]}>{MENSAJE_CATALOGO_VACIO}</Text>
     );
@@ -81,7 +100,7 @@ const styles = StyleSheet.create({
     encabezado: {
         alignItems: 'center',
         paddingTop: 24,
-        paddingBottom: 24,
+        paddingBottom: 16,
     },
     titulo: {
         fontSize: 24,

@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import { traducirErrorDatos } from "./erroresDatos";
-import { FormularioPastel, ImagenLocal, PastelAdmin, PastelCatalogo } from "../types/pedido.types";
+import { FILTROS_VACIOS, RANGOS_PRECIO } from "../constants/filtrosCatalogo";
+import { FiltrosCatalogo, FormularioPastel, ImagenLocal, OrdenCatalogo, PastelAdmin, PastelCatalogo } from "../types/pedido.types";
 import { MENSAJES_CATALOGO, nombreImagenCatalogo, rutaDeUrlCatalogo } from "../utils/catalogo";
 import { extensionImagen, MENSAJES_PEDIDO, mimeImagen } from "../utils/pedido";
 
@@ -17,20 +18,47 @@ interface PaginaCatalogo {
 }
 
 // pagina empieza en 0; se pide un registro de mas para saber si hay otra pagina
-// sin hacer un conteo aparte. RLS ya filtra activo = true para el cliente
-export async function listarCatalogo(pagina: number, porPagina: number = PASTELES_POR_PAGINA): Promise<PaginaCatalogo> {
+// sin hacer un conteo aparte. RLS ya filtra activo = true para el cliente.
+// Los filtros se aplican en el servidor (M5 D1) y la paginacion de 10 en 10 se mantiene
+export async function listarCatalogo(
+    pagina: number,
+    filtros: FiltrosCatalogo = FILTROS_VACIOS,
+    porPagina: number = PASTELES_POR_PAGINA,
+): Promise<PaginaCatalogo> {
     const desde = pagina * porPagina;
-    const {data, error} = await supabase
-        .from('catalogo_pasteles')
-        .select(COLUMNAS)
-        .eq('activo', true)
-        .order('nombre')
+    const {data, error} = await ordenarCatalogo(filtrarCatalogo(consultaCatalogo(), filtros), filtros.orden)
         .range(desde, desde + porPagina);
     if (error) {
         return {pasteles: [], hayMas: false, error: traducirErrorDatos(error)};
     }
-    const filas = (data ?? []) as PastelCatalogo[];
+    const filas = ((data ?? []) as PastelCatalogo[]).map((fila) => ({...fila, precio_base: Number(fila.precio_base)}));
     return {pasteles: filas.slice(0, porPagina), hayMas: filas.length > porPagina, error: null};
+}
+
+function consultaCatalogo() {
+    return supabase.from('catalogo_pasteles').select(COLUMNAS).eq('activo', true);
+}
+
+// consulta de supabase-js en la que se pueden encadenar filtros y orden
+type ConsultaCatalogo = ReturnType<typeof consultaCatalogo>;
+
+// dentro de una seccion las opciones se suman con .in(); entre secciones se acotan (D3)
+function filtrarCatalogo(consulta: ConsultaCatalogo, filtros: FiltrosCatalogo): ConsultaCatalogo {
+    let filtrada = consulta;
+    const rango = RANGOS_PRECIO.find((r) => r.id === filtros.precio);
+    if (rango?.mayorQue !== undefined) filtrada = filtrada.gt('precio_base', rango.mayorQue);
+    if (rango?.hasta !== undefined) filtrada = filtrada.lte('precio_base', rango.hasta);
+    if (filtros.panes.length) filtrada = filtrada.in('tipo_pan', filtros.panes);
+    if (filtros.rellenos.length) filtrada = filtrada.in('relleno', filtros.rellenos);
+    if (filtros.tamanios.length) filtrada = filtrada.in('tamanio', filtros.tamanios);
+    if (filtros.niveles.length) filtrada = filtrada.in('niveles', filtros.niveles);
+    return filtrada;
+}
+
+// nombre e id como desempate para que la paginacion no repita ni salte pasteles (D5)
+function ordenarCatalogo(consulta: ConsultaCatalogo, orden: OrdenCatalogo): ConsultaCatalogo {
+    const porPrecio = orden === 'nombre' ? consulta : consulta.order('precio_base', {ascending: orden === 'precioAsc'});
+    return porPrecio.order('nombre').order('id');
 }
 
 // para precargar el wizard al presionar "Pedir" en una tarjeta
