@@ -15,7 +15,8 @@ export default function Index(){
         return <Cargando />;
     }
     if(!session){
-        return <Redirect href="/login" />;
+        // F09: sin sesion se explora el catalogo; la cuenta se pide al hacer un pedido
+        return <Redirect href="/home" />;
     }
     if(perfil){
         return <Redirect href={rutaPorRol(perfil.rol)} />;

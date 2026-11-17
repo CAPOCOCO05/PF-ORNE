@@ -58,13 +58,16 @@ app/
 | Condición | Destino |
 |---|---|
 | Cargando sesión o perfil | Spinner |
-| Sin sesión | `/login` |
+| Sin sesión | `/home` (catálogo como visitante, F09) |
 | Rol `cliente` | `/home` |
 | Rol `admin` | `/admin` |
 | Rol `repartidor` | `/repartidor` |
 
 Cada `_layout.tsx` de rol repite la verificación: si el usuario no tiene ese rol, lo
-regresa a `/`. Así no se puede entrar escribiendo la URL o con un enlace profundo.
+regresa a `/`. Excepción (F09): la sección del cliente deja entrar sin sesión
+(`permitirInvitado`); ahí `pedidos`, `perfil`, `perfil/editar`, `pedido/[id]` y el
+wizard muestran "Inicia sesión o crea tu cuenta" (`RequiereCuenta`). "Pedir" sin
+sesión abre `/register?pedir=<id|nuevo>` y al terminar se continúa con el wizard. Así no se puede entrar escribiendo la URL o con un enlace profundo.
 (La seguridad real está en las políticas RLS; la guardia es solo de navegación.)
 
 ## Encabezado y barra de navegación (F08 N1)

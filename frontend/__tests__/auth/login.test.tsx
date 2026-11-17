@@ -5,10 +5,13 @@ import { useAuth } from "../../src/context/AuthContext";
 import { MENSAJES_VALIDACION } from "../../src/utils/validaciones";
 
 const mockReplace = jest.fn();
+const mockDismissTo = jest.fn();
+let mockParams: { pedir?: string } = {};
 jest.mock("expo-router", () => {
     const { Text } = jest.requireActual("react-native");
     return {
-        useRouter: () => ({ replace: mockReplace }),
+        useRouter: () => ({ replace: mockReplace, dismissTo: mockDismissTo }),
+        useLocalSearchParams: () => mockParams,
         Link: ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>,
     };
 });
@@ -18,6 +21,7 @@ const mockSignIn = jest.fn();
 
 beforeEach(() => {
     jest.clearAllMocks();
+    mockParams = {};
     (useAuth as jest.Mock).mockReturnValue({ signIn: mockSignIn, authError: null });
 });
 
@@ -67,5 +71,23 @@ describe("Login", () => {
         await render(<Login />);
 
         expect(screen.getByText("No se pudo cargar tu cuenta, inicia sesión de nuevo")).toBeTruthy();
+    });
+
+    it("si venia de 'Pedir', al iniciar sesion abre el pedido con ese pastel (F09)", async () => {
+        mockParams = { pedir: "p1" };
+        mockSignIn.mockResolvedValue({ error: null });
+        await render(<Login />);
+
+        await llenar("ana@mail.com", "secreto");
+        await fireEvent.press(screen.getByText("Iniciar sesión"));
+
+        await waitFor(() => expect(mockDismissTo).toHaveBeenCalledWith({ pathname: "/pedido/nuevo", params: { pastel: "p1" } }));
+        expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it("permite volver al catalogo sin cuenta (F09)", async () => {
+        await render(<Login />);
+
+        expect(screen.getByText("Ver catálogo sin cuenta")).toBeTruthy();
     });
 });

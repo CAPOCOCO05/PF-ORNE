@@ -39,11 +39,11 @@ describe("Index (redireccion inicial)", () => {
         expect(screen.getByTestId("cargando")).toBeTruthy();
     });
 
-    it("sin sesion va a /login", async () => {
+    it("sin sesion va al catalogo (F09)", async () => {
         mockAuth({});
         await render(<Index />);
 
-        expect(screen.getByText("redirect:/login")).toBeTruthy();
+        expect(screen.getByText("redirect:/home")).toBeTruthy();
     });
 
     it.each([

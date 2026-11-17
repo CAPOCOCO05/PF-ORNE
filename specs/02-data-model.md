@@ -111,7 +111,7 @@ Reglas:
 | `pedido_detalle` | Ver/crear/editar el de sus borradores | Ver todos | Ver el de sus entregas |
 | `pagos` | Ver/crear los suyos | Ver todos | — |
 | `datos_cliente` | Ver, crear y editar la suya (sin borrar) (F07 M7) | — | — |
-| `catalogo_pasteles` | Ver activos | Ver todos; crear y editar, sin borrar (F07 M4) | — |
+| `catalogo_pasteles` | Ver activos (también sin sesión, rol `anon`, F09) | Ver todos; crear y editar, sin borrar (F07 M4) | — |
 | Storage `referencias-pasteles` | Subir/ver en su carpeta | Ver todo | — |
 | Storage `catalogo` (público) | Ver (URL pública) | Subir, reemplazar y borrar (F07 M4) | Ver (URL pública) |
 
@@ -135,6 +135,7 @@ En `backend/supabase/migrations/`, en este orden:
 | `012_catalogo_admin.sql` | Admin crea y edita pasteles (sin `delete`), nombre único, trigger que calcula `precio_base` con `calcular_precio`, políticas de Storage del bucket `catalogo` | F07 M4 |
 | `013_datos_cliente.sql` | Tabla `datos_cliente` con RLS solo del dueño, llenado inicial desde el último pedido y trigger que la completa al confirmar un pedido | F07 M7 |
 | `014_precios_relleno.sql` | Montos confirmados de los rellenos en `calcular_precio` (Cajeta $50, Mermelada $70) y recálculo de `precio_base` del catálogo | F01 D7 |
+| `015_catalogo_publico.sql` | Lectura de los pasteles activos sin sesión (rol `anon`) | F09 |
 
 ## Catálogo de sabores e imágenes
 
@@ -183,7 +184,8 @@ create table catalogo_pasteles (
 );
 ```
 
-Esta tabla **sí** necesita RLS: cualquier usuario con sesión ve el catálogo activo
+Esta tabla **sí** necesita RLS: cualquier persona, con o sin sesión (`anon`, F09,
+`015`), ve el catálogo activo
 y solo el admin lo crea y edita, desde la app (F07 M4, `012`). `precio_base` lo
 calcula un trigger con `calcular_precio`, así que siempre coincide con lo que cobra
 el wizard; el nombre es único sin distinguir mayúsculas. No se borran pasteles:

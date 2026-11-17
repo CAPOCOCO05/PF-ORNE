@@ -8,11 +8,21 @@ import { useDatosCliente } from "../../src/hooks/useDatosCliente";
 import { COLORS } from "../../src/theme/colors";
 import { DireccionGuardada } from "../../src/types/pedido.types";
 import { textoDireccion } from "../../src/utils/datosCliente";
+import RequiereCuenta from "../../src/components/RequiereCuenta";
 
 const MENSAJE_SIN_DIRECCION = 'Aún no tienes una dirección guardada';
 
 // F07 M7: perfil del cliente con sus datos de contacto (admin y repartidor siguen con PantallaPerfil)
-export default function Perfil() {
+// F09: sin sesion se invita a crear cuenta en lugar de consultar datos
+export default function PerfilProtegida() {
+    return (
+        <RequiereCuenta mensaje="Crea tu cuenta para guardar tus datos y tu dirección de entrega.">
+            <Perfil />
+        </RequiereCuenta>
+    );
+}
+
+function Perfil() {
     const router = useRouter();
     const {signOut} = useAuth();
     const {nombre, correo, datos, cargando, error, recargar} = useDatosCliente();

@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from 'react-native'
-import { Link, useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { useDialogo } from '../../src/context/DialogoContext';
 import { useState } from 'react';
@@ -7,6 +7,7 @@ import Boton from '../../src/components/Boton';
 import Input from '../../src/components/Input';
 import PantallaAuth from '../../src/components/PantallaAuth';
 import { COLORS } from '../../src/theme/colors';
+import { rutaTrasAutenticar } from '../../src/utils/rutas';
 import { DatosRegistro, MAX_NOMBRE, normalizarNombre, tieneErrores, validarRegistro } from '../../src/utils/validaciones';
 
 const DATOS_VACIOS: DatosRegistro = {nombre: '', correo: '', contrasena: '', confirmar: ''};
@@ -15,6 +16,9 @@ export default function Register() {
     const {signUp} = useAuth();
     const router = useRouter();
     const {avisar} = useDialogo();
+    // F09: pedido que el visitante quiso hacer desde el catalogo (id del pastel o 'nuevo')
+    const {pedir} = useLocalSearchParams<{pedir?: string}>();
+    const paramsPedido = pedir ? {pedir} : undefined;
     const [datos, setDatos] = useState<DatosRegistro>(DATOS_VACIOS);
     const [tocados, setTocados] = useState<Partial<Record<keyof DatosRegistro, boolean>>>({});
     const [intentoEnvio, setIntentoEnvio] = useState(false);
@@ -50,21 +54,27 @@ export default function Register() {
             // solo si se activa "Confirm email" en Supabase (hoy esta desactivado)
             // el dialogo vive arriba del Stack: sigue visible despues de navegar al login
             void avisar({titulo: 'Revisa tu correo', mensaje: 'Te enviamos un correo para confirmar tu cuenta.'});
-            router.replace('/login');
+            router.replace({pathname: '/login', params: paramsPedido});
             return;
         }
-        router.replace('/'); // index decide la seccion segun el rol (cliente)
+        // F09: si venia de "Pedir" sigue con su pedido; si no, index decide segun el rol (cliente)
+        if (pedir) router.dismissTo(rutaTrasAutenticar(pedir));
+        else router.replace('/');
     }
 
     const pie = (
-        <Text style={styles.textoPie}>
-            ¿Ya tienes cuenta?{' '}
-            <Link href="/login" replace style={styles.enlace}>Inicia sesión</Link>
-        </Text>
+        <>
+            <Text style={styles.textoPie}>
+                ¿Ya tienes cuenta?{' '}
+                <Link href={{pathname: '/login', params: paramsPedido}} replace style={styles.enlace}>Inicia sesión</Link>
+            </Text>
+            <Link href="/home" dismissTo style={styles.verCatalogo}>Ver catálogo sin cuenta</Link>
+        </>
     );
 
     return (
         <PantallaAuth pie={pie} mensajeError={errorEnvio}>
+            {pedir ? <Text style={styles.motivo}>Crea tu cuenta para hacer tu pedido</Text> : null}
             <Input
                 etiqueta="Nombre completo"
                 placeholder="Nombre y apellidos"
@@ -134,6 +144,19 @@ const styles = StyleSheet.create({
         color: COLORS.TITULO,
     },
     enlace: {
+        textDecorationLine: 'underline',
+    },
+    motivo: {
+        marginBottom: 12,
+        fontSize: 16,
+        fontWeight: '700',
+        color: COLORS.TITULO,
+        textAlign: 'center',
+    },
+    verCatalogo: {
+        marginTop: 12,
+        fontSize: 14,
+        color: COLORS.TITULO,
         textDecorationLine: 'underline',
     },
     aviso: {

@@ -13,9 +13,19 @@ import {
 } from "../../../src/utils/datosCliente";
 import { ENTREGA_VACIA } from "../../../src/utils/entrega";
 import { MAX_NOMBRE } from "../../../src/utils/validaciones";
+import RequiereCuenta from "../../../src/components/RequiereCuenta";
 
 // F07 M7: editar nombre, telefono y direccion guardada (no aparece en el menu)
-export default function EditarPerfil() {
+// F09: sin sesion se invita a crear cuenta en lugar de consultar datos
+export default function EditarPerfilProtegida() {
+    return (
+        <RequiereCuenta mensaje="Crea tu cuenta para guardar tus datos y tu dirección de entrega.">
+            <EditarPerfil />
+        </RequiereCuenta>
+    );
+}
+
+function EditarPerfil() {
     const router = useRouter();
     const {confirmar, avisar} = useDialogo();
     const {nombre, datos, cargando, error, recargar, guardar} = useDatosCliente();

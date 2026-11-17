@@ -6,9 +6,19 @@ import { useDialogo } from "../../src/context/DialogoContext";
 import { useMisPedidos } from "../../src/hooks/useMisPedidos";
 import { COLORS } from "../../src/theme/colors";
 import { ResumenPedido } from "../../src/types/pedido.types";
+import RequiereCuenta from "../../src/components/RequiereCuenta";
 
 // Mis pedidos: todos los pedidos del cliente, incluidos los borradores para retomarlos (F01, D2)
-export default function Pedidos() {
+// F09: sin sesion se invita a crear cuenta en lugar de consultar datos
+export default function PedidosProtegida() {
+    return (
+        <RequiereCuenta mensaje="Crea tu cuenta para hacer pedidos y darles seguimiento.">
+            <Pedidos />
+        </RequiereCuenta>
+    );
+}
+
+function Pedidos() {
     const router = useRouter();
     const {pedidos, cargando, error, eliminando, recargar, eliminar} = useMisPedidos();
     const {confirmar, avisar} = useDialogo();

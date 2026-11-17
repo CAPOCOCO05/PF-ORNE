@@ -6,6 +6,8 @@ import { FILTROS_VACIOS } from "../../src/constants/filtrosCatalogo";
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
 jest.mock("../../src/hooks/useCatalogo", () => ({ useCatalogo: jest.fn() }));
+let mockSesion: object | null = { user: { id: "u1" } };
+jest.mock("../../src/context/AuthContext", () => ({ useAuth: () => ({ session: mockSesion }) }));
 
 const mockReintentar = jest.fn();
 
@@ -22,7 +24,10 @@ function mockCatalogo(valores: object) {
     });
 }
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+    jest.clearAllMocks();
+    mockSesion = { user: { id: "u1" } };
+});
 
 describe("Home (catalogo)", () => {
     it("muestra las tarjetas con precio y detalles", async () => {
@@ -51,6 +56,27 @@ describe("Home (catalogo)", () => {
         await fireEvent.press(screen.getByText("Crear pedido"));
 
         expect(mockPush).toHaveBeenCalledWith("/pedido/nuevo");
+    });
+
+    it("sin cuenta, 'Pedir' lleva al registro recordando el pastel (F09)", async () => {
+        mockSesion = null;
+        mockCatalogo({ pasteles: [PASTEL] });
+        await render(<Home />);
+
+        expect(screen.getByText("Red Velvet")).toBeTruthy();
+        await fireEvent.press(screen.getByLabelText("Pedir Red Velvet"));
+
+        expect(mockPush).toHaveBeenCalledWith({ pathname: "/register", params: { pedir: "p1" } });
+    });
+
+    it("sin cuenta, 'Crear pedido' lleva al registro con un pedido nuevo (F09)", async () => {
+        mockSesion = null;
+        mockCatalogo({});
+        await render(<Home />);
+
+        await fireEvent.press(screen.getByText("Crear pedido"));
+
+        expect(mockPush).toHaveBeenCalledWith({ pathname: "/register", params: { pedir: "nuevo" } });
     });
 
     it("primera carga: spinner", async () => {

@@ -4,6 +4,10 @@ import { router } from "expo-router";
 import BarraNavegacion from "../../src/components/BarraNavegacion";
 import { IconoCatalogo, IconoPedidos } from "../../src/components/Iconos";
 
+let mockSesion: object | null = { user: { id: "u1" } };
+jest.mock("../../src/context/AuthContext", () => ({ useAuth: () => ({ session: mockSesion }) }));
+beforeEach(() => { mockSesion = { user: { id: "u1" } }; });
+
 // F08 N1 con el router real: las rutas sin pestaña (wizard, detalles) deben poder abrirse.
 // Regresion: con `href: null` expo-router 58 redirigia a la primera pestaña y el wizard no abria.
 
@@ -63,5 +67,30 @@ describe("BarraNavegacion con el router (F08 N1)", () => {
         await fireEvent.press(screen.getByRole("tab", {name: "Mis pedidos"}));
 
         expect(screen.getByText("Pantalla mis pedidos")).toBeTruthy();
+    });
+
+    it("sin sesion el encabezado ofrece 'Iniciar sesión' y abre el login (F09)", async () => {
+        mockSesion = null;
+        // como en la app: el login vive en el Stack raiz, fuera de la seccion con pestañas
+        await renderRouter({
+            "_layout": {default: () => {
+                const { Stack } = jest.requireActual("expo-router");
+                return <Stack screenOptions={{headerShown: false}} />;
+            }},
+            "(cliente)/_layout": Layout,
+            "(cliente)/home": pantalla("Pantalla catálogo"),
+            "(cliente)/pedidos": pantalla("Pantalla mis pedidos"),
+            "login": pantalla("Pantalla login"),
+        }, {initialUrl: "/home"});
+
+        await fireEvent.press(screen.getByText("Iniciar sesión"));
+
+        expect(screen).toHavePathname("/login");
+    });
+
+    it("con sesion no muestra 'Iniciar sesión'", async () => {
+        await montar();
+
+        expect(screen.queryByText("Iniciar sesión")).toBeNull();
     });
 });

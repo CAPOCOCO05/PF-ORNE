@@ -25,6 +25,8 @@ const mockActualizarNombre = jest.fn();
 jest.mock("../../src/context/AuthContext", () => ({
     useAuth: () => ({
         user: { id: "u1", email: "ana@mail.com" },
+        session: { user: { id: "u1" } },
+        loading: false,
         perfil: { id: "u1", nombre: "Ana López", rol: "cliente" },
         signOut: mockSignOut,
         actualizarNombre: mockActualizarNombre,

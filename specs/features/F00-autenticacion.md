@@ -44,7 +44,8 @@ privacidad**" (enlace); el login tiene el enlace "Aviso de privacidad" bajo
 
 ## Flujo principal — Login
 1. El usuario abre la app → `app/index.tsx` revisa si hay sesión guardada.
-2. Sin sesión → se muestra `login.tsx`.
+2. Sin sesión → se muestra el catálogo como visitante (F09); el login se abre con
+   "Iniciar sesión" del encabezado o al querer hacer un pedido.
 3. El usuario ingresa correo y contraseña y presiona "INICIAR SESIÓN".
 4. Supabase valida y crea la sesión; se guarda en el dispositivo (AsyncStorage).
 5. La app lee el perfil del usuario (tabla `perfiles`) para conocer su rol.
@@ -58,8 +59,8 @@ privacidad**" (enlace); el login tiene el enlace "Aviso de privacidad" bajo
 4. Inicia sesión automáticamente y entra a `/home`.
 
 ## Flujo — Cerrar sesión
-Desde la pantalla de perfil (pestaña Perfil, F08 N1) → se borra la sesión y regresa a
-`/login`.
+Desde la pantalla de perfil (pestaña Perfil, F08 N1) → se borra la sesión y regresa al
+catálogo como visitante (F09).
 
 ## Validaciones
 Se muestran en rojo bajo el campo, al salir de él o al presionar el botón (F05).

@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text } from 'react-native'
-import { Link, useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { useDialogo } from '../../src/context/DialogoContext';
 import { useState } from 'react';
@@ -7,12 +7,16 @@ import Boton from '../../src/components/Boton';
 import Input from '../../src/components/Input';
 import PantallaAuth from '../../src/components/PantallaAuth';
 import { COLORS } from '../../src/theme/colors';
+import { rutaTrasAutenticar } from '../../src/utils/rutas';
 import { DatosLogin, tieneErrores, validarLogin } from '../../src/utils/validaciones';
 
 export default function Login() {
     const {signIn, authError} = useAuth();
     const router = useRouter();
     const {avisar} = useDialogo();
+    // F09: pedido que el visitante quiso hacer desde el catalogo (id del pastel o 'nuevo')
+    const {pedir} = useLocalSearchParams<{pedir?: string}>();
+    const paramsPedido = pedir ? {pedir} : undefined;
     const [datos, setDatos] = useState<DatosLogin>({correo: '', contrasena: ''});
     const [tocados, setTocados] = useState<Partial<Record<keyof DatosLogin, boolean>>>({});
     const [intentoEnvio, setIntentoEnvio] = useState(false);
@@ -40,14 +44,19 @@ export default function Login() {
             setErrorEnvio(error);
             return;
         }
-        router.replace('/'); // index decide la seccion segun el rol
+        // F09: si venia de "Pedir" sigue con su pedido; si no, index decide segun el rol
+        if (pedir) router.dismissTo(rutaTrasAutenticar(pedir));
+        else router.replace('/');
     }
 
     const pie = (
-        <Text style={styles.textoPie}>
-            ¿No tienes cuenta?{' '}
-            <Link href="/register" style={styles.enlace}>Regístrate</Link>
-        </Text>
+        <>
+            <Text style={styles.textoPie}>
+                ¿No tienes cuenta?{' '}
+                <Link href={{pathname: '/register', params: paramsPedido}} replace style={styles.enlace}>Regístrate</Link>
+            </Text>
+            <Link href="/home" dismissTo style={styles.verCatalogo}>Ver catálogo sin cuenta</Link>
+        </>
     );
 
     return (
@@ -96,6 +105,12 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: COLORS.TITULO,
         textAlign: 'center',
+        textDecorationLine: 'underline',
+    },
+    verCatalogo: {
+        marginTop: 12,
+        fontSize: 14,
+        color: COLORS.TITULO,
         textDecorationLine: 'underline',
     },
     textoPie: {

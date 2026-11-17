@@ -5,10 +5,13 @@ import { useAuth } from "../../src/context/AuthContext";
 import { MENSAJES_VALIDACION } from "../../src/utils/validaciones";
 
 const mockReplace = jest.fn();
+const mockDismissTo = jest.fn();
+let mockParams: { pedir?: string } = {};
 jest.mock("expo-router", () => {
     const { Text } = jest.requireActual("react-native");
     return {
-        useRouter: () => ({ replace: mockReplace }),
+        useRouter: () => ({ replace: mockReplace, dismissTo: mockDismissTo }),
+        useLocalSearchParams: () => mockParams,
         Link: ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>,
     };
 });
@@ -18,6 +21,7 @@ const mockSignUp = jest.fn();
 
 beforeEach(() => {
     jest.clearAllMocks();
+    mockParams = {};
     (useAuth as jest.Mock).mockReturnValue({ signUp: mockSignUp });
 });
 
@@ -85,5 +89,25 @@ describe("Register (F00, F07 M6)", () => {
 
         expect(await screen.findByText("Este correo ya está registrado")).toBeTruthy();
         expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it("si venia de 'Crear pedido': explica el motivo y al registrarse abre el pedido (F09)", async () => {
+        mockParams = { pedir: "nuevo" };
+        mockSignUp.mockResolvedValue({ error: null, requiereConfirmacion: false });
+        await render(<Register />);
+
+        expect(screen.getByText("Crea tu cuenta para hacer tu pedido")).toBeTruthy();
+        await llenar("Ana López");
+        await fireEvent.press(screen.getByText("Registrarme"));
+
+        await waitFor(() => expect(mockDismissTo).toHaveBeenCalledWith("/pedido/nuevo"));
+        expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it("sin pedido pendiente no muestra el motivo", async () => {
+        await render(<Register />);
+
+        expect(screen.queryByText("Crea tu cuenta para hacer tu pedido")).toBeNull();
+        expect(screen.getByText("Ver catálogo sin cuenta")).toBeTruthy();
     });
 });

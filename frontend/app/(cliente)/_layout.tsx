@@ -5,7 +5,7 @@ import { IconoCatalogo, IconoPedidos, IconoPerfil } from "../../src/components/I
 // seccion del rol cliente
 export default function Layout() {
     return (
-        <GuardiaRol rol="cliente">
+        <GuardiaRol rol="cliente" permitirInvitado>
             <BarraNavegacion
                 opciones={[
                     {ruta: 'home', titulo: 'Catálogo', Icono: IconoCatalogo},

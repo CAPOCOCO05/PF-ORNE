@@ -122,6 +122,44 @@ begin
     v_pruebas := v_pruebas || 'Cliente no ve un pastel oculto'::text;
     v_estados := v_estados || case when n = 0 then 'OK' else 'FALLA' end;
 
+    -- ------------------------------------------------- visitante sin sesion (F09, 015)
+    perform set_config('role', 'anon', true);
+    perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
+
+    select count(*) into n from public.catalogo_pasteles where id = v_pastel;
+    v_pruebas := v_pruebas || 'Sin sesión ve los pasteles publicados'::text;
+    v_estados := v_estados || case when n = 1 then 'OK' else 'FALLA' end;
+
+    select count(*) into n from public.catalogo_pasteles where id = v_nuevo;
+    v_pruebas := v_pruebas || 'Sin sesión no ve un pastel oculto'::text;
+    v_estados := v_estados || case when n = 0 then 'OK' else 'FALLA' end;
+
+    v_fallo := false;
+    begin
+      insert into public.catalogo_pasteles (nombre, precio_base, tamanio, niveles, tipo_pan, relleno)
+      values ('Prueba permisos visitante', 100, '10', 1, 'vainilla', 'cajeta');
+    exception when others then v_fallo := true;
+    end;
+    v_pruebas := v_pruebas || 'Sin sesión no puede crear pasteles'::text;
+    v_estados := v_estados || case when v_fallo then 'OK' else 'FALLA' end;
+
+    v_fallo := false;
+    begin
+      update public.catalogo_pasteles set nombre = 'Cambiado sin sesión' where id = v_pastel;
+      get diagnostics n = row_count;
+    exception when others then v_fallo := true;
+    end;
+    v_pruebas := v_pruebas || 'Sin sesión no puede editar pasteles'::text;
+    v_estados := v_estados || case when v_fallo or n = 0 then 'OK' else 'FALLA' end;
+
+    v_fallo := false;
+    begin
+      select count(*) into n from public.pedidos;
+    exception when others then v_fallo := true;
+    end;
+    v_pruebas := v_pruebas || 'Sin sesión no ve pedidos'::text;
+    v_estados := v_estados || case when v_fallo or n = 0 then 'OK' else 'FALLA' end;
+
     raise exception 'DESHACER';
   exception when others then
     if sqlerrm <> 'DESHACER' then

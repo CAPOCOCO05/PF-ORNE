@@ -5,8 +5,8 @@
 
 | # | Mejora | Rol | Estado |
 |---|---|---|---|
-| N1 | Barra de navegación inferior (pestañas) en lugar del menú lateral | Todos | 🟡 Falta probar en dispositivo |
-| N2 | Aviso de privacidad (consulta; se informa al registrarse) | Todos | 🟡 Falta probar en dispositivo |
+| N1 | Barra de navegación inferior (pestañas) en lugar del menú lateral | Todos | ✅ Completa |
+| N2 | Aviso de privacidad (consulta; se informa al registrarse) | Todos | ✅ Completa |
 
 **Orden sugerido:** N1 → N2. N2 agrega la opción "Aviso de privacidad" al perfil,
 que con N1 se vuelve la pantalla desde donde se llega a todo lo que no es una pestaña.
@@ -69,7 +69,7 @@ un menú oculto.
 - [x] Cada rol ve sus pestañas abajo y ya no hay menú lateral ni ícono hamburguesa.
 - [x] Tocar una pestaña abre su sección; desde un detalle o el wizard, tocar la pestaña resaltada regresa a su pantalla principal.
 - [x] Las pantallas del wizard y los detalles no aparecen como pestaña, y la barra se ve también en ellas (D4).
-- [ ] La barra respeta el área segura inferior en Android e iOS.
+- [x] La barra respeta el área segura inferior en Android e iOS.
 - [x] Un usuario sigue sin poder abrir la sección de otro rol.
 
 ### Tareas
@@ -79,7 +79,7 @@ un menú oculto.
 - [x] Cambiar `(cliente)/_layout.tsx`, `admin/_layout.tsx` y `repartidor/_layout.tsx`; borrar `MenuLateral.tsx`.
 - [x] Actualizar `01-navigation.md` (sección "Encabezado y menú").
 - [x] Pruebas: pestaña resaltada en rutas ocultas (`BarraNavegacion.test.tsx`).
-- [ ] Probar criterios de aceptación en dispositivo.
+- [x] Probar criterios de aceptación en dispositivo ✅.
 
 ---
 
@@ -144,4 +144,4 @@ de Datos Personales en Posesión de los Particulares, LFPDPPP).
 - [x] Mensaje con enlace en `register.tsx` (D3) y su prueba.
 - [x] Enlaces en `login.tsx` y en el perfil de los tres roles, con prueba.
 - [x] Actualizar `01-navigation.md` y F00.
-- [ ] Probar criterios de aceptación.
+- [x] Probar criterios de aceptación (pruebas de la app y dispositivo ✅).

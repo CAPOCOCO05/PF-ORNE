@@ -5,10 +5,12 @@ import Boton from "../../src/components/Boton";
 import TarjetaPastel from "../../src/components/TarjetaPastel";
 import BarraFiltros from "../../src/components/catalogo/BarraFiltros";
 import { FILTROS_VACIOS } from "../../src/constants/filtrosCatalogo";
+import { useAuth } from "../../src/context/AuthContext";
 import { useCatalogo } from "../../src/hooks/useCatalogo";
 import { COLORS } from "../../src/theme/colors";
 import { FiltrosCatalogo, PastelCatalogo } from "../../src/types/pedido.types";
 import { hayFiltros, limpiarFiltros } from "../../src/utils/filtrosCatalogo";
+import { PEDIDO_NUEVO } from "../../src/utils/rutas";
 
 const MENSAJE_CATALOGO_VACIO = 'Aún no hay pasteles en el catálogo';
 const MENSAJE_SIN_RESULTADOS = 'No hay pasteles con esos filtros';
@@ -16,15 +18,21 @@ const MENSAJE_SIN_RESULTADOS = 'No hay pasteles con esos filtros';
 // F01: catalogo base paginado — pantalla de inicio del cliente (design/pantalla_principal_catalogo.png)
 export default function Home() {
     const router = useRouter();
+    const {session} = useAuth();
     // F07 M5 D4: la pantalla sigue montada al ir al wizard (Drawer), asi los filtros se
     // conservan; al cerrar sesion se desmonta la seccion y se reinician
     const [filtros, setFiltros] = useState<FiltrosCatalogo>(FILTROS_VACIOS);
     const {pasteles, hayMas, cargando, error, cargarMas, reintentar, recargar} = useCatalogo(filtros);
     const primeraCarga = pasteles.length === 0;
 
-    // "Pedir" precarga el wizard con la configuracion del pastel; "Crear pedido" lo abre vacio (D6)
-    const pedir = (pastel: PastelCatalogo) => router.push({pathname: '/pedido/nuevo', params: {pastel: pastel.id}});
-    const crearPedido = () => router.push('/pedido/nuevo');
+    // "Pedir" precarga el wizard con la configuracion del pastel; "Crear pedido" lo abre vacio (D6).
+    // F09: sin sesion se va primero al registro, que al terminar abre el wizard con ese pedido
+    const pedir = (pastel: PastelCatalogo) => session
+        ? router.push({pathname: '/pedido/nuevo', params: {pastel: pastel.id}})
+        : router.push({pathname: '/register', params: {pedir: pastel.id}});
+    const crearPedido = () => session
+        ? router.push('/pedido/nuevo')
+        : router.push({pathname: '/register', params: {pedir: PEDIDO_NUEVO}});
 
     const encabezado = (
         <View style={styles.encabezado}>

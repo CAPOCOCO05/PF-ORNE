@@ -13,7 +13,7 @@ jest.mock("expo-router", () => {
         useFocusEffect: (efecto: () => void) => useEffect(efecto, [efecto]),
     };
 });
-jest.mock("../../src/context/AuthContext", () => ({ useAuth: () => ({ user: { id: "u1" } }) }));
+jest.mock("../../src/context/AuthContext", () => ({ useAuth: () => ({ user: { id: "u1" }, session: { user: { id: "u1" } }, loading: false }) }));
 jest.mock("../../src/services/pedidosService", () => ({ listarMisPedidos: jest.fn(), eliminarBorrador: jest.fn() }));
 
 const BORRADOR: ResumenPedido = {
