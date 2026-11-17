@@ -29,6 +29,14 @@ async function llenar(nombre: string) {
 }
 
 describe("Register (F00, F07 M6)", () => {
+    it("informa del aviso de privacidad con un enlace, sin casilla (F08 N2)", async () => {
+        await render(<Register />);
+
+        expect(screen.getByText(/Al registrarte aceptas nuestro/)).toBeTruthy();
+        expect(screen.getByText("Aviso de privacidad")).toBeTruthy();
+        expect(screen.queryByRole("checkbox")).toBeNull();
+    });
+
     it("pide el nombre completo con su ayuda", async () => {
         await render(<Register />);
 

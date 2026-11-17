@@ -14,7 +14,7 @@ Usuario con sesión y rol `admin`.
 - `admin/index.tsx` — lista de pedidos.
 - `admin/pedido/[id].tsx` — detalle y acciones.
 
-Mismo encabezado y menú lateral que el cliente (ver `01-navigation.md`), con la
+Mismo encabezado y barra inferior que el cliente (F08 N1, ver `01-navigation.md`), con la
 paleta de `00-project.md`.
 
 ## Flujo principal

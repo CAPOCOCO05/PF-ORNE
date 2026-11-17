@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { Rol } from "../types/auth.types";
 import { COLORS } from "../theme/colors";
@@ -14,6 +15,7 @@ const NOMBRE_ROL: Record<Rol, string> = {
 // datos de la cuenta y cerrar sesion; la usan las tres secciones (ver 01-navigation.md)
 export default function PantallaPerfil() {
     const {user, perfil, signOut} = useAuth();
+    const router = useRouter();
 
     return (
         <View style={styles.container}>
@@ -21,7 +23,8 @@ export default function PantallaPerfil() {
             <Text style={styles.nombre}>{perfil?.nombre}</Text>
             <Text style={styles.dato}>{user?.email}</Text>
             {perfil ? <Text style={styles.rol}>{NOMBRE_ROL[perfil.rol]}</Text> : null}
-            <Boton titulo="Cerrar sesión" onPress={signOut} style={styles.boton} />
+            <Boton titulo="Aviso de privacidad" variante="secundario" onPress={() => router.push('/aviso-privacidad')} style={styles.boton} />
+            <Boton titulo="Cerrar sesión" onPress={signOut} style={styles.botonCerrar} />
         </View>
     );
 }
@@ -57,6 +60,10 @@ const styles = StyleSheet.create({
     },
     boton: {
         marginTop: 32,
+        alignSelf: 'stretch',
+    },
+    botonCerrar: {
+        marginTop: 12,
         alignSelf: 'stretch',
     },
 });

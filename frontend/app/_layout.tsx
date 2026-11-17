@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function RootLayout(){ // root layout para proveer el contexto de autenticacion a toda la app
     return(
-        // el menu lateral (Drawer) necesita el contenedor de gestos en la raiz
+        // contenedor de gestos en la raiz (lo usan las pantallas con gestos de navegacion)
         <GestureHandlerRootView style={{ flex: 1 }}>
             {/* dialogos propios (F07 M1); arriba del Stack para que sigan visibles al navegar */}
             <DialogoProvider>

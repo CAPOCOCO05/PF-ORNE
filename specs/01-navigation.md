@@ -9,18 +9,19 @@ su `_layout.tsx`.
 app/
 ├── _layout.tsx                # AuthProvider global (Stack raíz)
 ├── index.tsx                  # Redirección según sesión y rol (ver abajo)
+├── aviso-privacidad.tsx       # F08 N2 Aviso de privacidad (con o sin sesión)
 │
 ├── (auth)/                    # Sin sesión
 │   ├── login.tsx              # F00
 │   └── register.tsx           # F00
 │
 ├── (cliente)/                 # Rol cliente — URLs sin prefijo (/home, /pedidos…)
-│   ├── _layout.tsx            # Guardia de rol + Drawer con encabezado ORNE
+│   ├── _layout.tsx            # Guardia de rol + barra inferior (Tabs) con encabezado ORNE
 │   ├── home.tsx               # F01 Catálogo base (paginado) — pantalla de inicio
 │   ├── pedidos.tsx            # Mis pedidos (incluye borradores)
 │   ├── perfil.tsx             # F07 M7 Datos personales, dirección guardada, cerrar sesión
 │   ├── perfil/
-│   │   └── editar.tsx         # F07 M7 Editar nombre, teléfono y dirección (no está en el menú)
+│   │   └── editar.tsx         # F07 M7 Editar nombre, teléfono y dirección (sin pestaña propia)
 │   └── pedido/
 │       ├── nuevo/
 │       │   ├── _layout.tsx        # Stack + PedidoProvider (estado del wizard)
@@ -33,7 +34,7 @@ app/
 │       └── [id].tsx               # Detalle de un pedido ya existente (solo consulta)
 │
 ├── admin/                     # Rol admin — URLs /admin/...
-│   ├── _layout.tsx            # Guardia de rol + Drawer
+│   ├── _layout.tsx            # Guardia de rol + barra inferior (Tabs)
 │   ├── index.tsx              # F04 Lista de todos los pedidos (filtro por estado)
 │   ├── pedido/[id].tsx        # F04 Detalle + cambiar estado + asignar repartidor
 │   ├── catalogo/
@@ -42,7 +43,7 @@ app/
 │   └── perfil.tsx
 │
 └── repartidor/                # Rol repartidor — URLs /repartidor/...
-    ├── _layout.tsx            # Guardia de rol + Drawer
+    ├── _layout.tsx            # Guardia de rol + barra inferior (Tabs)
     ├── index.tsx              # F06 Mis entregas asignadas
     ├── entrega/[id].tsx       # F06 Ubicación en mapa + "Marcar como entregado"
     └── perfil.tsx
@@ -66,23 +67,28 @@ Cada `_layout.tsx` de rol repite la verificación: si el usuario no tiene ese ro
 regresa a `/`. Así no se puede entrar escribiendo la URL o con un enlace profundo.
 (La seguridad real está en las políticas RLS; la guardia es solo de navegación.)
 
-## Encabezado y menú (según `design/pantalla_principal_catalogo.png`)
+## Encabezado y barra de navegación (F08 N1)
 
-En lugar de una barra de pestañas se usa un **Drawer** (menú lateral):
+En lugar del menú lateral se usa una **barra de pestañas inferior** (`Tabs` de
+`expo-router/tabs`, componente `src/components/BarraNavegacion.tsx`):
 
-- Encabezado: ícono hamburguesa (abre el menú) · logo ORNE · ícono de perfil (abre
-  `perfil.tsx`). Fondo `#f6f4f3`.
-- Opciones del menú por rol:
+- Encabezado: solo el logo ORNE, fondo `#f6f4f3`.
+- Barra inferior: ícono + etiqueta; pestaña activa en `#b2181d`. Visible siempre,
+  también en el wizard y en los detalles.
+- Pestañas por rol:
 
 | Cliente | Admin | Repartidor |
 |---|---|---|
 | Catálogo | Pedidos | Mis entregas |
 | Mis pedidos | Catálogo (F07 M4) | Perfil |
-| Perfil | Perfil | Cerrar sesión |
-| Cerrar sesión | Cerrar sesión | |
+| Perfil | Perfil | |
 
-- Las pantallas del wizard (`pedido/nuevo/*`) y los detalles (`[id].tsx`) no
-  aparecen en el menú.
+- "Cerrar sesión" y "Aviso de privacidad" están en la pantalla de Perfil de cada rol.
+- Las pantallas del wizard (`pedido/nuevo/*`), los detalles (`[id].tsx`) y
+  `perfil/editar` no tienen pestaña propia; en ellas se resalta la pestaña de la que
+  se llegó (`pedido/nuevo` → Catálogo, `pedido/[id]` → Mis pedidos, etc.).
+- `aviso-privacidad.tsx` vive en el Stack raíz, fuera de las secciones de rol, para
+  abrirse desde login y registro sin sesión (sin barra inferior).
 
 ## Reglas de navegación del wizard (pedido/nuevo/*)
 

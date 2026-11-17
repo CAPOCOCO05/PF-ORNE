@@ -1,18 +1,43 @@
-import Svg, { Circle, ClipPath, Defs, Line, Path } from "react-native-svg";
+import Svg, { Circle, ClipPath, Defs, Line, Path, Rect } from "react-native-svg";
 import { COLORS } from "../theme/colors";
 
-interface IconoProps {
+export interface IconoProps {
     tamano?: number;
     color?: string;
 }
 
-// tres lineas para abrir el menu lateral (design/pantalla_principal_catalogo.png)
-export function IconoMenu({tamano = 28, color = COLORS.TITULO}: IconoProps) {
+// pastel de dos pisos con vela: pestaña "Catálogo" (F08 N1)
+export function IconoCatalogo({tamano = 26, color = COLORS.TITULO}: IconoProps) {
     return (
-        <Svg width={tamano} height={tamano} viewBox="0 0 24 24">
-            {[6, 12, 18].map((y) => (
-                <Line key={y} x1={3} y1={y} x2={21} y2={y} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+        <Svg width={tamano} height={tamano} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.7} strokeLinejoin="round">
+            <Line x1={12} y1={2.5} x2={12} y2={6} strokeLinecap="round" />
+            <Rect x={7} y={6} width={10} height={6} rx={1.5} />
+            <Rect x={3.5} y={12} width={17} height={8} rx={1.5} />
+            <Path d="M3.5 15.5 C6 17 8.5 14 12 15.5 C15.5 17 18 14 20.5 15.5" />
+        </Svg>
+    );
+}
+
+// hoja con renglones: pestañas "Mis pedidos" y "Pedidos" (F08 N1)
+export function IconoPedidos({tamano = 26, color = COLORS.TITULO}: IconoProps) {
+    return (
+        <Svg width={tamano} height={tamano} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.7} strokeLinecap="round">
+            <Rect x={5} y={3} width={14} height={18} rx={2} strokeLinejoin="round" />
+            {[8, 12, 16].map((y) => (
+                <Line key={y} x1={8.5} y1={y} x2={15.5} y2={y} />
             ))}
+        </Svg>
+    );
+}
+
+// camioneta de reparto: pestaña "Mis entregas" (F08 N1)
+export function IconoEntregas({tamano = 26, color = COLORS.TITULO}: IconoProps) {
+    return (
+        <Svg width={tamano} height={tamano} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.7} strokeLinejoin="round">
+            <Path d="M2.5 6 H14 V16 H2.5 Z" />
+            <Path d="M14 9.5 H18 L21.5 13 V16 H14 Z" />
+            <Circle cx={6.5} cy={17.5} r={1.8} fill={COLORS.FONDO} />
+            <Circle cx={17.5} cy={17.5} r={1.8} fill={COLORS.FONDO} />
         </Svg>
     );
 }

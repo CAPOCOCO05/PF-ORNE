@@ -4,6 +4,9 @@ import { useAuth } from "../../context/AuthContext";
 
 jest.mock("../../context/AuthContext", () => ({ useAuth: jest.fn() }));
 
+const mockPush = jest.fn();
+jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
+
 const mockSignOut = jest.fn();
 
 beforeEach(() => {
@@ -30,5 +33,13 @@ describe("PantallaPerfil", () => {
         await fireEvent.press(screen.getByText("Cerrar sesión"));
 
         expect(mockSignOut).toHaveBeenCalled();
+    });
+
+    it("abre el aviso de privacidad (F08 N2)", async () => {
+        await render(<PantallaPerfil />);
+
+        await fireEvent.press(screen.getByText("Aviso de privacidad"));
+
+        expect(mockPush).toHaveBeenCalledWith("/aviso-privacidad");
     });
 });

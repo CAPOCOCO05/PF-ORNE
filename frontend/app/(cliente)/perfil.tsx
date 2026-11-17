@@ -47,6 +47,7 @@ export default function Perfil() {
                 </View>
             ) : null}
 
+            <Boton titulo="Aviso de privacidad" variante="secundario" onPress={() => router.push('/aviso-privacidad')} style={styles.boton} />
             <Boton titulo="Cerrar sesión" variante="secundario" onPress={signOut} style={styles.boton} />
         </ScrollView>
     );

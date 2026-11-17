@@ -15,7 +15,7 @@ Usuario con sesión y rol `repartidor`. El admin le asignó pedidos (estado
 - `repartidor/index.tsx` — mis entregas.
 - `repartidor/entrega/[id].tsx` — ubicación y acción.
 
-Mismo encabezado y menú lateral que los demás roles (ver `01-navigation.md`).
+Mismo encabezado y barra inferior que los demás roles (F08 N1, ver `01-navigation.md`).
 
 ## Flujo principal
 1. El repartidor inicia sesión y llega a "Mis entregas".

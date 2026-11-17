@@ -1,18 +1,18 @@
+import BarraNavegacion from "../../src/components/BarraNavegacion";
 import GuardiaRol from "../../src/components/GuardiaRol";
-import MenuLateral from "../../src/components/MenuLateral";
+import { IconoCatalogo, IconoPedidos, IconoPerfil } from "../../src/components/Iconos";
 
 // seccion del rol admin
 export default function Layout() {
     return (
         <GuardiaRol rol="admin">
-            <MenuLateral
+            <BarraNavegacion
                 opciones={[
-                    {ruta: 'index', titulo: 'Pedidos'},
-                    {ruta: 'catalogo/index', titulo: 'Catálogo'},
-                    {ruta: 'perfil', titulo: 'Perfil'},
+                    {ruta: 'index', titulo: 'Pedidos', Icono: IconoPedidos},
+                    {ruta: 'catalogo/index', titulo: 'Catálogo', Icono: IconoCatalogo},
+                    {ruta: 'perfil', titulo: 'Perfil', Icono: IconoPerfil},
                 ]}
-                ocultas={['pedido/[id]', 'catalogo/[id]']}
-                rutaPerfil="perfil"
+                ocultas={{'pedido/[id]': 'index', 'catalogo/[id]': 'catalogo/index'}}
             />
         </GuardiaRol>
     );

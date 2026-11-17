@@ -32,6 +32,9 @@ Ninguna (es el punto de entrada de la app).
 
 El registro no tiene diseño propio: usa el mismo estilo (logo, tarjeta, campos,
 botón **REGISTRARME** y enlace "¿Ya tienes cuenta? **Inicia sesión**").
+Debajo de REGISTRARME se muestra "Al registrarte aceptas nuestro **Aviso de
+privacidad**" (enlace); el login tiene el enlace "Aviso de privacidad" bajo
+"Olvidé mi contraseña" (F08 N2).
 
 ## Datos de entrada
 - correo (obligatorio)
@@ -55,7 +58,7 @@ botón **REGISTRARME** y enlace "¿Ya tienes cuenta? **Inicia sesión**").
 4. Inicia sesión automáticamente y entra a `/home`.
 
 ## Flujo — Cerrar sesión
-Desde el menú lateral o la pantalla de perfil → se borra la sesión y regresa a
+Desde la pantalla de perfil (pestaña Perfil, F08 N1) → se borra la sesión y regresa a
 `/login`.
 
 ## Validaciones

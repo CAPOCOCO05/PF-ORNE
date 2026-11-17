@@ -1,17 +1,17 @@
+import BarraNavegacion from "../../src/components/BarraNavegacion";
 import GuardiaRol from "../../src/components/GuardiaRol";
-import MenuLateral from "../../src/components/MenuLateral";
+import { IconoEntregas, IconoPerfil } from "../../src/components/Iconos";
 
 // seccion del rol repartidor
 export default function Layout() {
     return (
         <GuardiaRol rol="repartidor">
-            <MenuLateral
+            <BarraNavegacion
                 opciones={[
-                    {ruta: 'index', titulo: 'Mis entregas'},
-                    {ruta: 'perfil', titulo: 'Perfil'},
+                    {ruta: 'index', titulo: 'Mis entregas', Icono: IconoEntregas},
+                    {ruta: 'perfil', titulo: 'Perfil', Icono: IconoPerfil},
                 ]}
-                ocultas={['entrega/[id]']}
-                rutaPerfil="perfil"
+                ocultas={{'entrega/[id]': 'index'}}
             />
         </GuardiaRol>
     );

@@ -116,6 +116,11 @@ export default function Register() {
                 onSubmitEditing={handleRegister}
             />
             <Boton titulo="Registrarme" onPress={handleRegister} cargando={loading} style={styles.boton} />
+            {/* F08 N2: solo se informa; no hay casilla ni se guarda la aceptacion */}
+            <Text style={styles.aviso}>
+                Al registrarte aceptas nuestro{' '}
+                <Link href="/aviso-privacidad" style={styles.enlace}>Aviso de privacidad</Link>
+            </Text>
         </PantallaAuth>
     )
 }
@@ -130,5 +135,11 @@ const styles = StyleSheet.create({
     },
     enlace: {
         textDecorationLine: 'underline',
+    },
+    aviso: {
+        marginTop: 12,
+        fontSize: 13,
+        color: COLORS.TEXTO_SUAVE,
+        textAlign: 'center',
     },
 })
