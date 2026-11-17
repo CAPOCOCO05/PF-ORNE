@@ -32,6 +32,7 @@ Se aplican **en orden**:
 | `011_no_entregado.sql` | Estado `no_entregado` con `motivo_no_entrega`, trigger y política del repartidor; función `contar_pedidos_por_estado()` | F07 M2, M3 |
 | `012_catalogo_admin.sql` | El admin crea y edita pasteles del catálogo (sin borrar); nombre único; trigger que calcula `precio_base`; políticas del bucket `catalogo` | F07 M4 |
 | `013_datos_cliente.sql` | Tabla `datos_cliente` (teléfono y dirección guardada) solo visible para el dueño; llenado inicial desde el último pedido; trigger que la completa al confirmar | F07 M7 |
+| `014_precios_relleno.sql` | Montos confirmados de los rellenos en `calcular_precio` (Cajeta $50, Mermelada $70) y recálculo del `precio_base` del catálogo | F01 D7 |
 
 ## Pruebas de permisos
 

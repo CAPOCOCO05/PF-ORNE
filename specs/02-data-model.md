@@ -134,6 +134,7 @@ En `backend/supabase/migrations/`, en este orden:
 | `011_no_entregado.sql` | Estado `no_entregado`, `motivo_no_entrega`, política y trigger del repartidor, `contar_pedidos_por_estado()` | F07 M2, M3 |
 | `012_catalogo_admin.sql` | Admin crea y edita pasteles (sin `delete`), nombre único, trigger que calcula `precio_base` con `calcular_precio`, políticas de Storage del bucket `catalogo` | F07 M4 |
 | `013_datos_cliente.sql` | Tabla `datos_cliente` con RLS solo del dueño, llenado inicial desde el último pedido y trigger que la completa al confirmar un pedido | F07 M7 |
+| `014_precios_relleno.sql` | Montos confirmados de los rellenos en `calcular_precio` (Cajeta $50, Mermelada $70) y recálculo de `precio_base` del catálogo | F01 D7 |
 
 ## Catálogo de sabores e imágenes
 

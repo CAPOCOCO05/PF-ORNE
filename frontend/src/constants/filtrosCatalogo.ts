@@ -9,7 +9,7 @@ export interface RangoPrecio {
     hasta?: number;         // inclusivo
 }
 
-// D2: provisionales, se ajustan cuando se confirmen los montos de F01 D7.
+// D2: revisados con los montos confirmados de F01 D7 (el pastel mas barato cuesta $380).
 // "Hasta $500" incluye los $500; el siguiente rango empieza despues
 export const RANGOS_PRECIO: RangoPrecio[] = [
     { id: 'hasta500', texto: 'Hasta $500', hasta: 500 },

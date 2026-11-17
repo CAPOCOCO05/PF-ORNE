@@ -124,7 +124,7 @@ El botón "Siguiente" siempre está habilitado. Al presionarlo con campos faltan
 cada selector incompleto se resalta en rojo con "Este campo es obligatorio" y no se
 avanza.
 
-### D5. Tamaño, niveles y sabores — ⚠️ Confirmar
+### D5. Tamaño, niveles y sabores — ✅ Confirmado
 - **Combinaciones válidas** (los niveles no disponibles se muestran deshabilitados):
 
   | Tamaño (personas) | Niveles permitidos |
@@ -168,15 +168,16 @@ avanza.
   infinito (`FlatList.onEndReached`). Estados: cargando, vacío ("Aún no hay pasteles
   en el catálogo"), error con "Reintentar", y fin de lista sin más peticiones.
 
-### D7. Precio — ⚠️ Confirmar montos
+### D7. Precio — ✅ Confirmado (montos de rellenos actualizados en `014`)
 - Fórmula: `PrecioBase(tamaño) + CostoNivelExtra × (niveles − 1) + CostoRelleno`.
   El sabor del pan no afecta el precio.
-- Montos **provisionales** (MXN), definidos en `src/constants/precios.ts`:
+- Montos **confirmados** (MXN), definidos en `src/constants/precios.ts` y en
+  `calcular_precio` (`014_precios_relleno.sql`; ambos deben coincidir):
 
   | Tamaño | Base | | Relleno | Costo |
   |---|---|---|---|---|
-  | 10 | $350 | | Cajeta | $0 |
-  | 15 | $500 | | Mermelada de fresa | $0 |
+  | 10 | $350 | | Cajeta | $50 |
+  | 15 | $500 | | Mermelada de fresa | $70 |
   | 20 | $650 | | Crema pastelera | $30 |
   | 30 | $900 | | Chocolate | $40 |
   | Nivel extra | $250 c/u | | Mantequilla de maní | $50 |
@@ -210,7 +211,7 @@ avanza.
 
 ## Tareas
 - [x] Migración `006_ajustes_borrador.sql` (D1) en `backend/supabase/migrations/`.
-- [x] Menú lateral (Drawer de `expo-router/drawer`) en los `_layout.tsx` de cada rol según `01-navigation.md` (pendiente de F00; requiere `react-native-gesture-handler`, `react-native-reanimated` y `react-native-worklets`).
+- [x] Menú lateral (Drawer de `expo-router/drawer`) en los `_layout.tsx` de cada rol según `01-navigation.md` (pendiente de F00; requiere `react-native-gesture-handler`, `react-native-reanimated` y `react-native-worklets`). Reemplazado por la barra inferior en F08 N1.
 - [x] `perfil.tsx` de cada rol (nombre, correo, "Cerrar sesión").
 - [x] `src/constants/catalogoSabores.ts` (assets locales de sabores).
 - [x] `src/constants/precios.ts` y función `calcularPrecio()` (D7).

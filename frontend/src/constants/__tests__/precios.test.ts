@@ -10,11 +10,12 @@ describe("calcularPrecio", () => {
     });
 
     it.each([
-        // coinciden con los precio_base de prueba de 005_catalogo.sql
+        // coinciden con calcular_precio de 014_precios_relleno.sql
         ["10", 1, "cremapastelera", 380],
         ["15", 1, "chocolate", 540],
         ["20", 2, "cremapastelera", 930],
-        ["30", 2, "mermeladafresa", 1150],
+        ["30", 2, "mermeladafresa", 1220],
+        ["10", 1, "cajeta", 400],
         ["30", 3, "cremapastelera", 1430],
     ] as const)("%s personas, %i niveles, %s → %i", (tamanio, niveles, relleno, esperado) => {
         expect(calcularPrecio({ tamanio, niveles, relleno })).toBe(esperado);

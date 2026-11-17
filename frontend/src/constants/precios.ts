@@ -1,6 +1,6 @@
 import { Niveles, RellenoId, Tamanio } from "../types/pedido.types";
 
-// montos provisionales en MXN (F01, D7 — ⚠️ pendientes de confirmar con el cliente)
+// montos confirmados en MXN (F01, D7); deben coincidir con calcular_precio (014_precios_relleno.sql)
 export const PRECIO_BASE: Record<Tamanio, number> = {
     '10': 350,
     '15': 500,
@@ -11,8 +11,8 @@ export const PRECIO_BASE: Record<Tamanio, number> = {
 export const COSTO_NIVEL_EXTRA = 250;
 
 export const COSTO_RELLENO: Record<RellenoId, number> = {
-    cajeta: 0,
-    mermeladafresa: 0,
+    cajeta: 50,
+    mermeladafresa: 70,
     cremapastelera: 30,
     chocolate: 40,
     mantequillademani: 50,
