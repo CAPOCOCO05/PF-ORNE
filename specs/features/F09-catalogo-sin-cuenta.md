@@ -56,7 +56,7 @@ Visitante (sin sesión) y cliente.
 - [x] Sin sesión, la app abre en el catálogo y se pueden ver, filtrar y ordenar los pasteles.
 - [x] "Pedir" o "Crear pedido" sin sesión llevan al registro; al registrarse o iniciar sesión se abre el pedido (con el pastel elegido).
 - [x] Sin sesión, "Mis pedidos" y "Perfil" invitan a crear cuenta y no consultan datos.
-- [ ] Un visitante solo puede leer los pasteles publicados: no ve los ocultos, no edita el catálogo ni ve pedidos (probado en SQL).
+- [x] Un visitante solo puede leer los pasteles publicados: no ve los ocultos, no edita el catálogo ni ve pedidos (probado en SQL).
 - [x] Probar en dispositivo ✅.
 
 ## Tareas
@@ -67,5 +67,5 @@ Visitante (sin sesión) y cliente.
 - [x] `Encabezado` con "Iniciar sesión" sin sesión, con prueba de navegación.
 - [x] Actualizar `00-project.md`, `01-navigation.md`, `02-data-model.md`, F00 y `backend/README.md`.
 - [x] Correr `015` en Supabase.
-- [ ] Correr `permisos_catalogo.sql` en Supabase (casos sin sesión).
+- [x] Correr `permisos_catalogo.sql` en Supabase (casos sin sesión): todo OK.
 - [x] Probar criterios de aceptación en dispositivo ✅.
