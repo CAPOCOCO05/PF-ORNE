@@ -2,25 +2,22 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import PanelFiltros from "./PanelFiltros";
 import FiltrosAplicados from "./FiltrosAplicados";
-import { ORDENES_CATALOGO } from "../../constants/filtrosCatalogo";
-import { FiltrosCatalogo, OrdenCatalogo } from "../../types/pedido.types";
-import { contarFiltros, textoOrden } from "../../utils/filtrosCatalogo";
+import { FiltrosCatalogo } from "../../types/pedido.types";
+import { contarFiltros } from "../../utils/filtrosCatalogo";
 import { COLORS } from "../../theme/colors";
-
-type Desplegable = 'filtros' | 'orden' | null;
 
 interface BarraFiltrosProps {
     filtros: FiltrosCatalogo;
     onCambiar: (filtros: FiltrosCatalogo) => void;
 }
 
-// F07 M5: barra compacta con dos desplegables ("Filtrar" y "Ordenar") que se abren
-// debajo, sin cubrir el catalogo; los filtros aplicados se ven como chips con "×"
+// F07 M5: barra compacta con el desplegable "Filtrar" que se abre debajo, sin cubrir
+// el catalogo; los filtros aplicados se ven como chips con "×".
+// Sin "Ordenar" (F10 A3): el catalogo se muestra siempre por nombre
 export default function BarraFiltros({filtros, onCambiar}: BarraFiltrosProps) {
-    const [abierto, setAbierto] = useState<Desplegable>(null);
-    const alternarDesplegable = (cual: Desplegable) => setAbierto((actual) => actual === cual ? null : cual);
+    const [abierto, setAbierto] = useState(false);
     const aplicar = (nuevos: FiltrosCatalogo) => {
-        setAbierto(null);
+        setAbierto(false);
         onCambiar(nuevos);
     };
     const total = contarFiltros(filtros);
@@ -30,19 +27,12 @@ export default function BarraFiltros({filtros, onCambiar}: BarraFiltrosProps) {
             <View style={styles.barra}>
                 <BotonDesplegable
                     texto={total > 0 ? `Filtrar (${total})` : 'Filtrar'}
-                    abierto={abierto === 'filtros'}
+                    abierto={abierto}
                     activo={total > 0}
-                    onPress={() => alternarDesplegable('filtros')}
-                />
-                <BotonDesplegable
-                    texto={`Ordenar: ${textoOrden(filtros.orden)}`}
-                    abierto={abierto === 'orden'}
-                    activo={filtros.orden !== 'nombre'}
-                    onPress={() => alternarDesplegable('orden')}
+                    onPress={() => setAbierto((actual) => !actual)}
                 />
             </View>
-            {abierto === 'filtros' && <PanelFiltros filtros={filtros} onAplicar={aplicar} />}
-            {abierto === 'orden' && <MenuOrden orden={filtros.orden} onElegir={(orden) => aplicar({...filtros, orden})} />}
+            {abierto && <PanelFiltros filtros={filtros} onAplicar={aplicar} />}
             <FiltrosAplicados filtros={filtros} onCambiar={onCambiar} />
         </View>
     );
@@ -67,29 +57,6 @@ function BotonDesplegable({texto, abierto, activo, onPress}: BotonDesplegablePro
             <Text style={[styles.textoDesplegable, activo && styles.textoActivo]} numberOfLines={1}>{texto}</Text>
             <Text style={styles.flecha}>{abierto ? '▴' : '▾'}</Text>
         </Pressable>
-    );
-}
-
-function MenuOrden({orden, onElegir}: {orden: OrdenCatalogo; onElegir: (orden: OrdenCatalogo) => void}) {
-    return (
-        <View style={styles.menu} accessibilityRole="radiogroup" accessibilityLabel="Ordenar por">
-            {ORDENES_CATALOGO.map(({id, texto}) => {
-                const elegido = id === orden;
-                return (
-                    <Pressable
-                        key={id}
-                        onPress={() => onElegir(id)}
-                        accessibilityRole="radio"
-                        accessibilityLabel={texto}
-                        accessibilityState={{selected: elegido}}
-                        style={styles.opcionMenu}
-                    >
-                        <Text style={[styles.textoOpcion, elegido && styles.textoActivo]}>{texto}</Text>
-                        {elegido && <Text style={styles.marca}>✓</Text>}
-                    </Pressable>
-                );
-            })}
-        </View>
     );
 }
 
@@ -131,28 +98,5 @@ const styles = StyleSheet.create({
         marginLeft: 6,
         fontSize: 13,
         color: COLORS.TITULO,
-    },
-    menu: {
-        marginTop: 8,
-        borderRadius: 14,
-        borderWidth: 1,
-        borderColor: COLORS.BOTON_SECUNDARIO,
-        backgroundColor: COLORS.BLANCO,
-        overflow: 'hidden',
-    },
-    opcionMenu: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-    },
-    textoOpcion: {
-        fontSize: 14,
-        color: COLORS.TEXTO,
-    },
-    marca: {
-        fontSize: 14,
-        color: COLORS.BOTON_PRINCIPAL,
-        fontWeight: '700',
     },
 });

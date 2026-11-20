@@ -8,7 +8,7 @@ import Input from '../../src/components/Input';
 import PantallaAuth from '../../src/components/PantallaAuth';
 import { COLORS } from '../../src/theme/colors';
 import { rutaTrasAutenticar } from '../../src/utils/rutas';
-import { DatosRegistro, MAX_NOMBRE, normalizarNombre, tieneErrores, validarRegistro } from '../../src/utils/validaciones';
+import { DatosRegistro, MAX_CONTRASENA, MAX_CORREO, MAX_NOMBRE, normalizarNombre, tieneErrores, validarRegistro } from '../../src/utils/validaciones';
 
 const DATOS_VACIOS: DatosRegistro = {nombre: '', correo: '', contrasena: '', confirmar: ''};
 
@@ -96,6 +96,7 @@ export default function Register() {
                 onBlur={tocar('correo')}
                 error={errorDe('correo')}
                 keyboardType="email-address"
+                maxLength={MAX_CORREO}
                 autoCapitalize="none"
                 autoComplete="email"
                 textContentType="emailAddress"
@@ -108,6 +109,7 @@ export default function Register() {
                 onBlur={tocar('contrasena')}
                 error={errorDe('contrasena')}
                 secureTextEntry
+                maxLength={MAX_CONTRASENA}
                 autoCapitalize="none"
                 autoComplete="new-password"
                 textContentType="newPassword"
@@ -120,6 +122,7 @@ export default function Register() {
                 onBlur={tocar('confirmar')}
                 error={errorDe('confirmar')}
                 secureTextEntry
+                maxLength={MAX_CONTRASENA}
                 autoCapitalize="none"
                 autoComplete="new-password"
                 textContentType="newPassword"

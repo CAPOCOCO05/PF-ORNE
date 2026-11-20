@@ -2,6 +2,8 @@
 
 export const MIN_CONTRASENA = 6; // regla por defecto de Supabase Auth
 export const MAX_NOMBRE = 80; // F07 M6
+export const MAX_CORREO = 254;     // F10 A6: largo maximo de un correo (RFC 5321)
+export const MAX_CONTRASENA = 72;  // F10 A6: Supabase Auth (bcrypt) no usa mas de 72 caracteres
 
 export const MENSAJES_VALIDACION = {
     CORREO_VACIO: 'Ingresa tu correo',

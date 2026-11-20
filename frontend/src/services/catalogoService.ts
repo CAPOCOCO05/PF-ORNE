@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { traducirErrorDatos } from "./erroresDatos";
+import { esErrorDeConexion, MENSAJE_SIN_CONEXION, mensajeDeExcepcion, traducirErrorDatos } from "./erroresDatos";
 import { FILTROS_VACIOS, RANGOS_PRECIO } from "../constants/filtrosCatalogo";
 import { FiltrosCatalogo, FormularioPastel, ImagenLocal, OrdenCatalogo, PastelAdmin, PastelCatalogo } from "../types/pedido.types";
 import { MENSAJES_CATALOGO, nombreImagenCatalogo, rutaDeUrlCatalogo } from "../utils/catalogo";
@@ -124,12 +124,12 @@ export async function subirImagenCatalogo(imagen: ImagenLocal): Promise<{url: st
         const {error} = await bucket.upload(ruta, contenido, {contentType: mime});
         if (error) {
             console.warn('subirImagenCatalogo:', error.message);
-            return {url: null, error: MENSAJES_CATALOGO.IMAGEN};
+            return {url: null, error: esErrorDeConexion(error) ? MENSAJE_SIN_CONEXION : MENSAJES_CATALOGO.IMAGEN};
         }
         return {url: bucket.getPublicUrl(ruta).data.publicUrl, error: null};
     } catch (e) {
         console.warn('subirImagenCatalogo:', e);
-        return {url: null, error: MENSAJES_CATALOGO.IMAGEN};
+        return {url: null, error: mensajeDeExcepcion(e, MENSAJES_CATALOGO.IMAGEN)};
     }
 }
 

@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { esErrorDeConexion, MENSAJES_DATOS, traducirErrorDatos } from "./erroresDatos";
+import { esErrorDeConexion, MENSAJES_DATOS, mensajeDeExcepcion, traducirErrorDatos } from "./erroresDatos";
 import { calcularPrecio } from "../constants/precios";
 import { extensionImagen, MENSAJES_PEDIDO, mimeImagen, normalizarMensaje } from "../utils/pedido";
 import { armarDireccion, normalizarTelefono } from "../utils/entrega";
@@ -193,7 +193,7 @@ async function subirArchivo(uri: string, ruta: string, mime: string): Promise<st
         return error ? traducirErrorDatos(error, MENSAJES_DATOS.IMAGEN) : null;
     } catch (e) {
         console.warn('subirArchivo:', e);
-        return MENSAJES_DATOS.IMAGEN;
+        return mensajeDeExcepcion(e, MENSAJES_DATOS.IMAGEN);
     }
 }
 

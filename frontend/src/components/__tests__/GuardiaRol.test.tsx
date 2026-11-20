@@ -78,6 +78,34 @@ describe("GuardiaRol con permitirInvitado (F09)", () => {
         expect(screen.getByText("redirect:/")).toBeTruthy();
     });
 
+    it("al abrir la app con sesion muestra el spinner mientras carga el perfil", async () => {
+        mockAuth({ session: { user: { id: "u1" } }, loading: true });
+        await renderCliente();
+
+        expect(screen.getByTestId("cargando")).toBeTruthy();
+        expect(screen.queryByText("catalogo")).toBeNull();
+    });
+
+    it("al registrarse no desmonta la seccion mientras carga el perfil (conserva el pedido elegido)", async () => {
+        mockAuth({ session: null });
+        const vista = await render(
+            <GuardiaRol rol="cliente" permitirInvitado>
+                <Text>catalogo</Text>
+            </GuardiaRol>
+        );
+        expect(screen.getByText("catalogo")).toBeTruthy();
+
+        mockAuth({ session: { user: { id: "u1" } }, loading: true });
+        await vista.rerender(
+            <GuardiaRol rol="cliente" permitirInvitado>
+                <Text>catalogo</Text>
+            </GuardiaRol>
+        );
+
+        expect(screen.getByText("catalogo")).toBeTruthy();
+        expect(screen.queryByTestId("cargando")).toBeNull();
+    });
+
     it("sin permitirInvitado y sin sesion regresa a /", async () => {
         mockAuth({ session: null });
         await renderGuardia();

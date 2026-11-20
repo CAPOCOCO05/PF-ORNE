@@ -1,5 +1,8 @@
+import { useRef } from "react";
 import { ActivityIndicator, Pressable, StyleProp, StyleSheet, Text, ViewStyle } from "react-native";
 import { COLORS } from "../theme/colors";
+
+export const ESPERA_ENTRE_TOQUES_MS = 600;
 
 interface BotonProps {
     titulo: string;
@@ -15,13 +18,26 @@ export default function Boton({titulo, onPress, variante = 'principal', cargando
     const esPrincipal = variante === 'principal';
     const colorTexto = esPrincipal ? COLORS.BLANCO : COLORS.TITULO;
     const bloqueado = cargando || deshabilitado;
+    const ultimoToque = useRef<{momento: number; accion: () => void} | null>(null);
+
+    // F10 A5: dos toques seguidos antes de que llegue `cargando` (el estado tarda un
+    // render) no disparan la accion dos veces (p. ej. guardar o confirmar el pedido).
+    // Solo se ignora si la pantalla no ha cambiado desde el toque anterior (misma
+    // `onPress`): un dialogo nuevo o un formulario editado vuelven a responder
+    const presionar = () => {
+        const ahora = Date.now();
+        const anterior = ultimoToque.current;
+        if (anterior && anterior.accion === onPress && ahora - anterior.momento < ESPERA_ENTRE_TOQUES_MS) return;
+        ultimoToque.current = {momento: ahora, accion: onPress};
+        onPress();
+    };
 
     return (
         <Pressable
             testID={testID}
             // se descarta la promesa de un handler async: el boton no espera su resultado
             // (p. ej. una accion que queda esperando la respuesta de un dialogo, F07 M1)
-            onPress={() => { onPress(); }}
+            onPress={presionar}
             disabled={bloqueado}
             accessibilityRole="button"
             accessibilityState={{disabled: bloqueado, busy: cargando}}

@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { traducirErrorDatos } from "./erroresDatos";
+import { esErrorDeConexion, MENSAJE_SIN_CONEXION, traducirErrorDatos } from "./erroresDatos";
 import { COLUMNAS_PEDIDO_COMPLETO, FilaPedidoCompleto, pedidoCompletoDeFila } from "./pedidosService";
 import { ConteoEstados, FiltroAdmin } from "../constants/estadosPedido";
 import { estadosDeFiltro, ordenAscendente } from "../utils/estados";
@@ -155,7 +155,7 @@ export async function cambiarEstado({id, estadoActual, destino, repartidorId, qu
         .select('id');
     if (error) {
         console.warn('cambiarEstado:', error.code, error.message);
-        return {resultado: 'error', error: MENSAJES_ADMIN.ACTUALIZAR};
+        return {resultado: 'error', error: esErrorDeConexion(error) ? MENSAJE_SIN_CONEXION : MENSAJES_ADMIN.ACTUALIZAR};
     }
     if (!data || data.length === 0) return {resultado: 'desactualizado', error: MENSAJES_ADMIN.ACTUALIZADO};
     return {resultado: 'ok', error: null};

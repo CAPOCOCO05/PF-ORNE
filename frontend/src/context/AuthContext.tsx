@@ -2,9 +2,10 @@ import { Session, User } from "@supabase/supabase-js";
 import { Perfil, SignInData, SignUpData } from "../types/auth.types";
 import { createContext, useContext, useEffect, useState } from "react";
 import * as authService from "../services/authService";
+import { MENSAJE_SIN_CONEXION } from "../services/erroresDatos";
 
 export const ERROR_SIN_PERFIL = "No se pudo cargar tu cuenta, inicia sesión de nuevo";
-export const ERROR_CONEXION = "Error de conexión, inténtalo de nuevo";
+export const ERROR_CONEXION = MENSAJE_SIN_CONEXION;
 
 interface AuthContextType {
     user: User | null;

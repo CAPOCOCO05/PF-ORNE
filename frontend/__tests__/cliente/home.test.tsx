@@ -120,7 +120,7 @@ describe("Home: filtros del catalogo (F07 M5)", () => {
 
         expect(ultimosFiltros()).toEqual(FILTROS_VACIOS);
         expect(screen.getByText("Filtrar")).toBeTruthy();
-        expect(screen.getByText("Ordenar: Precio")).toBeTruthy();
+        expect(screen.queryByText(/Ordenar/)).toBeNull(); // F10 A3: solo "Filtrar"
         expect(screen.queryByTestId("panel-filtros")).toBeNull();
     });
 
@@ -173,17 +173,6 @@ describe("Home: filtros del catalogo (F07 M5)", () => {
         await fireEvent.press(screen.getByText("Ver resultados"));
 
         expect(ultimosFiltros()).toEqual(FILTROS_VACIOS);
-    });
-
-    it("ordena por precio desde su desplegable", async () => {
-        mockCatalogo({ pasteles: [PASTEL] });
-        await render(<Home />);
-
-        await fireEvent.press(screen.getByText("Ordenar: Precio"));
-        await fireEvent.press(screen.getByLabelText("Mayor a Menor"));
-
-        expect(ultimosFiltros()).toEqual({ ...FILTROS_VACIOS, orden: "precioDesc" });
-        expect(screen.getByText("Ordenar: Mayor a Menor")).toBeTruthy();
     });
 
     it("sin resultados con filtros: mensaje distinto y 'Limpiar filtros'", async () => {

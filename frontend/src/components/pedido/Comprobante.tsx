@@ -6,6 +6,7 @@ import { usePedidoDetalle } from "../../hooks/usePedidoDetalle";
 import { COLORS } from "../../theme/colors";
 import { PedidoCompleto } from "../../types/pedido.types";
 import { formatearFecha } from "../../utils/fechas";
+import { formatearClabe, generarClabe } from "../../utils/pago";
 import Boton from "../Boton";
 import ResumenPedido from "./ResumenPedido";
 
@@ -64,7 +65,7 @@ function Detalle({pedido}: {pedido: PedidoCompleto}) {
                 ) : null}
             </View>
 
-            {pedido.folio ? <DatosPago folio={pedido.folio} /> : null}
+            {pedido.folio ? <DatosPago pedidoId={pedido.id} folio={pedido.folio} /> : null}
         </>
     );
 }
@@ -80,15 +81,15 @@ function AvisoNoEntregado({motivo}: {motivo: string | null}) {
     );
 }
 
-function DatosPago({folio}: {folio: string}) {
+// CLABE ficticia propia de cada pedido, derivada de su id
+function DatosPago({pedidoId, folio}: {pedidoId: string; folio: string}) {
     return (
         <View style={styles.pago}>
             <Text style={styles.tituloPago}>Pago: {METODO_PAGO}</Text>
             <Text style={styles.textoPago}>Banco: {DATOS_BANCARIOS.banco}</Text>
             <Text style={styles.textoPago}>Titular: {DATOS_BANCARIOS.titular}</Text>
-            <Text style={styles.textoPago}>CLABE: {DATOS_BANCARIOS.clabe}</Text>
+            <Text style={styles.textoPago}>CLABE: {formatearClabe(generarClabe(pedidoId))}</Text>
             <Text style={styles.textoPago}>Referencia: {folio}</Text>
-            <Text style={styles.leyendaPago}>{DATOS_BANCARIOS.leyenda}</Text>
         </View>
     );
 }
@@ -193,12 +194,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.TEXTO,
         marginTop: 2,
-    },
-    leyendaPago: {
-        marginTop: 8,
-        fontSize: 12,
-        fontStyle: 'italic',
-        color: COLORS.TEXTO_SUAVE,
     },
     acciones: {
         marginTop: 24,

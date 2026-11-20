@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { traducirErrorDatos } from "./erroresDatos";
+import { esErrorDeConexion, MENSAJE_SIN_CONEXION, traducirErrorDatos } from "./erroresDatos";
 import { COLUMNAS_ENTREGA, entregaDeFila, FilaEntrega } from "./pedidosService";
 import { EntregaRepartidor, EntregaResumen, EstadoPedido, Niveles, Tamanio } from "../types/pedido.types";
 import { armarDireccion } from "../utils/entrega";
@@ -96,7 +96,7 @@ export async function marcarEntregado(id: string): Promise<{resultado: Resultado
         .select('id');
     if (error) {
         console.warn('marcarEntregado:', error.code, error.message);
-        return {resultado: 'error', error: MENSAJES_REPARTIDOR.ACTUALIZAR};
+        return {resultado: 'error', error: esErrorDeConexion(error) ? MENSAJE_SIN_CONEXION : MENSAJES_REPARTIDOR.ACTUALIZAR};
     }
     if (!data || data.length === 0) return {resultado: 'desactualizado', error: MENSAJES_REPARTIDOR.YA_NO_DISPONIBLE};
     return {resultado: 'ok', error: null};
@@ -115,7 +115,7 @@ export async function marcarNoEntregado(id: string, motivo: string): Promise<{re
         .select('id');
     if (error) {
         console.warn('marcarNoEntregado:', error.code, error.message);
-        return {resultado: 'error', error: MENSAJES_REPARTIDOR.ACTUALIZAR};
+        return {resultado: 'error', error: esErrorDeConexion(error) ? MENSAJE_SIN_CONEXION : MENSAJES_REPARTIDOR.ACTUALIZAR};
     }
     if (!data || data.length === 0) return {resultado: 'desactualizado', error: MENSAJES_REPARTIDOR.YA_NO_DISPONIBLE};
     return {resultado: 'ok', error: null};

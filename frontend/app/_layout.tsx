@@ -1,3 +1,4 @@
+import BannerConexion from "../src/components/BannerConexion";
 import { AuthProvider } from "../src/context/AuthContext";
 import { DialogoProvider } from "../src/context/DialogoContext";
 import { Stack } from "expo-router";
@@ -13,6 +14,8 @@ export default function RootLayout(){ // root layout para proveer el contexto de
                     <Stack screenOptions={{ headerShown: false }}>
                         <Stack.Screen name="index" />
                     </Stack>
+                    {/* aviso flotante de "Sin conexión a internet" en todas las pantallas (F10 A8) */}
+                    <BannerConexion />
                 </AuthProvider>
             </DialogoProvider>
         </GestureHandlerRootView>

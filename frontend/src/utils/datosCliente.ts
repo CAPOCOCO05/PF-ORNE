@@ -1,5 +1,5 @@
 import { DatosCliente, DatosEntrega, DireccionGuardada } from "../types/pedido.types";
-import { dentroDeZona, ENTREGA_VACIA, MENSAJES_ENTREGA, normalizarTelefono, telefonoValido } from "./entrega";
+import { dentroDeZona, ENTREGA_VACIA, MENSAJES_ENTREGA, normalizarTelefono, telefonoValido, validarNumeroExterior } from "./entrega";
 import { MENSAJES_PEDIDO } from "./pedido";
 import { normalizarNombre, validarNombreCompleto } from "./validaciones";
 
@@ -53,7 +53,8 @@ export function validarDatosCliente(formulario: FormularioDatosCliente): Partial
 
     const {calle, numeroExterior, colonia, ubicacion} = formulario.direccion;
     if (!calle.trim()) errores.calle = MENSAJES_PEDIDO.OBLIGATORIO;
-    if (!numeroExterior.trim()) errores.numeroExterior = MENSAJES_PEDIDO.OBLIGATORIO;
+    const errorNumero = validarNumeroExterior(numeroExterior);
+    if (errorNumero) errores.numeroExterior = errorNumero;
     if (!colonia.trim()) errores.colonia = MENSAJES_PEDIDO.OBLIGATORIO;
     if (!ubicacion) errores.ubicacion = MENSAJES_ENTREGA.UBICACION;
     else if (!dentroDeZona(ubicacion)) errores.ubicacion = MENSAJES_ENTREGA.FUERA_DE_ZONA;

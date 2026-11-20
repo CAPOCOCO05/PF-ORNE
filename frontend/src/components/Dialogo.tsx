@@ -3,6 +3,7 @@ import { AccessibilityInfo, Image, Modal, Pressable, StyleSheet, Text, View } fr
 import type { OpcionesDialogo, RespuestaDialogo } from "../context/DialogoContext";
 import { COLORS } from "../theme/colors";
 import Boton from "./Boton";
+import VistaTeclado from "./VistaTeclado";
 
 interface DialogoProps {
     opciones: OpcionesDialogo | null; // null = cerrado
@@ -58,6 +59,8 @@ export function MarcoDialogo({titulo, mensaje, alerta = false, cerrarAlTocarFuer
 
     return (
         <Modal testID={`${testID}-modal`} visible transparent animationType="fade" statusBarTranslucent onRequestClose={onCerrar}>
+            {/* F10 A4: el teclado no tapa campos dentro del dialogo (motivo de no entrega) */}
+            <VistaTeclado>
             <Pressable testID={`${testID}-fondo`} style={styles.fondo} onPress={cerrarAlTocarFuera ? onCerrar : undefined} accessible={false}>
                 {/* la tarjeta absorbe el toque para que no llegue al fondo */}
                 <View testID={testID} style={styles.tarjeta} accessibilityViewIsModal onStartShouldSetResponder={() => true}>
@@ -67,6 +70,7 @@ export function MarcoDialogo({titulo, mensaje, alerta = false, cerrarAlTocarFuer
                     {children}
                 </View>
             </Pressable>
+            </VistaTeclado>
         </Modal>
     );
 }

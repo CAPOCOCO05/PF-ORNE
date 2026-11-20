@@ -3,8 +3,6 @@
 export const METODO_PAGO = 'Tarjeta (transferencia o depósito)';
 
 export const DATOS_BANCARIOS = {
-    banco: 'Banco de Ejemplo',
+    banco: 'Banco Bienestar',
     titular: 'Pastelería ORNE',
-    clabe: '000 000 0000 0000 0000',   // 18 digitos, ficticia
-    leyenda: 'Pago simulado: no se realizará ningún cargo',
 } as const;

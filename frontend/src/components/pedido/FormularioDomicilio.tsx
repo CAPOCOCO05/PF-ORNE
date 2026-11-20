@@ -72,7 +72,7 @@ export default function FormularioDomicilio({entrega, errores, onCambiar}: Formu
             <View style={styles.busqueda}>
                 <View style={styles.flex}>
                     <Input etiqueta="Buscar dirección" value={busqueda} onChangeText={setBusqueda}
-                        placeholder="Ej. Av. Reforma 100" returnKeyType="search" onSubmitEditing={buscar} />
+                        placeholder="Ej. Av. Reforma 100" maxLength={MAX_CAMPO_DIRECCION} returnKeyType="search" onSubmitEditing={buscar} />
                 </View>
                 <Boton titulo="Buscar" variante="secundario" onPress={buscar} cargando={buscando} style={styles.botonBuscar} />
             </View>

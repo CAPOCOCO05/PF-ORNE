@@ -1,6 +1,7 @@
 import {
     MENSAJES_ENTREGA, armarDireccion, dentroDeZona, diasAnticipacion, distanciaKm, esDomingo, fechaMaxima,
-    fechaMinima, hoyLocal, normalizarTelefono, semanasDelMes, sumarDias, telefonoValido, validarEntrega, validarFechaEntrega,
+    fechaMinima, hoyLocal, normalizarTelefono, numeroExteriorValido, semanasDelMes, sumarDias, telefonoValido, validarEntrega,
+    validarFechaEntrega, validarNumeroExterior,
 } from "../entrega";
 import { MENSAJES_PEDIDO } from "../pedido";
 import { SUCURSAL } from "../../constants/sucursal";
@@ -83,6 +84,19 @@ describe("telefono y direccion", () => {
         expect(telefonoValido("646 123 4567")).toBe(true);
         expect(telefonoValido("646123456")).toBe(false);
         expect(telefonoValido("64612345ab")).toBe(false);
+    });
+
+    it("numero exterior: positivo, con letra o S/N; no texto ni negativos (F10 A6)", () => {
+        expect(numeroExteriorValido("123")).toBe(true);
+        expect(numeroExteriorValido("123-B")).toBe(true);
+        expect(numeroExteriorValido("45 A")).toBe(true);
+        expect(numeroExteriorValido("s/n")).toBe(true);
+        expect(numeroExteriorValido("abc")).toBe(false);
+        expect(numeroExteriorValido("-5")).toBe(false);
+        expect(numeroExteriorValido("0")).toBe(false);
+        expect(validarNumeroExterior("  ")).toBe(MENSAJES_PEDIDO.OBLIGATORIO);
+        expect(validarNumeroExterior("abc")).toBe(MENSAJES_ENTREGA.NUMERO_EXTERIOR);
+        expect(validarNumeroExterior("12")).toBeUndefined();
     });
 
     it("arma la direccion legible", () => {

@@ -1,9 +1,10 @@
 // traduce los errores de Supabase Auth a los mensajes de la spec F00
+import { MENSAJE_SIN_CONEXION } from "./erroresDatos";
 
 export const MENSAJES_AUTH = {
     CREDENCIALES: 'Correo o contraseña incorrectos',
     CORREO_REGISTRADO: 'Este correo ya tiene una cuenta',
-    CONEXION: 'Error de conexión, inténtalo de nuevo',
+    CONEXION: MENSAJE_SIN_CONEXION,
     CONTRASENA_DEBIL: 'La contraseña debe tener al menos 6 caracteres',
     DEMASIADOS_INTENTOS: 'Demasiados intentos, espera un momento',
     CORREO_INVALIDO: 'Ingresa un correo válido',

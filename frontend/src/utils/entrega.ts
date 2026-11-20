@@ -8,6 +8,7 @@ import { MENSAJES_PEDIDO } from "./pedido";
 
 export const MENSAJES_ENTREGA = {
     TELEFONO: 'Ingresa un teléfono de 10 dígitos',
+    NUMERO_EXTERIOR: 'Escribe un número válido (ej. 123 o 123-B) o S/N',
     UBICACION: 'Fija tu ubicación en el mapa',
     FUERA_DE_ZONA: 'Esta dirección está fuera de nuestra zona de entrega; puedes elegir recolección en sucursal',
     DOMINGO: 'No hacemos entregas en domingo',
@@ -106,6 +107,19 @@ export function telefonoValido(telefono: string): boolean {
     return /^[0-9]{10}$/.test(normalizarTelefono(telefono));
 }
 
+// F10 A6: empieza con un numero positivo ("123", "123-B", "45 A") o es "S/N";
+// rechaza texto sin numero ("abc") y negativos ("-5")
+export function numeroExteriorValido(numero: string): boolean {
+    return /^(S\/N|[1-9][0-9A-Za-z\s/-]*)$/i.test(numero.trim());
+}
+
+// obligatorio y con formato de numero; undefined si esta bien
+export function validarNumeroExterior(numero: string): string | undefined {
+    if (!numero.trim()) return MENSAJES_PEDIDO.OBLIGATORIO;
+    if (!numeroExteriorValido(numero)) return MENSAJES_ENTREGA.NUMERO_EXTERIOR;
+    return undefined;
+}
+
 // texto legible para el repartidor: "Calle 123 Int 4, Colonia"
 export function armarDireccion({calle, numeroExterior, numeroInterior, colonia}: Pick<DatosEntrega, 'calle' | 'numeroExterior' | 'numeroInterior' | 'colonia'>): string {
     const interior = numeroInterior.trim() ? ` Int ${numeroInterior.trim()}` : '';
@@ -134,7 +148,8 @@ export function validarEntrega(datos: DatosEntrega, niveles: Niveles | null, hoy
 
     if (datos.tipoEntrega === 'domicilio') {
         if (!datos.calle.trim()) errores.calle = MENSAJES_PEDIDO.OBLIGATORIO;
-        if (!datos.numeroExterior.trim()) errores.numeroExterior = MENSAJES_PEDIDO.OBLIGATORIO;
+        const errorNumero = validarNumeroExterior(datos.numeroExterior);
+        if (errorNumero) errores.numeroExterior = errorNumero;
         if (!datos.colonia.trim()) errores.colonia = MENSAJES_PEDIDO.OBLIGATORIO;
         if (!datos.ubicacion) errores.ubicacion = MENSAJES_ENTREGA.UBICACION;
         else if (!dentroDeZona(datos.ubicacion)) errores.ubicacion = MENSAJES_ENTREGA.FUERA_DE_ZONA;

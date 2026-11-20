@@ -211,6 +211,13 @@ describe("cambiarEstado", () => {
         expect(await cambiarEstado({ id: "ped1", estadoActual: "pendiente", destino: "listo" }))
             .toEqual({ resultado: "error", error: MENSAJES_ADMIN.ACTUALIZAR });
     });
+
+    it("sin internet avisa que no hay conexion (F10 A7)", async () => {
+        mockConsulta({ data: null, error: { message: "Error: fetch failed: Unable to resolve host", code: "" } });
+
+        expect(await cambiarEstado({ id: "ped1", estadoActual: "pendiente", destino: "confirmado" }))
+            .toEqual({ resultado: "error", error: MENSAJES_DATOS.CONEXION });
+    });
 });
 
 describe("listarRepartidores", () => {

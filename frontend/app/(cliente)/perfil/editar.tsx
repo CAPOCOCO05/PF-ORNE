@@ -14,6 +14,7 @@ import {
 import { ENTREGA_VACIA } from "../../../src/utils/entrega";
 import { MAX_NOMBRE } from "../../../src/utils/validaciones";
 import RequiereCuenta from "../../../src/components/RequiereCuenta";
+import VistaTeclado from "../../../src/components/VistaTeclado";
 
 // F07 M7: editar nombre, telefono y direccion guardada (no aparece en el menu)
 // F09: sin sesion se invita a crear cuenta en lugar de consultar datos
@@ -93,6 +94,7 @@ function EditarPerfil() {
     };
 
     return (
+        <VistaTeclado>
         <ScrollView style={styles.fondo} contentContainerStyle={styles.contenido} keyboardShouldPersistTaps="handled">
             <Text style={styles.titulo}>Editar datos</Text>
 
@@ -139,6 +141,7 @@ function EditarPerfil() {
             <Boton titulo="Guardar cambios" onPress={guardarCambios} cargando={guardando} style={styles.boton} />
             <Boton titulo="Cancelar" variante="secundario" onPress={salir} deshabilitado={guardando} style={styles.botonCancelar} />
         </ScrollView>
+        </VistaTeclado>
     );
 }
 

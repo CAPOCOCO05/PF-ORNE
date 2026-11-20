@@ -2,7 +2,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { render } from "../../src/test-utils/renderConDialogo";
 import PasoPago from "../../app/(cliente)/pedido/nuevo/pago";
 import Confirmacion from "../../app/(cliente)/pedido/nuevo/confirmacion";
-import { DATOS_BANCARIOS } from "../../src/constants/pago";
+import { formatearClabe, generarClabe } from "../../src/utils/pago";
 import { PedidoProvider, usePedido } from "../../src/context/PedidoContext";
 import { confirmarPedido, MENSAJES_CONFIRMACION, obtenerPedido } from "../../src/services/pedidosService";
 import { PedidoCompleto, PedidoEnCurso } from "../../src/types/pedido.types";
@@ -148,9 +148,8 @@ describe("Paso 6: confirmación", () => {
         expect(await screen.findByText("ORN-7K2QXM")).toBeTruthy();
         expect(obtenerPedido).toHaveBeenCalledWith("ped1");
         expect(screen.getByText("Total: $790.00 MXN")).toBeTruthy();
-        expect(screen.getByText(`CLABE: ${DATOS_BANCARIOS.clabe}`)).toBeTruthy();
+        expect(screen.getByText(`CLABE: ${formatearClabe(generarClabe("ped1"))}`)).toBeTruthy();
         expect(screen.getByText("Referencia: ORN-7K2QXM")).toBeTruthy();
-        expect(screen.getByText(DATOS_BANCARIOS.leyenda)).toBeTruthy();
     });
 
     it("botones para salir del wizard", async () => {

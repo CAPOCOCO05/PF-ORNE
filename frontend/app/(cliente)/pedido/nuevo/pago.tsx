@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import PantallaPaso from "../../../../src/components/pedido/PantallaPaso";
 import ResumenPedido from "../../../../src/components/pedido/ResumenPedido";
-import { DATOS_BANCARIOS, METODO_PAGO } from "../../../../src/constants/pago";
+import { METODO_PAGO } from "../../../../src/constants/pago";
 import { useDialogo } from "../../../../src/context/DialogoContext";
 import { usePedido } from "../../../../src/context/PedidoContext";
 import { RUTA_PASO } from "../../../../src/hooks/usePasoPedido";
@@ -77,9 +77,6 @@ export default function PasoPago() {
                     <View style={styles.radio}><View style={styles.radioPunto} /></View>
                     <Text style={styles.textoMetodo}>{METODO_PAGO}</Text>
                 </View>
-                <Text style={styles.leyenda}>
-                    Al confirmar te daremos los datos bancarios y tu folio como referencia. {DATOS_BANCARIOS.leyenda}.
-                </Text>
             </View>
         </PantallaPaso>
     );
@@ -125,10 +122,5 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '700',
         color: COLORS.TITULO,
-    },
-    leyenda: {
-        marginTop: 8,
-        fontSize: 12,
-        color: COLORS.TEXTO_SUAVE,
     },
 });

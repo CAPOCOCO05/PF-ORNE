@@ -57,6 +57,7 @@ debe seguir la paleta:
 | F07 | Mejoras posteriores al MVP (diálogos propios, no entregado, filtros, catálogo admin, nombre completo, perfil del cliente) | Todos | ✅ Completa |
 | F08 | Barra de navegación inferior (tabs) y aviso de privacidad | Todos | ✅ Completa |
 | F09 | Catálogo sin cuenta; la cuenta se pide al hacer el pedido | Visitante / Cliente | ✅ Completa |
+| F10 | Ajustes para la revisión (CLABE por pedido, regreso al pedido tras registrarse, teclado, doble toque, validaciones) | Todos | ✅ Completa |
 
 **Orden de implementación:** F00 → catálogo de F01 (pantalla de inicio) → resto de
 F01 → F02 → F03 → F04 → F06 → F07 → F08 → F09. F05 se aplica en cada una.

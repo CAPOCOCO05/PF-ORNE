@@ -8,7 +8,7 @@ import Input from '../../src/components/Input';
 import PantallaAuth from '../../src/components/PantallaAuth';
 import { COLORS } from '../../src/theme/colors';
 import { rutaTrasAutenticar } from '../../src/utils/rutas';
-import { DatosLogin, tieneErrores, validarLogin } from '../../src/utils/validaciones';
+import { DatosLogin, MAX_CONTRASENA, MAX_CORREO, tieneErrores, validarLogin } from '../../src/utils/validaciones';
 
 export default function Login() {
     const {signIn, authError} = useAuth();
@@ -69,6 +69,7 @@ export default function Login() {
                 onBlur={tocar('correo')}
                 error={errorDe('correo')}
                 keyboardType="email-address"
+                maxLength={MAX_CORREO}
                 autoCapitalize="none"
                 autoComplete="email"
                 textContentType="emailAddress"
@@ -81,6 +82,7 @@ export default function Login() {
                 onBlur={tocar('contrasena')}
                 error={errorDe('contrasena')}
                 secureTextEntry
+                maxLength={MAX_CONTRASENA}
                 autoCapitalize="none"
                 autoComplete="current-password"
                 textContentType="password"
