@@ -1,8 +1,8 @@
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "../theme/colors";
 import FondoOndas from "./FondoOndas";
-import VistaTeclado from "./VistaTeclado";
+import ScrollTeclado from "./ScrollTeclado";
 
 interface PantallaAuthProps {
     children: React.ReactNode; // contenido de la tarjeta (campos y boton)
@@ -15,8 +15,7 @@ export default function PantallaAuth({children, pie, mensajeError}: PantallaAuth
     return (
         <SafeAreaView style={styles.pantalla}>
             <FondoOndas />
-            <VistaTeclado>
-                <ScrollView contentContainerStyle={styles.contenido} keyboardShouldPersistTaps="handled">
+            <ScrollTeclado contentContainerStyle={styles.contenido}>
                     <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" accessibilityLabel="ORNE" />
 
                     <View style={styles.tarjetaContenedor}>
@@ -30,8 +29,7 @@ export default function PantallaAuth({children, pie, mensajeError}: PantallaAuth
                     </View>
 
                     <View style={styles.pie}>{pie}</View>
-                </ScrollView>
-            </VistaTeclado>
+                </ScrollTeclado>
         </SafeAreaView>
     );
 }

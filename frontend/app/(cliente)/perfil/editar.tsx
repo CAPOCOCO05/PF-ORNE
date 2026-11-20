@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import Boton from "../../../src/components/Boton";
 import Input from "../../../src/components/Input";
@@ -14,7 +14,7 @@ import {
 import { ENTREGA_VACIA } from "../../../src/utils/entrega";
 import { MAX_NOMBRE } from "../../../src/utils/validaciones";
 import RequiereCuenta from "../../../src/components/RequiereCuenta";
-import VistaTeclado from "../../../src/components/VistaTeclado";
+import ScrollTeclado from "../../../src/components/ScrollTeclado";
 
 // F07 M7: editar nombre, telefono y direccion guardada (no aparece en el menu)
 // F09: sin sesion se invita a crear cuenta en lugar de consultar datos
@@ -94,8 +94,7 @@ function EditarPerfil() {
     };
 
     return (
-        <VistaTeclado>
-        <ScrollView style={styles.fondo} contentContainerStyle={styles.contenido} keyboardShouldPersistTaps="handled">
+        <ScrollTeclado style={styles.fondo} contentContainerStyle={styles.contenido}>
             <Text style={styles.titulo}>Editar datos</Text>
 
             <Input
@@ -140,8 +139,7 @@ function EditarPerfil() {
 
             <Boton titulo="Guardar cambios" onPress={guardarCambios} cargando={guardando} style={styles.boton} />
             <Boton titulo="Cancelar" variante="secundario" onPress={salir} deshabilitado={guardando} style={styles.botonCancelar} />
-        </ScrollView>
-        </VistaTeclado>
+        </ScrollTeclado>
     );
 }
 

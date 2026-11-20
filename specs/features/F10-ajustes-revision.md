@@ -32,8 +32,15 @@ edge-to-edge (SDK 58) Android ya no reacomoda la pantalla.
 - **D3.** Componente `VistaTeclado`: `behavior="padding"` en ambas plataformas y
   offset igual a su posición real en pantalla (encabezado, área segura).
 
+- **D3b (iOS).** Probado en iOS, el campo seguía tapado: `KeyboardAvoidingView` encoge
+  la pantalla pero el `ScrollView` no se desplaza al campo enfocado. En formularios con
+  scroll (`ScrollTeclado`) iOS usa `automaticallyAdjustKeyboardInsets` del `ScrollView`
+  (deja espacio al teclado y lleva el campo enfocado a la vista) y se apaga
+  `KeyboardAvoidingView` para no duplicar el espacio; Android sigue con `VistaTeclado`.
+
 - [x] Login y registro (`PantallaAuth`), pasos del pedido (`PantallaPaso`), editar
       perfil, alta/edición de pastel (admin) y diálogos (motivo de no entrega).
+- [x] `ScrollTeclado` para los formularios con scroll (corrección de iOS).
 
 ## A5. Doble toque
 - [x] `Boton` ignora un segundo toque en 600 ms si la pantalla no cambió entre

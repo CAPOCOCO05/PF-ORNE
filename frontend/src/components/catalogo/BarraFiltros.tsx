@@ -24,7 +24,7 @@ export default function BarraFiltros({filtros, onCambiar}: BarraFiltrosProps) {
 
     return (
         <View style={styles.contenedor}>
-            <View style={styles.barra}>
+            <View  style={styles.barra}>
                 <BotonDesplegable
                     texto={total > 0 ? `Filtrar (${total})` : 'Filtrar'}
                     abierto={abierto}
@@ -67,8 +67,8 @@ const styles = StyleSheet.create({
         marginTop: 12,
     },
     barra: {
-        flexDirection: 'row',
-        gap: 8,
+        flexDirection: 'row', 
+        gap: 8, 
     },
     desplegable: {
         flex: 1,

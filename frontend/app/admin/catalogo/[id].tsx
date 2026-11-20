@@ -4,7 +4,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import Boton from "../../../src/components/Boton";
 import Input from "../../../src/components/Input";
 import TarjetaPastel from "../../../src/components/TarjetaPastel";
-import VistaTeclado from "../../../src/components/VistaTeclado";
+import ScrollTeclado from "../../../src/components/ScrollTeclado";
 import SelectorOpciones from "../../../src/components/pedido/SelectorOpciones";
 import SelectorSabor from "../../../src/components/pedido/SelectorSabor";
 import { SABORES_PAN, SABORES_RELLENO } from "../../../src/constants/catalogoSabores";
@@ -97,8 +97,7 @@ export default function AdminPastel() {
     const imagenMostrada = formulario.imagenLocal?.uri ?? formulario.imagenUrl;
 
     return (
-        <VistaTeclado>
-        <ScrollView style={styles.fondo} contentContainerStyle={styles.contenido} keyboardShouldPersistTaps="handled">
+        <ScrollTeclado style={styles.fondo} contentContainerStyle={styles.contenido}>
             <Text style={styles.titulo}>{pastel.esNuevo ? 'Nuevo pastel' : 'Editar pastel'}</Text>
 
             <Input
@@ -191,8 +190,7 @@ export default function AdminPastel() {
                 style={styles.boton}
             />
             <Boton titulo="Cancelar" variante="secundario" onPress={volver} deshabilitado={pastel.guardando} style={styles.boton} />
-        </ScrollView>
-        </VistaTeclado>
+        </ScrollTeclado>
     );
 }
 

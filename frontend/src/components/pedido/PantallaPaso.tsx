@@ -1,10 +1,10 @@
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { usePedido } from "../../context/PedidoContext";
 import { COLORS } from "../../theme/colors";
 import { PasoPedido } from "../../types/pedido.types";
 import Boton from "../Boton";
-import VistaTeclado from "../VistaTeclado";
+import ScrollTeclado from "../ScrollTeclado";
 import IndicadorPasos from "./IndicadorPasos";
 import PrecioPedido from "./PrecioPedido";
 
@@ -49,13 +49,11 @@ export default function PantallaPaso({paso, children, textoAtras, onAtras, texto
     }
 
     return (
-        <VistaTeclado>
-            <ScrollView style={styles.fondo} contentContainerStyle={styles.contenido} keyboardShouldPersistTaps="handled">
+        <ScrollTeclado style={styles.fondo} contentContainerStyle={styles.contenido}>
                 <Text style={styles.titulo}>Registrar pedido</Text>
                 <IndicadorPasos actual={paso} />
                 {contenido}
-            </ScrollView>
-        </VistaTeclado>
+            </ScrollTeclado>
     );
 }
 

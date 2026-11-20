@@ -78,7 +78,6 @@ export default function Register() {
             <Input
                 etiqueta="Nombre completo"
                 placeholder="Nombre y apellidos"
-                ayuda="Lo usará el repartidor para entregarte tu pedido"
                 value={datos.nombre}
                 onChangeText={cambiar('nombre')}
                 onBlur={tocar('nombre')}

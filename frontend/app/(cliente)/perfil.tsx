@@ -1,5 +1,5 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import Boton from "../../src/components/Boton";
 import { IconoPerfil } from "../../src/components/Iconos";
 import MapaDestino from "../../src/components/repartidor/MapaDestino";
@@ -57,8 +57,8 @@ function Perfil() {
                 </View>
             ) : null}
 
-            <Boton titulo="Aviso de privacidad" variante="secundario" onPress={() => router.push('/aviso-privacidad')} style={styles.boton} />
             <Boton titulo="Cerrar sesión" variante="secundario" onPress={signOut} style={styles.boton} />
+            <Link href="/aviso-privacidad" style={styles.olvide}>Aviso de privacidad</Link>
         </ScrollView>
     );
 }
@@ -161,5 +161,12 @@ const styles = StyleSheet.create({
     boton: {
         marginTop: 20,
         alignSelf: 'stretch',
+    },
+    olvide: {
+        marginTop: 10,
+        fontSize: 15,
+        color: COLORS.TITULO,
+        textAlign: 'center',
+        textDecorationLine: 'underline',
     },
 });
