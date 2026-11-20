@@ -10,7 +10,9 @@ const mockPush = jest.fn();
 const mockNavigate = jest.fn();
 jest.mock("expo-router", () => {
     const { useEffect } = jest.requireActual("react");
+    const { Text } = jest.requireActual("react-native");
     return {
+        Link: ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>,
         useRouter: () => ({ push: mockPush, navigate: mockNavigate }),
         useFocusEffect: (efecto: () => void) => useEffect(efecto, [efecto]),
     };

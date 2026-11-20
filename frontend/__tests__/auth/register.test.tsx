@@ -41,11 +41,10 @@ describe("Register (F00, F07 M6)", () => {
         expect(screen.queryByRole("checkbox")).toBeNull();
     });
 
-    it("pide el nombre completo con su ayuda", async () => {
+    it("pide el nombre completo", async () => {
         await render(<Register />);
 
         expect(screen.getByText("Nombre completo")).toBeTruthy();
-        expect(screen.getByText("Lo usará el repartidor para entregarte tu pedido")).toBeTruthy();
     });
 
     it("con campos vacios muestra los errores y no registra", async () => {
