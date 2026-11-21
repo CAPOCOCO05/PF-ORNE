@@ -23,8 +23,10 @@ export default function PantallaPerfil() {
             <Text style={styles.nombre}>{perfil?.nombre}</Text>
             <Text style={styles.dato}>{user?.email}</Text>
             {perfil ? <Text style={styles.rol}>{NOMBRE_ROL[perfil.rol]}</Text> : null}
-            <Boton titulo="Aviso de privacidad" variante="secundario" onPress={() => router.push('/aviso-privacidad')} style={styles.boton} />
-            <Boton titulo="Cerrar sesión" onPress={signOut} style={styles.botonCerrar} />
+            <Boton titulo="Cerrar sesión" onPress={signOut} style={styles.boton} />
+            <Text accessibilityRole="link" onPress={() => router.push('/aviso-privacidad')} style={styles.enlace}>
+                Aviso de privacidad
+            </Text>
         </View>
     );
 }
@@ -62,8 +64,11 @@ const styles = StyleSheet.create({
         marginTop: 32,
         alignSelf: 'stretch',
     },
-    botonCerrar: {
-        marginTop: 12,
-        alignSelf: 'stretch',
+    enlace: {
+        marginTop: 10,
+        fontSize: 15,
+        color: COLORS.TITULO,
+        textAlign: 'center',
+        textDecorationLine: 'underline',
     },
 });

@@ -89,9 +89,6 @@ export default function Login() {
                 onSubmitEditing={handleLogin}
             />
             <Boton titulo="Iniciar sesión" onPress={handleLogin} cargando={loading} style={styles.boton} />
-            <Pressable onPress={() => { void avisar({titulo: 'Próximamente', mensaje: 'La recuperación de contraseña estará disponible pronto.'}); }}>
-                <Text style={styles.olvide}>Olvidé mi contraseña</Text>
-            </Pressable>
             {/* F08 N2: el aviso se puede leer sin sesion */}
             <Link href="/aviso-privacidad" style={styles.olvide}>Aviso de privacidad</Link>
         </PantallaAuth>

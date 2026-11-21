@@ -98,7 +98,7 @@ de Datos Personales en Posesión de los Particulares, LFPDPPP).
 - **Registro:** debajo del botón REGISTRARME, el mensaje "Al registrarte aceptas
   nuestro **Aviso de privacidad**"; el texto subrayado abre la pantalla (D3).
 - **Login:** enlace pequeño "Aviso de privacidad" al pie de la tarjeta.
-- **Perfil (los tres roles):** opción "Aviso de privacidad" antes de "Cerrar sesión".
+- **Perfil (los tres roles):** enlace "Aviso de privacidad" debajo de "Cerrar sesión".
 
 ### Contenido mínimo (LFPDPPP)
 1. Identidad y domicilio del responsable: Pastelería ORNE, Calle Primera, C.P.
