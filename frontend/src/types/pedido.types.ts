@@ -134,7 +134,7 @@ export interface PedidoAdminResumen {
 export interface PagoPedido {
     metodo: string;
     monto: number;
-    estado: 'simulado' | 'pagado' | 'fallido';
+    estado: 'pendiente' | 'confirmado';
 }
 
 export interface PedidoAdmin extends PedidoCompleto {

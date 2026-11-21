@@ -19,7 +19,7 @@ function primerPasoIncompleto(pedido: PedidoEnCurso): PasoPedido {
     return 4;
 }
 
-// F03 paso 5: resumen completo, metodo de pago simulado y "Confirmar pedido"
+// F03 paso 5: resumen completo, metodo de pago y "Confirmar pedido"
 export default function PasoPago() {
     const router = useRouter();
     const {pedido} = usePedido();

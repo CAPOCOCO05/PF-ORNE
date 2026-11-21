@@ -20,7 +20,7 @@ export const AVISO_PRIVACIDAD: SeccionAviso[] = [
         titulo: 'Datos que recabamos',
         parrafos: [
             'Nombre completo, correo electrónico, teléfono, dirección de entrega y la ubicación del punto que marcas en el mapa, así como la imagen de referencia que adjuntes a tu pastel.',
-            'No recabamos datos sensibles ni financieros: el pago en la app es simulado y nunca te pediremos datos de tarjeta.',
+            'No recabamos datos sensibles ni financieros.',
         ],
     },
     {

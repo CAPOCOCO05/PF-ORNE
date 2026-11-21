@@ -303,7 +303,7 @@ function codigoDeError(error: {message?: string; code?: string}): CodigoConfirma
     return codigo ?? 'GENERICO';
 }
 
-// pasa el borrador a 'pendiente' en el servidor: recalcula el precio, genera el folio y el pago simulado (F03 D1)
+// pasa el borrador a 'pendiente' en el servidor: recalcula el precio, genera el folio y el pago en 'pendiente' (F03 D1)
 export async function confirmarPedido(id: string): Promise<ResultadoConfirmar> {
     const {data, error} = await supabase.rpc('confirmar_pedido', {p_pedido_id: id});
     if (error) {

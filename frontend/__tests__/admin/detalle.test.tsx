@@ -33,7 +33,7 @@ const PEDIDO: PedidoAdmin = {
     motivoNoEntrega: null,
     cliente: "Ana López",
     repartidor: null,
-    pago: { metodo: "tarjeta", monto: 790, estado: "simulado" },
+    pago: { metodo: "tarjeta", monto: 790, estado: "pendiente" },
 };
 
 // presiona la accion en pantalla y luego la confirma en el dialogo (F07 M1)
@@ -59,7 +59,7 @@ describe("Detalle del pedido (admin)", () => {
         expect(screen.getByLabelText("Relleno de Chocolate")).toBeTruthy();
         expect(screen.getByText("Feliz día")).toBeTruthy();
         expect(screen.getByText(/Casa azul/)).toBeTruthy();
-        expect(screen.getByText(/Simulado/)).toBeTruthy();
+        expect(screen.getByText(/Estado del pago: Pendiente/)).toBeTruthy();
     });
 
     it("pendiente: ofrece confirmar o cancelar, nada mas", async () => {

@@ -129,7 +129,7 @@ describe("obtenerPedidoAdmin", () => {
                 pedido_detalle: { tamanio: "15", niveles: 2, tipo_pan: "fresa", relleno: "chocolate", decoracion_texto: null, imagen_referencia_url: null },
                 cliente: { nombre: "Ana" },
                 repartidor: { nombre: "Luis" },
-                pagos: [{ metodo_pago: "tarjeta", monto: "790.00", estado_pago: "simulado" }],
+                pagos: [{ metodo_pago: "tarjeta", monto: "790.00", estado_pago: "pendiente" }],
             },
             error: null,
         });
@@ -144,7 +144,7 @@ describe("obtenerPedidoAdmin", () => {
             motivoNoEntrega: null,
             cliente: "Ana",
             repartidor: "Luis",
-            pago: { metodo: "tarjeta", monto: 790, estado: "simulado" },
+            pago: { metodo: "tarjeta", monto: 790, estado: "pendiente" },
         });
     });
 

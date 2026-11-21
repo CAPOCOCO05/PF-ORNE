@@ -16,7 +16,7 @@ interface ComprobanteProps {
     acciones: React.ReactNode;   // botones al final (cambian entre confirmacion y detalle)
 }
 
-// comprobante digital: folio, resumen, total y datos bancarios del pago simulado (F03 D3, D4)
+// comprobante digital: folio, resumen, total y datos bancarios del pago (F03 D3, D4)
 export default function Comprobante({id, titulo, acciones}: ComprobanteProps) {
     const {pedido, cargando, error, reintentar} = usePedidoDetalle(id);
 
@@ -81,7 +81,7 @@ function AvisoNoEntregado({motivo}: {motivo: string | null}) {
     );
 }
 
-// CLABE ficticia propia de cada pedido, derivada de su id
+// CLABE propia de cada pedido, derivada de su id
 function DatosPago({pedidoId, folio}: {pedidoId: string; folio: string}) {
     return (
         <View style={styles.pago}>

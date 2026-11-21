@@ -67,7 +67,7 @@ Pago {
   pedido_id: uuid
   metodo_pago: 'tarjeta'      // único método soportado en el MVP
   monto: number
-  estado_pago: 'simulado' | 'pagado' | 'fallido'
+  estado_pago: 'pendiente' | 'confirmado'   -- confirmado cuando el admin confirma el pedido (016)
 }
 ```
 

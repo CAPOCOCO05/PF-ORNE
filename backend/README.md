@@ -26,7 +26,7 @@ Se aplican **en orden**:
 | `005_catalogo.sql` | Tabla `catalogo_pasteles`, 12 pasteles de prueba, bucket público `catalogo` | F01 |
 | `006_ajustes_borrador.sql` | Columnas nullable para borradores, `paso_actual`, `tamanio`, RLS de edición de borradores, bucket `referencias-pasteles` con políticas | F01 |
 | `007_estados_y_roles.sql` | `repartidor_id`, `check` de estados, RLS de admin y repartidor, trigger que valida las transiciones de estado | F04, F06 |
-| `008_entrega_y_confirmacion.sql` | Dirección y teléfono de entrega, bloques de horario, `paso_actual` 1–5, funciones de fecha mínima y zona de entrega, `calcular_precio`, `confirmar_pedido` (folio + pago simulado); el cliente ya no puede confirmar con un update directo ni insertar pagos | F02, F03 |
+| `008_entrega_y_confirmacion.sql` | Dirección y teléfono de entrega, bloques de horario, `paso_actual` 1–5, funciones de fecha mínima y zona de entrega, `calcular_precio`, `confirmar_pedido` (folio + pago en `pendiente`); el cliente ya no puede confirmar con un update directo ni insertar pagos | F02, F03 |
 | `009_validar_repartidor.sql` | El trigger de transiciones solo acepta como `repartidor_id` a perfiles con rol `repartidor` | F04 |
 | `010_repartidor_ve_clientes.sql` | Política para que el repartidor vea el nombre del cliente de sus entregas en camino | F06 |
 | `011_no_entregado.sql` | Estado `no_entregado` con `motivo_no_entrega`, trigger y política del repartidor; función `contar_pedidos_por_estado()` | F07 M2, M3 |
@@ -34,6 +34,7 @@ Se aplican **en orden**:
 | `013_datos_cliente.sql` | Tabla `datos_cliente` (teléfono y dirección guardada) solo visible para el dueño; llenado inicial desde el último pedido; trigger que la completa al confirmar | F07 M7 |
 | `014_precios_relleno.sql` | Montos confirmados de los rellenos en `calcular_precio` (Cajeta $50, Mermelada $70) y recálculo del `precio_base` del catálogo | F01 D7 |
 | `015_catalogo_publico.sql` | Lectura de los pasteles activos sin sesión (rol `anon`) para explorar el catálogo sin cuenta | F09 |
+| `016_estado_pago.sql` | Estado del pago solo `pendiente` / `confirmado` (se quita el pago simulado); pasa a `confirmado` cuando el admin confirma el pedido | F03, F04 |
 
 ## Pruebas de permisos
 

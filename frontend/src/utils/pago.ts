@@ -1,4 +1,4 @@
-// CLABE FICTICIA de cada pedido (pago simulado, F03 D3). Se deriva del id del pedido:
+// CLABE de cada pedido (F03 D3). Se deriva del id del pedido:
 // cada pedido tiene la suya y siempre se muestra la misma, sin guardarla en la base
 
 const DIGITOS_SIN_CONTROL = 17;

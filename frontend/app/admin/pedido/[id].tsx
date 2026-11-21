@@ -12,9 +12,8 @@ import { PagoPedido, PedidoAdmin } from "../../../src/types/pedido.types";
 import { formatearFecha } from "../../../src/utils/fechas";
 
 const ETIQUETA_PAGO: Record<PagoPedido['estado'], string> = {
-    simulado: 'Simulado',
-    pagado: 'Pagado',
-    fallido: 'Fallido',
+    pendiente: 'Pendiente',
+    confirmado: 'Confirmado',
 };
 
 // F04: detalle completo del pedido y cambio de estado (D5, D6, D7)
