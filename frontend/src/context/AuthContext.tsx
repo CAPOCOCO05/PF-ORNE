@@ -59,7 +59,7 @@ export function AuthProvider({children}: {children: React.ReactNode}){ // provee
         }
 
         let cancelado = false; // evita aplicar una respuesta vieja si el usuario cambio
-        authService.getPerfil(userId).then(({perfil, error}) => {
+        authService.getPerfil().then(({perfil, error}) => {
             if (cancelado) return;
             if (error) {
                 console.warn("getPerfil:", error);
@@ -95,7 +95,7 @@ export function AuthProvider({children}: {children: React.ReactNode}){ // provee
     // guarda el nombre completo y lo refleja en el perfil sin volver a consultarlo (F07 M6)
     const actualizarNombre = async (nombre: string) => {
         if (!userId) return {error: ERROR_SIN_PERFIL};
-        const {error} = await authService.actualizarNombre(userId, nombre);
+        const {error} = await authService.actualizarNombre(nombre);
         if (!error) setPerfil((actual) => actual ? {...actual, nombre} : actual);
         return {error};
     };

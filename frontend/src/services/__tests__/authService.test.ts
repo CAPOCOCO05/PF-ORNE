@@ -2,46 +2,43 @@ import { actualizarNombre, getPerfil, signIn, signUp } from "../authService";
 import { MENSAJES_DATOS } from "../erroresDatos";
 import { MENSAJES_AUTH } from "../authErrors";
 import { supabase } from "../supabase";
+import { llamadaFetch, simularApi, simularSinConexion } from "../../test-utils/apiSimulada";
 
 jest.mock("../supabase", () => ({
     supabase: {
-        from: jest.fn(),
-        auth: { signInWithPassword: jest.fn(), signUp: jest.fn() },
+        auth: { signInWithPassword: jest.fn(), signUp: jest.fn(), getSession: jest.fn() },
     },
 }));
 
-// simula la cadena from().select().eq().maybeSingle()
-function mockConsulta(respuesta: {data: unknown; error: {message: string} | null}) {
-    const maybeSingle = jest.fn().mockResolvedValue(respuesta);
-    const eq = jest.fn().mockReturnValue({ maybeSingle });
-    const select = jest.fn().mockReturnValue({ eq });
-    (supabase.from as jest.Mock).mockReturnValue({ select });
-    return { select, eq };
-}
+beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    (supabase.auth.getSession as jest.Mock).mockResolvedValue({ data: { session: { access_token: "tok" } } });
+});
 
-describe("getPerfil", () => {
-    it("devuelve el perfil del usuario", async () => {
+describe("getPerfil (API /perfil)", () => {
+    it("devuelve el perfil del usuario de la sesion", async () => {
         const perfil = { id: "u1", nombre: "Ana", rol: "cliente" };
-        const { select, eq } = mockConsulta({ data: perfil, error: null });
+        const fetchMock = simularApi({ status: 200, cuerpo: { perfil } });
 
-        const resultado = await getPerfil("u1");
+        const resultado = await getPerfil();
 
-        expect(supabase.from).toHaveBeenCalledWith("perfiles");
-        expect(select).toHaveBeenCalledWith("id, nombre, rol");
-        expect(eq).toHaveBeenCalledWith("id", "u1");
+        const [url, opciones] = llamadaFetch(fetchMock);
+        expect(url).toBe("/perfil");
+        expect(opciones.headers).toHaveProperty("Authorization", "Bearer tok");
         expect(resultado).toEqual({ perfil, error: null });
     });
 
-    it("devuelve perfil null si el usuario no tiene perfil", async () => {
-        mockConsulta({ data: null, error: null });
+    it("404: perfil null sin error (la sesion no tiene perfil)", async () => {
+        simularApi({ status: 404, cuerpo: { error: "No encontramos tu perfil" } });
 
-        expect(await getPerfil("u1")).toEqual({ perfil: null, error: null });
+        expect(await getPerfil()).toEqual({ perfil: null, error: null });
     });
 
-    it("devuelve el mensaje de error si falla la consulta", async () => {
-        mockConsulta({ data: null, error: { message: "Network request failed" } });
+    it("sin internet: devuelve el error", async () => {
+        simularSinConexion();
 
-        expect(await getPerfil("u1")).toEqual({ perfil: null, error: "Network request failed" });
+        expect(await getPerfil()).toEqual({ perfil: null, error: MENSAJES_DATOS.CONEXION });
     });
 });
 
@@ -89,25 +86,25 @@ describe("signUp", () => {
 });
 
 describe("actualizarNombre (F07 M6)", () => {
-    function mockUpdate(respuesta: {error: {message: string; code: string} | null}) {
-        const eq = jest.fn().mockResolvedValue(respuesta);
-        const update = jest.fn().mockReturnValue({ eq });
-        (supabase.from as jest.Mock).mockReturnValue({ update });
-        return { update, eq };
-    }
+    it("manda el nombre a PATCH /perfil", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { perfil: { id: "u1", nombre: "Ana López", rol: "cliente" } } });
 
-    it("actualiza solo el nombre del perfil del usuario", async () => {
-        const { update, eq } = mockUpdate({ error: null });
-
-        expect(await actualizarNombre("u1", "Ana López")).toEqual({ error: null });
-        expect(supabase.from).toHaveBeenCalledWith("perfiles");
-        expect(update).toHaveBeenCalledWith({ nombre: "Ana López" });
-        expect(eq).toHaveBeenCalledWith("id", "u1");
+        expect(await actualizarNombre("Ana López")).toEqual({ error: null });
+        const [url, opciones] = llamadaFetch(fetchMock);
+        expect(url).toBe("/perfil");
+        expect(opciones.method).toBe("PATCH");
+        expect(JSON.parse(opciones.body as string)).toEqual({ nombre: "Ana López" });
     });
 
-    it("error de red: mensaje de conexion", async () => {
-        mockUpdate({ error: { message: "TypeError: Network request failed", code: "" } });
+    it("sin internet: mensaje de conexion", async () => {
+        simularSinConexion();
 
-        expect(await actualizarNombre("u1", "Ana López")).toEqual({ error: MENSAJES_DATOS.CONEXION });
+        expect(await actualizarNombre("Ana López")).toEqual({ error: MENSAJES_DATOS.CONEXION });
+    });
+
+    it("nombre rechazado por la API: su mensaje", async () => {
+        simularApi({ status: 400, cuerpo: { error: "Escribe tu nombre y al menos un apellido" } });
+
+        expect(await actualizarNombre("Ana")).toEqual({ error: "Escribe tu nombre y al menos un apellido" });
     });
 });

@@ -1,96 +1,70 @@
 import { guardarDatosCliente, obtenerDatosCliente } from "../perfilService";
 import { MENSAJES_DATOS } from "../erroresDatos";
 import { supabase } from "../supabase";
-import { consultaSimulada } from "../../test-utils/consultaSupabase";
+import { llamadaFetch, simularApi, simularSinConexion } from "../../test-utils/apiSimulada";
 
-jest.mock("../supabase", () => ({ supabase: { from: jest.fn() } }));
+// F07 M7: datos de contacto del cliente por medio de la API (/perfil/datos-cliente)
+jest.mock("../supabase", () => ({ supabase: { auth: { getSession: jest.fn() } } }));
 
-const FILA = {
-    telefono: "6461234567", calle: "Calle Primera", numero_exterior: "123", numero_interior: null, colonia: "Zona Centro",
-    direccion_referencia: null, direccion_lat: "31.7822590", direccion_lng: "-116.5956174",
+const DATOS = {
+    telefono: "6461234567",
+    direccion: {
+        calle: "Calle Primera", numeroExterior: "123", numeroInterior: "", colonia: "Zona Centro", referencia: "",
+        ubicacion: { latitud: 31.782259, longitud: -116.5956174 },
+    },
 };
 
-const ERROR_RED = { message: "TypeError: Network request failed", code: "" };
-
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    (supabase.auth.getSession as jest.Mock).mockResolvedValue({ data: { session: { access_token: "tok" } } });
+});
 
 describe("obtenerDatosCliente (F07 M7)", () => {
-    it("lee la fila del usuario y convierte la direccion", async () => {
-        const consulta = consultaSimulada({ data: FILA, error: null });
-        (supabase.from as jest.Mock).mockReturnValue(consulta);
+    it("pide los datos del usuario de la sesion", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { datos: DATOS } });
 
-        const { datos, error } = await obtenerDatosCliente("u1");
-
-        expect(supabase.from).toHaveBeenCalledWith("datos_cliente");
-        expect(consulta.eq).toHaveBeenCalledWith("usuario_id", "u1");
-        expect(error).toBeNull();
-        expect(datos).toEqual({
-            telefono: "6461234567",
-            direccion: {
-                calle: "Calle Primera", numeroExterior: "123", numeroInterior: "", colonia: "Zona Centro",
-                referencia: "", ubicacion: { latitud: 31.782259, longitud: -116.5956174 },
-            },
-        });
+        expect(await obtenerDatosCliente()).toEqual({ datos: DATOS, error: null });
+        const [url, opciones] = llamadaFetch(fetchMock);
+        expect(url).toBe("/perfil/datos-cliente");
+        expect(opciones.headers).toHaveProperty("Authorization", "Bearer tok");
     });
 
-    it("sin fila: datos vacios, no es error", async () => {
-        (supabase.from as jest.Mock).mockReturnValue(consultaSimulada({ data: null, error: null }));
+    it("sin internet: datos null y mensaje de conexion", async () => {
+        simularSinConexion();
 
-        expect(await obtenerDatosCliente("u1")).toEqual({ datos: { telefono: "", direccion: null }, error: null });
-    });
-
-    it("solo telefono: sin direccion", async () => {
-        const soloTelefono = { ...FILA, calle: null, numero_exterior: null, colonia: null, direccion_lat: null, direccion_lng: null };
-        (supabase.from as jest.Mock).mockReturnValue(consultaSimulada({ data: soloTelefono, error: null }));
-
-        const { datos } = await obtenerDatosCliente("u1");
-
-        expect(datos).toEqual({ telefono: "6461234567", direccion: null });
-    });
-
-    it("error de red: mensaje de conexion", async () => {
-        (supabase.from as jest.Mock).mockReturnValue(consultaSimulada({ data: null, error: ERROR_RED }));
-
-        expect(await obtenerDatosCliente("u1")).toEqual({ datos: null, error: MENSAJES_DATOS.CONEXION });
+        expect(await obtenerDatosCliente()).toEqual({ datos: null, error: MENSAJES_DATOS.CONEXION });
     });
 });
 
 describe("guardarDatosCliente (F07 M7)", () => {
-    it("upsert por usuario con la direccion completa", async () => {
-        const consulta = consultaSimulada({ error: null });
-        (supabase.from as jest.Mock).mockReturnValue(consulta);
+    it("manda telefono y direccion con PUT", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { datos: DATOS } });
 
-        const { error } = await guardarDatosCliente("u1", {
-            telefono: "6461234567",
-            direccion: {
-                calle: "Calle Primera", numeroExterior: "123", numeroInterior: "", colonia: "Zona Centro",
-                referencia: "Portón negro", ubicacion: { latitud: 31.78, longitud: -116.6 },
-            },
-        });
-
-        expect(error).toBeNull();
-        expect(consulta.upsert).toHaveBeenCalledWith({
-            usuario_id: "u1", telefono: "6461234567", calle: "Calle Primera", numero_exterior: "123",
-            numero_interior: null, colonia: "Zona Centro", direccion_referencia: "Portón negro",
-            direccion_lat: 31.78, direccion_lng: -116.6,
-        }, { onConflict: "usuario_id" });
+        expect(await guardarDatosCliente(DATOS)).toEqual({ error: null });
+        const [url, opciones] = llamadaFetch(fetchMock);
+        expect(url).toBe("/perfil/datos-cliente");
+        expect(opciones.method).toBe("PUT");
+        expect(JSON.parse(opciones.body as string)).toEqual(DATOS);
     });
 
-    it("sin direccion ni telefono vacia todas las columnas", async () => {
-        const consulta = consultaSimulada({ error: null });
-        (supabase.from as jest.Mock).mockReturnValue(consulta);
+    it("quitar la direccion manda direccion null", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { datos: { telefono: "", direccion: null } } });
 
-        await guardarDatosCliente("u1", { telefono: "", direccion: null });
+        await guardarDatosCliente({ telefono: "", direccion: null });
 
-        expect(consulta.upsert).toHaveBeenCalledWith({
-            usuario_id: "u1", telefono: null, calle: null, numero_exterior: null, numero_interior: null,
-            colonia: null, direccion_referencia: null, direccion_lat: null, direccion_lng: null,
-        }, { onConflict: "usuario_id" });
+        expect(JSON.parse(llamadaFetch(fetchMock)[1].body as string)).toEqual({ telefono: "", direccion: null });
     });
 
-    it("error de red: mensaje de conexion", async () => {
-        (supabase.from as jest.Mock).mockReturnValue(consultaSimulada({ error: ERROR_RED }));
+    it("datos rechazados por la API: su mensaje", async () => {
+        simularApi({ status: 400, cuerpo: { error: "Revisa los datos enviados", detalles: { telefono: "Ingresa un teléfono de 10 dígitos" } } });
 
-        expect(await guardarDatosCliente("u1", { telefono: "", direccion: null })).toEqual({ error: MENSAJES_DATOS.CONEXION });
+        expect(await guardarDatosCliente({ ...DATOS, telefono: "123" })).toEqual({ error: "Revisa los datos enviados" });
+    });
+
+    it("sin internet: mensaje de conexion", async () => {
+        simularSinConexion();
+
+        expect(await guardarDatosCliente(DATOS)).toEqual({ error: MENSAJES_DATOS.CONEXION });
     });
 });

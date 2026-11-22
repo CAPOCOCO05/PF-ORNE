@@ -19,7 +19,7 @@ export function useDatosCliente() {
         if (!userId) return;
         setCargando(true);
         setError(null);
-        const resultado = await obtenerDatosCliente(userId);
+        const resultado = await obtenerDatosCliente();
         setCargando(false);
         if (resultado.error) {
             setError(resultado.error);
@@ -36,7 +36,7 @@ export function useDatosCliente() {
     // primero los datos de contacto y luego el nombre (solo si cambio); devuelve el error
     const guardar = useCallback(async (nombre: string, nuevos: DatosCliente): Promise<string | null> => {
         if (!userId) return MENSAJE_SIN_SESION;
-        const {error: errorDatos} = await guardarDatosCliente(userId, nuevos);
+        const {error: errorDatos} = await guardarDatosCliente(nuevos);
         if (errorDatos) return errorDatos;
         setDatos(nuevos);
         const limpio = normalizarNombre(nombre);

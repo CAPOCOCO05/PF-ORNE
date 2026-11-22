@@ -115,7 +115,7 @@ describe("Editar datos del cliente (F07 M7)", () => {
         await fireEvent.press(screen.getByText("Guardar cambios"));
 
         await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/perfil"));
-        expect(guardarDatosCliente).toHaveBeenCalledWith("u1", { ...DATOS, telefono: "6460000000" });
+        expect(guardarDatosCliente).toHaveBeenCalledWith({ ...DATOS, telefono: "6460000000" });
         expect(mockActualizarNombre).toHaveBeenCalledWith("Ana María López");
     });
 
@@ -145,7 +145,7 @@ describe("Editar datos del cliente (F07 M7)", () => {
         expect(screen.getByText("Aún no tienes una dirección guardada")).toBeTruthy();
         await fireEvent.press(screen.getByText("Guardar cambios"));
 
-        await waitFor(() => expect(guardarDatosCliente).toHaveBeenCalledWith("u1", { telefono: "6461234567", direccion: null }));
+        await waitFor(() => expect(guardarDatosCliente).toHaveBeenCalledWith({ telefono: "6461234567", direccion: null }));
     });
 
     it("'Agregar dirección' sin llenarla marca los obligatorios", async () => {

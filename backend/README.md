@@ -46,12 +46,16 @@ nunca la `service_role`.
 | `POST /admin/catalogo/imagenes` | admin | Sube una imagen (cuerpo: bytes; `Content-Type: image/jpeg|png|heic|heif`, máx. 5 MB) y devuelve su URL | F07 M4 |
 | `POST /admin/catalogo` | admin | Crea un pastel (409 si el nombre se repite) | F07 M4 |
 | `PUT /admin/catalogo/:id` | admin | Edita un pastel; borra la imagen anterior si cambió | F07 M4 |
+| `GET /perfil` | Cualquier rol con sesión | Nombre y rol del usuario de la sesión (404 si no tiene perfil) | F00 |
+| `PATCH /perfil` | Cualquier rol con sesión | Cambia el nombre (nombre y al menos un apellido) | F07 M6 |
+| `GET /perfil/datos-cliente` | cliente | Teléfono y dirección guardada (vacíos si no hay) | F07 M7 |
+| `PUT /perfil/datos-cliente` | cliente | Guarda teléfono y dirección (completa, con pin y dentro de la zona) o la quita (`direccion: null`) | F07 M7 |
 
 ### Migración a la API (en curso)
 
 - [x] Estructura base: Express, configuración, sesión, roles y manejo de errores
 - [x] Catálogo (cliente y admin)
-- [ ] Perfil y datos del cliente
+- [x] Perfil y datos del cliente
 - [ ] Pedidos del cliente
 - [ ] Panel del admin (pedidos y repartidores)
 - [ ] Repartidor

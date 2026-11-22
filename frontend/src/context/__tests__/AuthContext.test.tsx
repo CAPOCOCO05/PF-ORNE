@@ -78,7 +78,7 @@ describe("AuthContext", () => {
         await act(async () => { respuesta = await result.current.actualizarNombre("Ana López"); });
 
         expect(respuesta.error).toBeNull();
-        expect(servicio.actualizarNombre).toHaveBeenCalledWith("u1", "Ana López");
+        expect(servicio.actualizarNombre).toHaveBeenCalledWith("Ana López");
         expect(result.current.perfil?.nombre).toBe("Ana López");
     });
 

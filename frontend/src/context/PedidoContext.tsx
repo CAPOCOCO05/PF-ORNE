@@ -72,7 +72,7 @@ export function PedidoProvider({children}: {children: React.ReactNode}) {
     // el wizard: llega en segundo plano y si falla el cliente los escribe como antes
     const precargarContacto = useCallback(async (miGeneracion: number) => {
         if (!user) return;
-        const {datos, error} = await obtenerDatosCliente(user.id);
+        const {datos, error} = await obtenerDatosCliente();
         if (miGeneracion !== generacion.current) return;
         if (error || !datos) {
             if (error) console.warn('precargarContacto:', error);

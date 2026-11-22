@@ -110,7 +110,7 @@ describe("PedidoContext: precarga de los datos del perfil (F07 M7 D5)", () => {
         await act(async () => { await result.current.iniciar({}); });
 
         await waitFor(() => expect(result.current.pedido.entrega.telefono).toBe("6461234567"));
-        expect(obtenerDatosCliente).toHaveBeenCalledWith("u1");
+        expect(obtenerDatosCliente).toHaveBeenCalledTimes(1);
         expect(result.current.pedido.entrega).toMatchObject({
             tipoEntrega: null, calle: "Calle Primera", colonia: "Zona Centro", ubicacion: { latitud: 31.78, longitud: -116.6 },
         });
