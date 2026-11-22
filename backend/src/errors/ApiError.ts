@@ -15,6 +15,8 @@ export class ApiError extends Error {
         mensaje: string,
         // detalle opcional por campo (p. ej. errores de un formulario)
         public readonly detalles?: Record<string, string>,
+        // codigo para que la app decida que hacer (p. ej. FECHA_NO_DISPONIBLE al confirmar)
+        public readonly codigo?: string,
     ) {
         super(mensaje);
         this.name = 'ApiError';

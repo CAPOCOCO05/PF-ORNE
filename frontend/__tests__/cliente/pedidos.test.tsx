@@ -34,7 +34,7 @@ describe("Mis pedidos", () => {
         await render(<Pedidos />);
 
         expect(await screen.findByText("Pedido sin confirmar")).toBeTruthy();
-        expect(listarMisPedidos).toHaveBeenCalledWith("u1");
+        expect(listarMisPedidos).toHaveBeenCalledTimes(1);
         expect(screen.getByText("Borrador")).toBeTruthy();
         expect(screen.getByText("15 personas · 2 niveles · Fresa")).toBeTruthy();
         expect(screen.getByText("$790.00 MXN")).toBeTruthy();
@@ -71,7 +71,7 @@ describe("Mis pedidos", () => {
 
         await fireEvent.press(screen.getByText("Sí, eliminar"));
 
-        expect(eliminarBorrador).toHaveBeenCalledWith("ped1", "u1");
+        expect(eliminarBorrador).toHaveBeenCalledWith("ped1");
         await waitFor(() => expect(screen.queryByText("Pedido sin confirmar")).toBeNull());
         expect(screen.getByText("Pedido AB12CD")).toBeTruthy();
     });

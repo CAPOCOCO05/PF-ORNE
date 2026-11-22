@@ -1,306 +1,205 @@
 import {
-    BUCKET_REFERENCIAS, confirmarPedido, eliminarBorrador, filaEntrega, guardarBorrador, listarMisPedidos,
-    MENSAJES_CONFIRMACION, obtenerBorrador, obtenerPedido,
+    confirmarPedido, eliminarBorrador, guardarBorrador, listarMisPedidos, MENSAJES_CONFIRMACION, obtenerBorrador, obtenerPedido,
+    urlReferencia,
 } from "../pedidosService";
 import { MENSAJES_DATOS } from "../erroresDatos";
 import { supabase } from "../supabase";
-import { ConsultaSimulada, consultaSimulada } from "../../test-utils/consultaSupabase";
+import { llamadaFetch, simularApi, simularSinConexion } from "../../test-utils/apiSimulada";
 import { ENTREGA_VACIA } from "../../utils/entrega";
+import { MENSAJES_PEDIDO } from "../../utils/pedido";
 import { DatosEntrega, PedidoEnCurso } from "../../types/pedido.types";
 
-jest.mock("../supabase", () => ({ supabase: { from: jest.fn(), rpc: jest.fn(), storage: { from: jest.fn() } } }));
-
-const ERROR_RED = { message: "TypeError: Network request failed", code: "" };
+// pedidos del cliente por medio de la API (/pedidos)
+jest.mock("../supabase", () => ({ supabase: { auth: { getSession: jest.fn() } } }));
 
 const PEDIDO: PedidoEnCurso = {
     id: null, tamanio: "15", niveles: 2, tipoPan: "fresa", relleno: "chocolate",
-    mensaje: "  Feliz día  ", imagenLocal: null, imagenRuta: null, entrega: ENTREGA_VACIA, pasoActual: 1,
+    mensaje: "Feliz día", imagenLocal: null, imagenRuta: null, entrega: ENTREGA_VACIA, pasoActual: 1,
 };
 
 const DOMICILIO: DatosEntrega = {
-    tipoEntrega: "domicilio", calle: " Calle Primera ", numeroExterior: "123", numeroInterior: "", colonia: "Centro",
-    referencia: "  ", telefono: "646 123-4567", ubicacion: { latitud: 31.78, longitud: -116.59 },
+    tipoEntrega: "domicilio", calle: "Calle Primera", numeroExterior: "123", numeroInterior: "", colonia: "Centro",
+    referencia: "", telefono: "6461234567", ubicacion: { latitud: 31.78, longitud: -116.59 },
     fechaEntrega: "2026-10-26", horaEntrega: "12:00",
 };
 
-// una consulta por tabla
-function mockTablas(tablas: Record<string, ConsultaSimulada>) {
-    (supabase.from as jest.Mock).mockImplementation((tabla: string) => tablas[tabla]);
-}
+const IMAGEN = { uri: "file:///foto.jpg", mimeType: "image/jpeg" };
+const RUTA = "u1/ped1/referencia.jpg";
 
-function mockStorage(archivos: string[] = []) {
-    const bucket = {
-        upload: jest.fn().mockResolvedValue({ error: null }),
-        list: jest.fn().mockResolvedValue({ data: archivos.map((name) => ({ name })), error: null }),
-        remove: jest.fn().mockResolvedValue({ error: null }),
-    };
-    (supabase.storage.from as jest.Mock).mockReturnValue(bucket);
-    return bucket;
+function cuerpo(fetchMock: jest.Mock, n = 0) {
+    return JSON.parse(llamadaFetch(fetchMock, n)[1].body as string);
 }
 
 beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(console, "warn").mockImplementation(() => {});
+    (supabase.auth.getSession as jest.Mock).mockResolvedValue({ data: { session: { access_token: "tok" } } });
 });
 
 describe("guardarBorrador", () => {
-    it("pedido nuevo: crea el borrador y hace upsert del detalle con el precio", async () => {
-        const pedidos = consultaSimulada({ data: { id: "ped1" }, error: null });
-        const detalle = consultaSimulada({ error: null });
-        mockTablas({ pedidos, pedido_detalle: detalle });
+    it("pedido nuevo: POST /pedidos con los datos del wizard (sin entrega)", async () => {
+        const fetchMock = simularApi({ status: 201, cuerpo: { id: "ped1" } });
 
-        const resultado = await guardarBorrador(PEDIDO, "u1", { pasoActual: 2 });
+        const resultado = await guardarBorrador(PEDIDO, { pasoActual: 2 });
 
-        // 500 + 250 (nivel extra) + 40 (chocolate)
-        expect(pedidos.insert).toHaveBeenCalledWith({ usuario_id: "u1", estado: "borrador", total: 790, paso_actual: 2 });
-        expect(detalle.upsert).toHaveBeenCalledWith({
-            pedido_id: "ped1", tamanio: "15", niveles: 2, tipo_pan: "fresa", relleno: "chocolate",
-            decoracion_texto: "Feliz día", imagen_referencia_url: null, precio_estimado: 790,
-        }, { onConflict: "pedido_id" });
+        const [url, opciones] = llamadaFetch(fetchMock);
+        expect(url).toBe("/pedidos");
+        expect(opciones.method).toBe("POST");
+        expect(cuerpo(fetchMock)).toEqual({
+            pasoActual: 2, tamanio: "15", niveles: 2, tipoPan: "fresa", relleno: "chocolate", mensaje: "Feliz día", entrega: null,
+        });
         expect(resultado).toEqual({ id: "ped1", imagenRuta: null, error: null });
     });
 
-    it("pedido existente: actualiza total y paso sin crear otro", async () => {
-        const pedidos = consultaSimulada({ error: null });
-        mockTablas({ pedidos, pedido_detalle: consultaSimulada({ error: null }) });
+    it("pedido existente en el paso 4: PATCH con los datos de entrega", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { id: "ped1" } });
 
-        await guardarBorrador({ ...PEDIDO, id: "ped1" }, "u1", { pasoActual: 3 });
+        await guardarBorrador({ ...PEDIDO, id: "ped1", entrega: DOMICILIO }, { pasoActual: 5, guardarEntrega: true });
 
-        expect(pedidos.insert).not.toHaveBeenCalled();
-        expect(pedidos.update).toHaveBeenCalledWith({ total: 790, paso_actual: 3 });
-        expect(pedidos.eq).toHaveBeenCalledWith("id", "ped1");
+        expect(llamadaFetch(fetchMock)[0]).toBe("/pedidos/ped1");
+        expect(llamadaFetch(fetchMock)[1].method).toBe("PATCH");
+        expect(cuerpo(fetchMock).entrega).toEqual(DOMICILIO);
     });
 
-    it("paso 4: guarda tambien los datos de entrega", async () => {
-        const pedidos = consultaSimulada({ error: null });
-        mockTablas({ pedidos, pedido_detalle: consultaSimulada({ error: null }) });
+    it("sin conexion: conserva el id y da el mensaje de la spec", async () => {
+        simularSinConexion();
 
-        await guardarBorrador({ ...PEDIDO, id: "ped1", entrega: DOMICILIO }, "u1", { pasoActual: 5, guardarEntrega: true });
-
-        expect(pedidos.update).toHaveBeenCalledWith({ total: 790, paso_actual: 5, ...filaEntrega(DOMICILIO) });
-    });
-
-    it("sin conexion al crear: no hay id y da el mensaje de la spec", async () => {
-        mockTablas({ pedidos: consultaSimulada({ data: null, error: ERROR_RED }) });
-
-        expect(await guardarBorrador(PEDIDO, "u1", { pasoActual: 2 }))
-            .toEqual({ id: null, imagenRuta: null, error: MENSAJES_DATOS.GUARDAR_CONEXION });
-    });
-
-    it("si falla el detalle conserva el id para reintentar", async () => {
-        mockTablas({
-            pedidos: consultaSimulada({ data: { id: "ped1" }, error: null }),
-            pedido_detalle: consultaSimulada({ error: ERROR_RED }),
-        });
-
-        expect(await guardarBorrador(PEDIDO, "u1", { pasoActual: 2 }))
+        expect(await guardarBorrador({ ...PEDIDO, id: "ped1" }, { pasoActual: 2 }))
             .toEqual({ id: "ped1", imagenRuta: null, error: MENSAJES_DATOS.GUARDAR_CONEXION });
     });
 
-    it("paso 3 con imagen nueva: la sube y borra la anterior", async () => {
-        const detalle = consultaSimulada({ error: null });
-        mockTablas({ pedidos: consultaSimulada({ error: null }), pedido_detalle: detalle });
-        const bucket = mockStorage(["referencia.jpg", "referencia.png"]);
-        const contenido = new ArrayBuffer(4);
-        globalThis.fetch = jest.fn().mockResolvedValue({ arrayBuffer: () => Promise.resolve(contenido) });
+    it("paso 3 con imagen nueva: guarda el borrador y despues sube la imagen", async () => {
+        const fetchMock = simularApi(
+            { status: 201, cuerpo: { id: "ped1" } },
+            { status: 200 },                                  // leer la imagen local
+            { status: 201, cuerpo: { ruta: RUTA } },
+        );
 
-        const pedido = { ...PEDIDO, id: "ped1", imagenLocal: { uri: "file:///foto.png", mimeType: "image/png" } };
-        const resultado = await guardarBorrador(pedido, "u1", { pasoActual: 3, sincronizarImagen: true });
+        const resultado = await guardarBorrador({ ...PEDIDO, imagenLocal: IMAGEN }, { pasoActual: 4, sincronizarImagen: true });
 
-        expect(supabase.storage.from).toHaveBeenCalledWith(BUCKET_REFERENCIAS);
-        expect(bucket.upload).toHaveBeenCalledWith("u1/ped1/referencia.png", contenido, { contentType: "image/png", upsert: true });
-        expect(bucket.remove).toHaveBeenCalledWith(["u1/ped1/referencia.jpg"]);
-        expect(resultado.imagenRuta).toBe("u1/ped1/referencia.png");
-        expect(detalle.upsert.mock.calls[0][0].imagen_referencia_url).toBe("u1/ped1/referencia.png");
+        expect(llamadaFetch(fetchMock, 1)[0]).toBe(IMAGEN.uri);
+        const [url, opciones] = llamadaFetch(fetchMock, 2);
+        expect(url).toBe("/pedidos/ped1/imagen");
+        expect(opciones.headers).toHaveProperty("Content-Type", "image/jpeg");
+        expect(resultado).toEqual({ id: "ped1", imagenRuta: RUTA, error: null });
     });
 
-    it("paso 3 sin imagen: borra la que hubiera en Storage", async () => {
-        mockTablas({ pedidos: consultaSimulada({ error: null }), pedido_detalle: consultaSimulada({ error: null }) });
-        const bucket = mockStorage(["referencia.jpg"]);
+    it("paso 3 sin imagen: pide quitar la que hubiera", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { id: "ped1" } }, { status: 204 });
 
-        await guardarBorrador({ ...PEDIDO, id: "ped1" }, "u1", { pasoActual: 3, sincronizarImagen: true });
+        const resultado = await guardarBorrador({ ...PEDIDO, id: "ped1" }, { pasoActual: 4, sincronizarImagen: true });
 
-        expect(bucket.upload).not.toHaveBeenCalled();
-        expect(bucket.remove).toHaveBeenCalledWith(["u1/ped1/referencia.jpg"]);
-    });
-});
-
-describe("filaEntrega", () => {
-    it("domicilio: limpia los textos, arma la direccion y guarda solo los digitos del telefono", () => {
-        expect(filaEntrega(DOMICILIO)).toEqual({
-            tipo_entrega: "domicilio", calle: "Calle Primera", numero_exterior: "123", numero_interior: null,
-            colonia: "Centro", direccion: "Calle Primera 123, Centro", direccion_referencia: null,
-            direccion_lat: 31.78, direccion_lng: -116.59, telefono_contacto: "6461234567",
-            fecha_entrega: "2026-10-26", hora_entrega: "12:00",
-        });
+        expect(llamadaFetch(fetchMock, 1)[0]).toBe("/pedidos/ped1/imagen");
+        expect(llamadaFetch(fetchMock, 1)[1].method).toBe("DELETE");
+        expect(resultado).toEqual({ id: "ped1", imagenRuta: null, error: null });
     });
 
-    it("recoleccion: quita la direccion y las coordenadas aunque se hubieran capturado", () => {
-        expect(filaEntrega({ ...DOMICILIO, tipoEntrega: "recoleccion" })).toEqual({
-            tipo_entrega: "recoleccion", calle: null, numero_exterior: null, numero_interior: null,
-            colonia: null, direccion: null, direccion_referencia: null, direccion_lat: null, direccion_lng: null,
-            telefono_contacto: "6461234567", fecha_entrega: "2026-10-26", hora_entrega: "12:00",
-        });
+    it("paso 3 con la imagen ya guardada: no la vuelve a subir", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { id: "ped1" } });
+
+        const resultado = await guardarBorrador({ ...PEDIDO, id: "ped1", imagenRuta: RUTA }, { pasoActual: 4, sincronizarImagen: true });
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(resultado.imagenRuta).toBe(RUTA);
+    });
+
+    it("si falla la imagen conserva el id para reintentar", async () => {
+        simularApi({ status: 201, cuerpo: { id: "ped1" } }, { status: 200 }, { status: 502, cuerpo: { error: MENSAJES_DATOS.IMAGEN } });
+
+        expect(await guardarBorrador({ ...PEDIDO, imagenLocal: IMAGEN }, { pasoActual: 4, sincronizarImagen: true }))
+            .toEqual({ id: "ped1", imagenRuta: null, error: MENSAJES_DATOS.IMAGEN });
+    });
+
+    it("archivo que no es imagen: no lo manda", async () => {
+        const fetchMock = simularApi({ status: 201, cuerpo: { id: "ped1" } });
+
+        const resultado = await guardarBorrador({ ...PEDIDO, imagenLocal: { uri: "file:///a.pdf", mimeType: "application/pdf" } }, { pasoActual: 4, sincronizarImagen: true });
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(resultado.error).toBe(MENSAJES_PEDIDO.IMAGEN_FORMATO);
     });
 });
 
 describe("obtenerBorrador", () => {
-    it("recupera los datos de entrega (hora sin segundos, coordenadas numericas)", async () => {
-        mockTablas({
-            pedidos: consultaSimulada({
-                data: {
-                    id: "ped1", estado: "borrador", folio: null, total: 790, paso_actual: 5, created_at: "2026-10-17",
-                    tipo_entrega: "domicilio", calle: "Calle Primera", numero_exterior: "123", numero_interior: null,
-                    colonia: "Centro", direccion: "Calle Primera 123, Centro", direccion_referencia: null,
-                    direccion_lat: "31.7800000", direccion_lng: "-116.5900000", telefono_contacto: "6461234567",
-                    fecha_entrega: "2026-10-26", hora_entrega: "12:00:00",
-                    pedido_detalle: { tamanio: "15", niveles: 2, tipo_pan: "fresa", relleno: "chocolate" },
-                },
-                error: null,
-            }),
-        });
+    it("convierte la respuesta al estado del wizard", async () => {
+        const borrador = { ...PEDIDO, id: "ped1", imagenRuta: RUTA, entrega: DOMICILIO, pasoActual: 4 };
+        const { imagenLocal: _imagenLocal, ...respuesta } = borrador;
+        simularApi({ status: 200, cuerpo: { pedido: respuesta } });
 
-        const { pedido } = await obtenerBorrador("ped1");
-
-        expect(pedido?.entrega).toEqual({ ...DOMICILIO, calle: "Calle Primera", referencia: "", telefono: "6461234567" });
+        expect(await obtenerBorrador("ped1")).toEqual({ pedido: { ...borrador, imagenLocal: null }, error: null });
     });
 
-    it("convierte la fila al estado del wizard", async () => {
-        mockTablas({
-            pedidos: consultaSimulada({
-                data: {
-                    id: "ped1", estado: "borrador", folio: null, total: 790, paso_actual: 2, created_at: "2026-10-17",
-                    pedido_detalle: { tamanio: "15", niveles: 2, tipo_pan: "fresa", relleno: null, decoracion_texto: null, imagen_referencia_url: null },
-                },
-                error: null,
-            }),
-        });
-
-        expect(await obtenerBorrador("ped1")).toEqual({
-            pedido: {
-                id: "ped1", tamanio: "15", niveles: 2, tipoPan: "fresa", relleno: null,
-                mensaje: "", imagenLocal: null, imagenRuta: null, entrega: ENTREGA_VACIA, pasoActual: 2,
-            },
-            error: null,
-        });
-    });
-
-    it("si no existe o ya no es borrador devuelve null", async () => {
-        mockTablas({ pedidos: consultaSimulada({ data: null, error: null }) });
+    it("404: null (ya no es borrador)", async () => {
+        simularApi({ status: 404, cuerpo: { error: "Este pedido ya no está disponible" } });
 
         expect(await obtenerBorrador("ped1")).toEqual({ pedido: null, error: null });
     });
 });
 
 describe("obtenerPedido", () => {
-    it("devuelve el pedido confirmado con detalle y entrega, sin filtrar por estado", async () => {
-        const pedidos = consultaSimulada({
-            data: {
-                id: "ped1", estado: "pendiente", folio: "ORN-7K2QXM", total: "790.00", paso_actual: 5, created_at: "2026-10-17",
-                tipo_entrega: "recoleccion", telefono_contacto: "6461234567", fecha_entrega: "2026-10-26", hora_entrega: "10:00:00",
-                calle: null, numero_exterior: null, numero_interior: null, colonia: null, direccion: null,
-                direccion_referencia: null, direccion_lat: null, direccion_lng: null,
-                pedido_detalle: [{ tamanio: "15", niveles: 2, tipo_pan: "fresa", relleno: "chocolate", decoracion_texto: "Feliz día", imagen_referencia_url: "u1/ped1/referencia.jpg" }],
-            },
-            error: null,
-        });
-        mockTablas({ pedidos });
+    it("devuelve el pedido", async () => {
+        const pedido = { id: "ped1", estado: "pendiente", folio: "ORN-1", total: 790 };
+        const fetchMock = simularApi({ status: 200, cuerpo: { pedido } });
 
-        const { pedido, error } = await obtenerPedido("ped1");
-
-        expect(error).toBeNull();
-        expect(pedidos.eq).toHaveBeenCalledTimes(1);
-        expect(pedido).toEqual({
-            id: "ped1", estado: "pendiente", folio: "ORN-7K2QXM", total: 790, creadoEn: "2026-10-17",
-            tamanio: "15", niveles: 2, tipoPan: "fresa", relleno: "chocolate", mensaje: "Feliz día",
-            imagenRuta: "u1/ped1/referencia.jpg",
-            entrega: { ...ENTREGA_VACIA, tipoEntrega: "recoleccion", telefono: "6461234567", fechaEntrega: "2026-10-26", horaEntrega: "10:00" },
-            motivoNoEntrega: null,
-        });
+        expect(await obtenerPedido("ped1")).toEqual({ pedido, error: null });
+        expect(llamadaFetch(fetchMock)[0]).toBe("/pedidos/ped1");
     });
 
-    it("error de conexion", async () => {
-        mockTablas({ pedidos: consultaSimulada({ data: null, error: ERROR_RED }) });
+    it("sin conexion", async () => {
+        simularSinConexion();
 
         expect(await obtenerPedido("ped1")).toEqual({ pedido: null, error: MENSAJES_DATOS.CONEXION });
     });
 });
 
 describe("confirmarPedido", () => {
-    it("llama a confirmar_pedido y devuelve el folio y el total del servidor", async () => {
-        (supabase.rpc as jest.Mock).mockResolvedValue({ data: [{ folio: "ORN-7K2QXM", total: "790.00" }], error: null });
+    it("devuelve el folio y el total del servidor", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { folio: "ORN-0001", total: 790 } });
 
-        expect(await confirmarPedido("ped1")).toEqual({ folio: "ORN-7K2QXM", total: 790, error: null });
-        expect(supabase.rpc).toHaveBeenCalledWith("confirmar_pedido", { p_pedido_id: "ped1" });
+        expect(await confirmarPedido("ped1")).toEqual({ folio: "ORN-0001", total: 790, error: null });
+        expect(llamadaFetch(fetchMock)[0]).toBe("/pedidos/ped1/confirmar");
+        expect(llamadaFetch(fetchMock)[1].method).toBe("POST");
     });
 
-    it.each([
-        ["FECHA_NO_DISPONIBLE"], ["PEDIDO_INCOMPLETO"], ["FUERA_DE_ZONA"], ["PEDIDO_YA_CONFIRMADO"], ["PEDIDO_NO_ENCONTRADO"],
-    ] as const)("traduce el codigo %s de la funcion", async (codigo) => {
-        (supabase.rpc as jest.Mock).mockResolvedValue({ data: null, error: { message: codigo, code: "P0001" } });
+    it("usa el codigo de la API para saber que hacer", async () => {
+        simularApi({ status: 409, cuerpo: { error: "La fecha...", codigo: "FECHA_NO_DISPONIBLE" } });
 
-        expect(await confirmarPedido("ped1")).toEqual({
-            folio: null, total: null, error: { codigo, mensaje: MENSAJES_CONFIRMACION[codigo] },
-        });
+        expect((await confirmarPedido("ped1")).error)
+            .toEqual({ codigo: "FECHA_NO_DISPONIBLE", mensaje: MENSAJES_CONFIRMACION.FECHA_NO_DISPONIBLE });
     });
 
     it("sin conexion: mensaje de la spec para reintentar", async () => {
-        (supabase.rpc as jest.Mock).mockResolvedValue({ data: null, error: ERROR_RED });
+        simularSinConexion();
 
-        expect((await confirmarPedido("ped1")).error).toEqual({
-            codigo: "CONEXION", mensaje: "Error de conexión. Tu pedido no se ha enviado. Inténtalo de nuevo.",
-        });
+        expect((await confirmarPedido("ped1")).error).toEqual({ codigo: "CONEXION", mensaje: MENSAJES_CONFIRMACION.CONEXION });
     });
 
-    it("error desconocido: generico", async () => {
-        (supabase.rpc as jest.Mock).mockResolvedValue({ data: null, error: { message: "otra cosa", code: "42501" } });
+    it("error sin codigo conocido: generico", async () => {
+        simularApi({ status: 500, cuerpo: { error: "x" } });
 
-        expect((await confirmarPedido("ped1")).error?.codigo).toBe("GENERICO");
+        expect((await confirmarPedido("ped1")).error).toEqual({ codigo: "GENERICO", mensaje: MENSAJES_CONFIRMACION.GENERICO });
     });
 });
 
-describe("listarMisPedidos", () => {
-    it("lista los pedidos del usuario, mas recientes primero", async () => {
-        const pedidos = consultaSimulada({
-            data: [{
-                id: "ped1", estado: "pendiente", folio: "AB12", total: "790.00", paso_actual: 3, created_at: "2026-10-17",
-                pedido_detalle: [{ tamanio: "15", niveles: 2, tipo_pan: "fresa", relleno: "chocolate" }],
-            }],
-            error: null,
-        });
-        mockTablas({ pedidos });
+describe("listarMisPedidos, eliminarBorrador y urlReferencia", () => {
+    it("lista los pedidos del usuario de la sesion", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { pedidos: [{ id: "ped1" }] } });
 
-        const { pedidos: lista, error } = await listarMisPedidos("u1");
-
-        expect(pedidos.eq).toHaveBeenCalledWith("usuario_id", "u1");
-        expect(pedidos.order).toHaveBeenCalledWith("created_at", { ascending: false });
-        expect(error).toBeNull();
-        expect(lista).toEqual([{
-            id: "ped1", estado: "pendiente", folio: "AB12", total: 790, pasoActual: 3, creadoEn: "2026-10-17",
-            tamanio: "15", niveles: 2, tipoPan: "fresa", relleno: "chocolate",
-        }]);
-    });
-});
-
-describe("eliminarBorrador", () => {
-    it("borra la imagen y despues el borrador", async () => {
-        const pedidos = consultaSimulada({ error: null });
-        mockTablas({ pedidos });
-        const bucket = mockStorage(["referencia.png"]);
-
-        expect(await eliminarBorrador("ped1", "u1")).toEqual({ error: null });
-        expect(bucket.remove).toHaveBeenCalledWith(["u1/ped1/referencia.png"]);
-        expect(pedidos.delete).toHaveBeenCalled();
-        expect(pedidos.eq).toHaveBeenCalledWith("estado", "borrador");
+        expect(await listarMisPedidos()).toEqual({ pedidos: [{ id: "ped1" }], error: null });
+        expect(llamadaFetch(fetchMock)[0]).toBe("/pedidos");
     });
 
-    it("si no se pudo borrar la imagen no borra el pedido", async () => {
-        const pedidos = consultaSimulada({ error: null });
-        mockTablas({ pedidos });
-        const bucket = mockStorage();
-        bucket.list.mockResolvedValue({ data: null, error: ERROR_RED });
+    it("elimina con DELETE", async () => {
+        const fetchMock = simularApi({ status: 204 });
 
-        expect(await eliminarBorrador("ped1", "u1")).toEqual({ error: MENSAJES_DATOS.CONEXION });
-        expect(pedidos.delete).not.toHaveBeenCalled();
+        expect(await eliminarBorrador("ped1")).toEqual({ error: null });
+        expect(llamadaFetch(fetchMock)[1].method).toBe("DELETE");
+    });
+
+    it("pide la URL firmada de la imagen", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { url: "https://firmada" } });
+
+        expect(await urlReferencia(RUTA)).toEqual({ url: "https://firmada", error: null });
+        expect(llamadaFetch(fetchMock)[0]).toBe(`/pedidos/referencias/url?ruta=${encodeURIComponent(RUTA)}`);
     });
 });

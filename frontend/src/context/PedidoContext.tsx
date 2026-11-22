@@ -137,7 +137,7 @@ export function PedidoProvider({children}: {children: React.ReactNode}) {
     // guarda el borrador (D2); el id y la ruta de la imagen se conservan aunque falle algo
     const guardar = useCallback(async (opciones: OpcionesGuardado) => {
         if (!user) return MENSAJES_PEDIDO_CONTEXTO.SESION_EXPIRADA;
-        const resultado = await guardarBorrador(pedidoRef.current, user.id, opciones);
+        const resultado = await guardarBorrador(pedidoRef.current, opciones);
         setPedido((actual) => ({
             ...actual,
             id: resultado.id ?? actual.id,

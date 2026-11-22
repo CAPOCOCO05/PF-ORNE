@@ -19,7 +19,7 @@ export function useMisPedidos() {
         const miPeticion = ++peticion.current;
         setCargando(true);
         setError(null);
-        const resultado = await listarMisPedidos(usuarioId);
+        const resultado = await listarMisPedidos();
         if (miPeticion !== peticion.current) return;
         setCargando(false);
         if (resultado.error) {
@@ -37,7 +37,7 @@ export function useMisPedidos() {
     const eliminar = useCallback(async (id: string) => {
         if (!usuarioId) return null;
         setEliminando(id);
-        const {error: errorEliminar} = await eliminarBorrador(id, usuarioId);
+        const {error: errorEliminar} = await eliminarBorrador(id);
         setEliminando(null);
         if (!errorEliminar) setPedidos((lista) => lista.filter((p) => p.id !== id));
         return errorEliminar;

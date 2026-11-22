@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import { ApiError, CODIGOS_PG, ErrorBaseDatos, MENSAJES_API } from '../errors/ApiError';
 
-// respuesta de error de la API: { error: mensaje, detalles?: { campo: mensaje } }
+// respuesta de error de la API: { error: mensaje, codigo?: 'CODIGO', detalles?: { campo: mensaje } }
 interface CuerpoError {
     error: string;
+    codigo?: string;
     detalles?: Record<string, string>;
 }
 
@@ -30,6 +31,7 @@ export function manejarErrores(error: unknown, req: Request, res: Response, _nex
     const apiError = aApiError(error);
     if (apiError.status >= 500) console.error(`[${req.method} ${req.originalUrl}]`, error);
     const cuerpo: CuerpoError = { error: apiError.message };
+    if (apiError.codigo) cuerpo.codigo = apiError.codigo;
     if (apiError.detalles) cuerpo.detalles = apiError.detalles;
     res.status(apiError.status).json(cuerpo);
 }

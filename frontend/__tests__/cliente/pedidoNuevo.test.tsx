@@ -100,7 +100,7 @@ describe("Paso 1: tamaño y niveles", () => {
 
         await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/pedido/nuevo/sabor"));
         expect(guardarBorrador).toHaveBeenCalledWith(
-            expect.objectContaining({ tamanio: "10", niveles: 1 }), "u1", { pasoActual: 2, sincronizarImagen: false, guardarEntrega: false },
+            expect.objectContaining({ tamanio: "10", niveles: 1 }), { pasoActual: 2, sincronizarImagen: false, guardarEntrega: false },
         );
     });
 
@@ -196,6 +196,6 @@ describe("Paso 3: decoración", () => {
         await fireEvent.press(screen.getByText("Siguiente"));
 
         await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/pedido/nuevo/entrega"));
-        expect(guardarBorrador).toHaveBeenCalledWith(expect.anything(), "u1", { pasoActual: 4, sincronizarImagen: true, guardarEntrega: false });
+        expect(guardarBorrador).toHaveBeenCalledWith(expect.anything(), { pasoActual: 4, sincronizarImagen: true, guardarEntrega: false });
     });
 });

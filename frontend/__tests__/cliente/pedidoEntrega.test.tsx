@@ -110,7 +110,6 @@ describe("Paso 4: entrega", () => {
         await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/pedido/nuevo/pago"));
         expect(guardarBorrador).toHaveBeenCalledWith(
             expect.objectContaining({ entrega: expect.objectContaining({ tipoEntrega: "recoleccion", fechaEntrega: fecha, horaEntrega: "12:00" }) }),
-            "u1",
             { pasoActual: 5, sincronizarImagen: false, guardarEntrega: true },
         );
     });

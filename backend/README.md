@@ -32,7 +32,7 @@ protegiendo los datos aunque la API tuviera un error. La API usa la llave `anon`
 nunca la `service_role`.
 
 **Errores.** Todas las respuestas de error tienen la forma
-`{ "error": "mensaje para el usuario", "detalles"?: { "campo": "mensaje" } }`.
+`{ "error": "mensaje para el usuario", "codigo"?: "CODIGO", "detalles"?: { "campo": "mensaje" } }`.
 
 ### Endpoints
 
@@ -50,13 +50,23 @@ nunca la `service_role`.
 | `PATCH /perfil` | Cualquier rol con sesión | Cambia el nombre (nombre y al menos un apellido) | F07 M6 |
 | `GET /perfil/datos-cliente` | cliente | Teléfono y dirección guardada (vacíos si no hay) | F07 M7 |
 | `PUT /perfil/datos-cliente` | cliente | Guarda teléfono y dirección (completa, con pin y dentro de la zona) o la quita (`direccion: null`) | F07 M7 |
+| `GET /pedidos` | cliente | Mis pedidos (incluye borradores), del más reciente al más antiguo | F01, F03 |
+| `POST /pedidos` | cliente | Crea el borrador; el total lo calcula el servidor | F01 D2 |
+| `PATCH /pedidos/:id` | cliente | Actualiza el borrador (el paso 4 manda también la entrega) | F01, F02 |
+| `GET /pedidos/:id/borrador` | cliente | Borrador para retomarlo en el wizard | F01 D2 |
+| `GET /pedidos/:id` | cliente | Pedido completo en cualquier estado | F03 |
+| `DELETE /pedidos/:id` | cliente | Elimina el borrador y su imagen | F01 D2 |
+| `POST /pedidos/:id/imagen` | cliente | Sube la imagen de referencia (bytes, máx. 5 MB) y borra la anterior | F01 D9 |
+| `DELETE /pedidos/:id/imagen` | cliente | Quita la imagen de referencia | F01 D9 |
+| `POST /pedidos/:id/confirmar` | cliente | Confirma el pedido (folio); los errores traen `codigo` (p. ej. `FECHA_NO_DISPONIBLE`) | F03 |
+| `GET /pedidos/referencias/url?ruta=` | cliente, admin | URL temporal para ver una imagen de referencia (bucket privado) | F03, F04 |
 
 ### Migración a la API (en curso)
 
 - [x] Estructura base: Express, configuración, sesión, roles y manejo de errores
 - [x] Catálogo (cliente y admin)
 - [x] Perfil y datos del cliente
-- [ ] Pedidos del cliente
+- [x] Pedidos del cliente
 - [ ] Panel del admin (pedidos y repartidores)
 - [ ] Repartidor
 

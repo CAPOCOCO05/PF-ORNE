@@ -21,6 +21,7 @@ export interface RespuestaApi<T> {
     error: string | null;
     status: number;                       // 0 si la peticion no llego a la API
     detalles?: Record<string, string>;    // errores por campo (400, 409)
+    codigo?: string;                      // codigo de negocio (p. ej. FECHA_NO_DISPONIBLE)
 }
 
 // ?a=1&b=x,y — las listas se mandan separadas por coma y se omiten los valores vacios
@@ -70,5 +71,7 @@ export async function peticionApi<T>(ruta: string, opciones: OpcionesApi = {}): 
     const json = await leerJson(respuesta);
     if (respuesta.ok) return {data: json as T, error: null, status: respuesta.status};
     const error = typeof json?.error === 'string' ? json.error : MENSAJES_DATOS.GENERICO;
-    return {data: null, error, status: respuesta.status, detalles: json?.detalles as Record<string, string> | undefined};
+    const respuestaError: RespuestaApi<T> = {data: null, error, status: respuesta.status, detalles: json?.detalles as Record<string, string> | undefined};
+    if (typeof json?.codigo === 'string') respuestaError.codigo = json.codigo;
+    return respuestaError;
 }
