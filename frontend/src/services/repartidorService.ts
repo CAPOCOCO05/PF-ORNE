@@ -1,11 +1,9 @@
-import { supabase } from "./supabase";
-import { esErrorDeConexion, MENSAJE_SIN_CONEXION, traducirErrorDatos } from "./erroresDatos";
-import { COLUMNAS_ENTREGA, entregaDeFila, FilaEntrega } from "./pedidosService";
-import { EntregaRepartidor, EntregaResumen, EstadoPedido, Niveles, Tamanio } from "../types/pedido.types";
-import { armarDireccion } from "../utils/entrega";
+import { peticionApi } from "./api";
+import { MENSAJE_SIN_CONEXION, MENSAJES_DATOS } from "./erroresDatos";
+import { EntregaRepartidor, EntregaResumen } from "../types/pedido.types";
 
-// entregas del repartidor (F06); RLS solo deja ver los pedidos asignados a el (007)
-// y el nombre del cliente de sus entregas en curso (010). No se consultan precios ni pagos
+// entregas del repartidor (F06) por medio de la API (/repartidor): solo ve los pedidos
+// asignados a el y nunca precios ni pagos
 
 export const MENSAJES_REPARTIDOR = {
     ACTUALIZAR: 'No se pudo actualizar la entrega, inténtalo de nuevo',
@@ -13,110 +11,39 @@ export const MENSAJES_REPARTIDOR = {
     SIN_MOTIVO: 'Indica por qué no se pudo entregar',
 } as const;
 
-const CLIENTE = 'cliente:perfiles!pedidos_usuario_perfil_fkey(nombre)';
-
-type Nombre = {nombre: string} | {nombre: string}[] | null;
-
-type FilaEntregaRepartidor = Partial<FilaEntrega> & {
-    id: string;
-    estado: EstadoPedido;
-    folio: string | null;
-    cliente: Nombre;
-    pedido_detalle?: {tamanio: Tamanio | null; niveles: Niveles | null} | {tamanio: Tamanio | null; niveles: Niveles | null}[] | null;
-};
-
-// PostgREST devuelve la relacion como objeto o como arreglo
-function primero<T>(valor: T | T[] | null | undefined): T | null {
-    return Array.isArray(valor) ? valor[0] ?? null : valor ?? null;
-}
-
-function nombreDe(valor: Nombre): string {
-    return primero(valor)?.nombre.trim() || 'Sin nombre';
-}
-
-function resumenDeFila(fila: FilaEntregaRepartidor): EntregaResumen {
-    const entrega = entregaDeFila(fila);
-    return {
-        id: fila.id,
-        folio: fila.folio,
-        cliente: nombreDe(fila.cliente),
-        fechaEntrega: entrega.fechaEntrega,
-        horaEntrega: entrega.horaEntrega,
-        direccion: armarDireccion(entrega),
-    };
-}
-
 // pedidos en camino asignados al repartidor, de la entrega mas proxima a la mas lejana
 export async function listarEntregas(): Promise<{entregas: EntregaResumen[]; error: string | null}> {
-    const {data, error} = await supabase
-        .from('pedidos')
-        .select(`id, estado, folio, calle, numero_exterior, numero_interior, colonia, fecha_entrega, hora_entrega, ${CLIENTE}`)
-        .eq('estado', 'en_camino')
-        .order('fecha_entrega', {ascending: true})
-        .order('hora_entrega', {ascending: true})
-        .order('id');
-    if (error) return {entregas: [], error: traducirErrorDatos(error)};
-    return {entregas: ((data ?? []) as FilaEntregaRepartidor[]).map(resumenDeFila), error: null};
+    const {data, error} = await peticionApi<{entregas: EntregaResumen[]}>('/repartidor/entregas');
+    if (error || !data) return {entregas: [], error: error ?? MENSAJES_DATOS.GENERICO};
+    return {entregas: data.entregas, error: null};
 }
 
-// detalle para ubicar la entrega: direccion, coordenadas, horario y que pastel lleva
+// detalle para ubicar la entrega: direccion, coordenadas, horario y que pastel lleva; null si no existe
 export async function obtenerEntrega(id: string): Promise<{entrega: EntregaRepartidor | null; error: string | null}> {
-    const {data, error} = await supabase
-        .from('pedidos')
-        .select(`id, estado, folio, ${COLUMNAS_ENTREGA}, ${CLIENTE}, pedido_detalle(tamanio, niveles)`)
-        .eq('id', id)
-        .maybeSingle<FilaEntregaRepartidor>();
-    if (error) return {entrega: null, error: traducirErrorDatos(error)};
-    if (!data) return {entrega: null, error: null};
-
-    const detalle = primero(data.pedido_detalle);
-    return {
-        entrega: {
-            id: data.id,
-            estado: data.estado,
-            folio: data.folio,
-            cliente: nombreDe(data.cliente),
-            tamanio: detalle?.tamanio ?? null,
-            niveles: detalle?.niveles ?? null,
-            entrega: entregaDeFila(data),
-        },
-        error: null,
-    };
+    const {data, error, status} = await peticionApi<{entrega: EntregaRepartidor}>(`/repartidor/entregas/${id}`);
+    if (status === 404) return {entrega: null, error: null};
+    if (error || !data) return {entrega: null, error};
+    return {entrega: data.entrega, error: null};
 }
 
 export type ResultadoEntrega = 'ok' | 'desactualizado' | 'error';
 
-// solo aplica si el pedido sigue en camino; RLS y el trigger rechazan cualquier otro cambio (007)
-export async function marcarEntregado(id: string): Promise<{resultado: ResultadoEntrega; error: string | null}> {
-    const {data, error} = await supabase
-        .from('pedidos')
-        .update({estado: 'entregado'})
-        .eq('id', id)
-        .eq('estado', 'en_camino')
-        .select('id');
-    if (error) {
-        console.warn('marcarEntregado:', error.code, error.message);
-        return {resultado: 'error', error: esErrorDeConexion(error) ? MENSAJE_SIN_CONEXION : MENSAJES_REPARTIDOR.ACTUALIZAR};
-    }
-    if (!data || data.length === 0) return {resultado: 'desactualizado', error: MENSAJES_REPARTIDOR.YA_NO_DISPONIBLE};
-    return {resultado: 'ok', error: null};
+// la API solo cierra la entrega si sigue en camino; si no, responde DESACTUALIZADO
+async function cerrarEntrega(ruta: string, cuerpo?: unknown): Promise<{resultado: ResultadoEntrega; error: string | null}> {
+    const {error, status, codigo} = await peticionApi(ruta, {metodo: 'POST', cuerpo});
+    if (!error) return {resultado: 'ok', error: null};
+    if (codigo === 'DESACTUALIZADO') return {resultado: 'desactualizado', error: MENSAJES_REPARTIDOR.YA_NO_DISPONIBLE};
+    console.warn('cerrarEntrega:', status, error);
+    return {resultado: 'error', error: status === 0 ? MENSAJE_SIN_CONEXION : MENSAJES_REPARTIDOR.ACTUALIZAR};
 }
 
-// "No se pudo entregar" con su motivo (F07 M2); igual que marcarEntregado, solo si sigue en camino.
-// RLS exige el motivo y el trigger valida la transicion (011)
+export function marcarEntregado(id: string): Promise<{resultado: ResultadoEntrega; error: string | null}> {
+    return cerrarEntrega(`/repartidor/entregas/${id}/entregado`);
+}
+
+// "No se pudo entregar" con su motivo (F07 M2); la API tambien exige el motivo
 export async function marcarNoEntregado(id: string, motivo: string): Promise<{resultado: ResultadoEntrega; error: string | null}> {
     const texto = motivo.trim();
     if (!texto) return {resultado: 'error', error: MENSAJES_REPARTIDOR.SIN_MOTIVO};
-    const {data, error} = await supabase
-        .from('pedidos')
-        .update({estado: 'no_entregado', motivo_no_entrega: texto})
-        .eq('id', id)
-        .eq('estado', 'en_camino')
-        .select('id');
-    if (error) {
-        console.warn('marcarNoEntregado:', error.code, error.message);
-        return {resultado: 'error', error: esErrorDeConexion(error) ? MENSAJE_SIN_CONEXION : MENSAJES_REPARTIDOR.ACTUALIZAR};
-    }
-    if (!data || data.length === 0) return {resultado: 'desactualizado', error: MENSAJES_REPARTIDOR.YA_NO_DISPONIBLE};
-    return {resultado: 'ok', error: null};
+    return cerrarEntrega(`/repartidor/entregas/${id}/no-entregado`, {motivo: texto});
 }

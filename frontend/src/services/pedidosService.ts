@@ -1,9 +1,7 @@
 import { peticionApi } from "./api";
 import { MENSAJES_DATOS, mensajeDeExcepcion } from "./erroresDatos";
 import { MENSAJES_PEDIDO, mimeImagen } from "../utils/pedido";
-import {
-    DatosEntrega, HoraBloque, ImagenLocal, PasoPedido, PedidoCompleto, PedidoEnCurso, ResumenPedido, TipoEntrega,
-} from "../types/pedido.types";
+import { ImagenLocal, PasoPedido, PedidoCompleto, PedidoEnCurso, ResumenPedido } from "../types/pedido.types";
 
 // pedidos del cliente: borradores de F01, "Mis pedidos", detalle y confirmacion (F03).
 // Los datos los guarda la API (backend/src/.../pedidos), que calcula el total y maneja las imagenes
@@ -139,42 +137,4 @@ export async function urlReferencia(ruta: string): Promise<{url: string | null; 
     const {data, error} = await peticionApi<{url: string}>('/pedidos/referencias/url', {query: {ruta}});
     if (error || !data) return {url: null, error};
     return {url: data.url, error: null};
-}
-
-// ---------------------------------------------------------------------------
-// TEMPORAL: conversion de filas que aun usa repartidorService mientras consulta Supabase
-// directamente. Se quita al migrar ese modulo a la API
-
-export interface FilaEntrega {
-    tipo_entrega: TipoEntrega | null;
-    calle: string | null;
-    numero_exterior: string | null;
-    numero_interior: string | null;
-    colonia: string | null;
-    direccion: string | null;
-    direccion_referencia: string | null;
-    direccion_lat: number | string | null;
-    direccion_lng: number | string | null;
-    telefono_contacto: string | null;
-    fecha_entrega: string | null;
-    hora_entrega: string | null;   // tipo time: llega como '10:00:00'
-}
-
-export const COLUMNAS_ENTREGA ='tipo_entrega, calle, numero_exterior, numero_interior, colonia, direccion, direccion_referencia, '
-    + 'direccion_lat, direccion_lng, telefono_contacto, fecha_entrega, hora_entrega';
-
-export function entregaDeFila(fila: Partial<FilaEntrega>): DatosEntrega {
-    const tieneUbicacion = fila.direccion_lat != null && fila.direccion_lng != null;
-    return {
-        tipoEntrega: fila.tipo_entrega ?? null,
-        calle: fila.calle ?? '',
-        numeroExterior: fila.numero_exterior ?? '',
-        numeroInterior: fila.numero_interior ?? '',
-        colonia: fila.colonia ?? '',
-        referencia: fila.direccion_referencia ?? '',
-        telefono: fila.telefono_contacto ?? '',
-        ubicacion: tieneUbicacion ? {latitud: Number(fila.direccion_lat), longitud: Number(fila.direccion_lng)} : null,
-        fechaEntrega: fila.fecha_entrega ?? null,
-        horaEntrega: fila.hora_entrega ? fila.hora_entrega.slice(0, 5) as HoraBloque : null,
-    };
 }

@@ -65,15 +65,22 @@ nunca la `service_role`.
 | `GET /admin/pedidos/:id` | admin | Detalle con cliente, repartidor y pago | F04 |
 | `PATCH /admin/pedidos/:id/estado` | admin | Cambia el estado si la transición es válida y el pedido sigue en `estadoActual` (409 `DESACTUALIZADO` si otro admin ya lo movió) | F04, F07 M2 |
 | `GET /admin/repartidores` | admin | Repartidores para asignar al enviar a reparto | F04 |
+| `GET /repartidor/entregas` | repartidor | Sus entregas en camino, de la más próxima a la más lejana (sin precios) | F06 |
+| `GET /repartidor/entregas/:id` | repartidor | Dirección, coordenadas, horario, cliente y pastel | F06 |
+| `POST /repartidor/entregas/:id/entregado` | repartidor | Marca la entrega como entregada si sigue en camino (409 `DESACTUALIZADO` si no) | F06 |
+| `POST /repartidor/entregas/:id/no-entregado` | repartidor | "No se pudo entregar" con `{ motivo }` (máx. 200 caracteres) | F07 M2 |
 
-### Migración a la API (en curso)
+### Migración a la API
 
 - [x] Estructura base: Express, configuración, sesión, roles y manejo de errores
 - [x] Catálogo (cliente y admin)
 - [x] Perfil y datos del cliente
 - [x] Pedidos del cliente
 - [x] Panel del admin (pedidos y repartidores)
-- [ ] Repartidor
+- [x] Repartidor
+
+La app ya no consulta las tablas ni Storage de Supabase: todo pasa por la API. Supabase
+solo se usa desde la app para iniciar sesión (Supabase Auth).
 
 ### Correr la API
 

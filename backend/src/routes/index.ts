@@ -3,6 +3,7 @@ import { adminRouter } from './admin.routes';
 import { adminCatalogoRouter, catalogoRouter } from './catalogo.routes';
 import { pedidosRouter } from './pedidos.routes';
 import { perfilRouter } from './perfil.routes';
+import { repartidorRouter } from './repartidor.routes';
 
 // todas las rutas de la API
 export const rutas = Router();
@@ -16,3 +17,4 @@ rutas.use('/admin/catalogo', adminCatalogoRouter);
 rutas.use('/admin', adminRouter);
 rutas.use('/perfil', perfilRouter);
 rutas.use('/pedidos', pedidosRouter);
+rutas.use('/repartidor', repartidorRouter);

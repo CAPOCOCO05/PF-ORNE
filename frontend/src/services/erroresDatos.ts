@@ -36,7 +36,7 @@ const PATRON_CONEXION = new RegExp([
     'timed? ?out',
 ].join('|'), 'i');
 
-// fallo de red: supabase-js no llego a recibir respuesta del servidor (sin codigo de error)
+// fallo de red: la peticion (a la API o a Supabase Auth) no recibio respuesta (sin codigo de error)
 export function esErrorDeConexion(error: ErrorDatosLike): boolean {
     return !error.code && PATRON_CONEXION.test(error.message ?? '');
 }
