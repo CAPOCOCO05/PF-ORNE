@@ -8,16 +8,16 @@ confirma su pedido con un folio de seguimiento.
 ```
 orne/
 ├── frontend/   # App móvil (Expo + React Native)      → frontend/README.md
-├── backend/    # Esquema Supabase (migraciones SQL)   → backend/README.md
+├── backend/    # API en capas (Express) + migraciones Supabase → backend/README.md
 └── specs/      # Especificación del proyecto y features
 ```
 
-El frontend y el backend están separados: el frontend solo conoce el backend a
-través de las variables `EXPO_PUBLIC_SUPABASE_URL` y
-`EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+El frontend y el backend están separados. La app pide los datos a la API de
+`backend/` (`EXPO_PUBLIC_API_URL`) y la API es la que consulta Supabase. La app
+solo usa Supabase directamente para iniciar sesión (Supabase Auth).
 
 ## Inicio rápido
-1. Monta el backend: [backend/README.md](backend/README.md).
+1. Monta el backend y arranca la API: [backend/README.md](backend/README.md).
 2. Corre la app: [frontend/README.md](frontend/README.md).
 
 ## Especificación

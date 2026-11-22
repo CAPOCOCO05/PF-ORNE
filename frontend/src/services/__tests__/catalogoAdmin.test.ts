@@ -1,158 +1,143 @@
 import { guardarPastel, listarCatalogoAdmin, obtenerPastelAdmin, subirImagenCatalogo } from "../catalogoService";
 import { MENSAJES_DATOS } from "../erroresDatos";
 import { supabase } from "../supabase";
-import { consultaSimulada } from "../../test-utils/consultaSupabase";
+import { llamadaFetch, simularApi, simularSinConexion } from "../../test-utils/apiSimulada";
 import { FORMULARIO_PASTEL_VACIO, MENSAJES_CATALOGO } from "../../utils/catalogo";
 import { MENSAJES_PEDIDO } from "../../utils/pedido";
 import { FormularioPastel } from "../../types/pedido.types";
 
-// F07 M4: funciones del admin en catalogoService
-jest.mock("../supabase", () => ({ supabase: { from: jest.fn(), storage: { from: jest.fn() } } }));
+// F07 M4: funciones del admin en catalogoService (peticiones a /admin/catalogo)
+jest.mock("../supabase", () => ({ supabase: { auth: { getSession: jest.fn() } } }));
 
-const ERROR_RED = { message: "TypeError: Network request failed", code: "" };
 const URL_PUBLICA = "https://abc.supabase.co/storage/v1/object/public/catalogo/";
 const IMAGEN = { uri: "file:///foto.jpg", mimeType: "image/jpeg" };
 
 const FORMULARIO: FormularioPastel = {
     ...FORMULARIO_PASTEL_VACIO,
-    nombre: "  Fiesta   de chocolate ", descripcion: "  ", tamanio: "20", niveles: 3, tipoPan: "chocolate", relleno: "chocolate",
+    nombre: "Fiesta de chocolate", tamanio: "20", niveles: 3, tipoPan: "chocolate", relleno: "chocolate",
 };
 
-let bucket: { upload: jest.Mock; getPublicUrl: jest.Mock; remove: jest.Mock };
-
-function mockConsulta(respuesta: { data?: unknown; error: unknown }) {
-    const consulta = consultaSimulada(respuesta);
-    (supabase.from as jest.Mock).mockReturnValue(consulta);
-    return consulta;
+function cuerpoEnviado(fetchMock: jest.Mock, n = 0) {
+    return JSON.parse(llamadaFetch(fetchMock, n)[1].body as string);
 }
 
 beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(console, "warn").mockImplementation(() => {});
-    bucket = {
-        upload: jest.fn().mockResolvedValue({ error: null }),
-        getPublicUrl: jest.fn((ruta: string) => ({ data: { publicUrl: URL_PUBLICA + ruta } })),
-        remove: jest.fn().mockResolvedValue({ error: null }),
-    };
-    (supabase.storage.from as jest.Mock).mockReturnValue(bucket);
-    globalThis.fetch = jest.fn().mockResolvedValue({ arrayBuffer: () => Promise.resolve(new ArrayBuffer(4)) });
+    (supabase.auth.getSession as jest.Mock).mockResolvedValue({ data: { session: { access_token: "tok-admin" } } });
 });
 
 describe("listarCatalogoAdmin", () => {
-    it("trae publicados y ocultos, por nombre, de 10 en 10", async () => {
-        const consulta = mockConsulta({ data: [{ id: "p1", nombre: "A", precio_base: "380.00", activo: false }], error: null });
+    it("pide la pagina con el token del admin", async () => {
+        const pasteles = [{ id: "p1", nombre: "A", precio_base: 380, activo: false }];
+        const fetchMock = simularApi({ status: 200, cuerpo: { pasteles, hayMas: false } });
 
         const resultado = await listarCatalogoAdmin(1);
 
-        expect(consulta.eq).not.toHaveBeenCalled();
-        expect(consulta.select).toHaveBeenCalledWith(expect.stringContaining("activo"));
-        expect(consulta.order).toHaveBeenCalledWith("nombre");
-        expect(consulta.range).toHaveBeenCalledWith(10, 20);
-        expect(resultado).toEqual({ pasteles: [{ id: "p1", nombre: "A", precio_base: 380, activo: false }], hayMas: false, error: null });
+        const [url, opciones] = llamadaFetch(fetchMock);
+        expect(url).toBe("/admin/catalogo?pagina=1");
+        expect(opciones.headers).toHaveProperty("Authorization", "Bearer tok-admin");
+        expect(resultado).toEqual({ pasteles, hayMas: false, error: null });
     });
 
-    it("error de conexion", async () => {
-        mockConsulta({ data: null, error: ERROR_RED });
+    it("sin internet", async () => {
+        simularSinConexion();
 
         expect(await listarCatalogoAdmin(0)).toEqual({ pasteles: [], hayMas: false, error: MENSAJES_DATOS.CONEXION });
     });
 });
 
 describe("obtenerPastelAdmin", () => {
-    it("devuelve el pastel con su precio como numero", async () => {
-        mockConsulta({ data: { id: "p1", precio_base: "930.00", activo: true }, error: null });
+    it("devuelve el pastel", async () => {
+        simularApi({ status: 200, cuerpo: { pastel: { id: "p1", precio_base: 930, activo: true } } });
 
         expect(await obtenerPastelAdmin("p1")).toEqual({ pastel: { id: "p1", precio_base: 930, activo: true }, error: null });
     });
 
-    it("no existe: pastel null sin error", async () => {
-        mockConsulta({ data: null, error: null });
+    it("no existe (404): pastel null sin error", async () => {
+        simularApi({ status: 404, cuerpo: { error: MENSAJES_CATALOGO.NO_ENCONTRADO } });
 
         expect(await obtenerPastelAdmin("x")).toEqual({ pastel: null, error: null });
     });
 });
 
 describe("subirImagenCatalogo", () => {
-    it("sube al bucket catalogo con nombre unico y devuelve la URL publica", async () => {
+    it("lee la imagen y la manda a la API con su tipo; devuelve la URL publica", async () => {
+        const fetchMock = simularApi({ status: 200 }, { status: 201, cuerpo: { url: URL_PUBLICA + "pastel-1.jpg" } });
+
         const resultado = await subirImagenCatalogo(IMAGEN);
 
-        expect(supabase.storage.from).toHaveBeenCalledWith("catalogo");
-        const [ruta, , opciones] = bucket.upload.mock.calls[0];
-        expect(ruta).toMatch(/^pastel-\d+-[a-z0-9]+\.jpg$/);
-        expect(opciones).toEqual({ contentType: "image/jpeg" });
-        expect(resultado).toEqual({ url: URL_PUBLICA + ruta, error: null });
+        expect(llamadaFetch(fetchMock, 0)[0]).toBe(IMAGEN.uri);
+        const [url, opciones] = llamadaFetch(fetchMock, 1);
+        expect(url).toBe("/admin/catalogo/imagenes");
+        expect(opciones.method).toBe("POST");
+        expect(opciones.headers).toHaveProperty("Content-Type", "image/jpeg");
+        expect(opciones.body).toBeInstanceOf(ArrayBuffer);
+        expect(resultado).toEqual({ url: URL_PUBLICA + "pastel-1.jpg", error: null });
     });
 
-    it("rechaza archivos que no son imagen", async () => {
+    it("rechaza archivos que no son imagen sin llamar a la API", async () => {
+        const fetchMock = simularApi({ status: 201, cuerpo: {} });
+
         expect(await subirImagenCatalogo({ uri: "file:///a.pdf", mimeType: "application/pdf" })).toEqual({ url: null, error: MENSAJES_PEDIDO.IMAGEN_FORMATO });
-        expect(bucket.upload).not.toHaveBeenCalled();
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it("falla la subida: mensaje de la spec", async () => {
-        bucket.upload.mockResolvedValue({ error: { message: "403" } });
+    it("falla la subida: mensaje de la API", async () => {
+        simularApi({ status: 200 }, { status: 502, cuerpo: { error: MENSAJES_CATALOGO.IMAGEN } });
 
         expect(await subirImagenCatalogo(IMAGEN)).toEqual({ url: null, error: MENSAJES_CATALOGO.IMAGEN });
     });
 });
 
 describe("guardarPastel", () => {
-    it("alta sin imagen: inserta los datos limpios, sin precio_base", async () => {
-        const consulta = mockConsulta({ data: { id: "nuevo1" }, error: null });
+    it("alta sin imagen: POST con los datos del formulario", async () => {
+        const fetchMock = simularApi({ status: 201, cuerpo: { id: "nuevo1" } });
 
         const resultado = await guardarPastel(null, FORMULARIO);
 
-        expect(consulta.insert).toHaveBeenCalledWith({
-            nombre: "Fiesta de chocolate", descripcion: null, tamanio: "20", niveles: 3, tipo_pan: "chocolate",
-            relleno: "chocolate", activo: true, imagen_url: null,
+        expect(llamadaFetch(fetchMock)[0]).toBe("/admin/catalogo");
+        expect(llamadaFetch(fetchMock)[1].method).toBe("POST");
+        expect(cuerpoEnviado(fetchMock)).toEqual({
+            nombre: "Fiesta de chocolate", descripcion: "", tamanio: "20", niveles: 3, tipoPan: "chocolate",
+            relleno: "chocolate", activo: true, imagenUrl: null,
         });
         expect(resultado).toEqual({ id: "nuevo1", error: null, errorNombre: null });
-        expect(bucket.upload).not.toHaveBeenCalled();
     });
 
-    it("edicion con imagen nueva: sube, actualiza y borra la imagen anterior", async () => {
-        const consulta = mockConsulta({ data: { id: "p1" }, error: null });
-
-        await guardarPastel("p1", { ...FORMULARIO, imagenUrl: URL_PUBLICA + "vieja.jpg", imagenLocal: IMAGEN });
-
-        const [ruta] = bucket.upload.mock.calls[0];
-        expect(consulta.update).toHaveBeenCalledWith(expect.objectContaining({ imagen_url: URL_PUBLICA + ruta }));
-        expect(consulta.eq).toHaveBeenCalledWith("id", "p1");
-        expect(bucket.remove).toHaveBeenCalledWith(["vieja.jpg"]);
-    });
-
-    it("si no se puede borrar la imagen anterior, igual se guarda (D4)", async () => {
-        mockConsulta({ data: { id: "p1" }, error: null });
-        bucket.remove.mockResolvedValue({ error: { message: "403" } });
+    it("edicion con imagen nueva: sube la imagen y hace PUT con su URL", async () => {
+        const fetchMock = simularApi(
+            { status: 200 },
+            { status: 201, cuerpo: { url: URL_PUBLICA + "nueva.jpg" } },
+            { status: 200, cuerpo: { id: "p1" } },
+        );
 
         const resultado = await guardarPastel("p1", { ...FORMULARIO, imagenUrl: URL_PUBLICA + "vieja.jpg", imagenLocal: IMAGEN });
 
+        expect(llamadaFetch(fetchMock, 2)[0]).toBe("/admin/catalogo/p1");
+        expect(llamadaFetch(fetchMock, 2)[1].method).toBe("PUT");
+        expect(cuerpoEnviado(fetchMock, 2)).toEqual(expect.objectContaining({ imagenUrl: URL_PUBLICA + "nueva.jpg" }));
         expect(resultado).toEqual({ id: "p1", error: null, errorNombre: null });
     });
 
     it("falla la subida: no se guarda nada", async () => {
-        bucket.upload.mockResolvedValue({ error: { message: "500" } });
+        const fetchMock = simularApi({ status: 200 }, { status: 502, cuerpo: { error: MENSAJES_CATALOGO.IMAGEN } });
 
         const resultado = await guardarPastel(null, { ...FORMULARIO, imagenLocal: IMAGEN });
 
-        expect(supabase.from).not.toHaveBeenCalled();
+        expect(fetchMock).toHaveBeenCalledTimes(2);
         expect(resultado).toEqual({ id: null, error: MENSAJES_CATALOGO.IMAGEN, errorNombre: null });
     });
 
-    it("nombre repetido: error junto al campo y se borra la imagen recien subida", async () => {
-        mockConsulta({ data: null, error: { message: "duplicate key", code: "23505" } });
+    it("nombre repetido (409): error junto al campo", async () => {
+        simularApi({ status: 409, cuerpo: { error: MENSAJES_CATALOGO.NOMBRE_REPETIDO, detalles: { nombre: MENSAJES_CATALOGO.NOMBRE_REPETIDO } } });
 
-        const resultado = await guardarPastel(null, { ...FORMULARIO, imagenLocal: IMAGEN });
-
-        expect(resultado).toEqual({ id: null, error: null, errorNombre: MENSAJES_CATALOGO.NOMBRE_REPETIDO });
-        expect(bucket.remove).toHaveBeenCalledWith([bucket.upload.mock.calls[0][0]]);
+        expect(await guardarPastel(null, FORMULARIO)).toEqual({ id: null, error: null, errorNombre: MENSAJES_CATALOGO.NOMBRE_REPETIDO });
     });
 
-    it("error de red al guardar: mensaje de conexion y no se toca la imagen publicada", async () => {
-        mockConsulta({ data: null, error: ERROR_RED });
+    it("sin internet al guardar: mensaje de conexion", async () => {
+        simularSinConexion();
 
-        const resultado = await guardarPastel("p1", { ...FORMULARIO, imagenUrl: URL_PUBLICA + "vieja.jpg" });
-
-        expect(resultado).toEqual({ id: "p1", error: MENSAJES_DATOS.CONEXION, errorNombre: null });
-        expect(bucket.remove).not.toHaveBeenCalled();
+        expect(await guardarPastel("p1", FORMULARIO)).toEqual({ id: "p1", error: MENSAJES_DATOS.CONEXION, errorNombre: null });
     });
 });

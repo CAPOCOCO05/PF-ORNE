@@ -65,16 +65,3 @@ export function validarPastel(formulario: FormularioPastel): ErroresPastel {
     if (formulario.relleno === null) errores.relleno = MENSAJES_PEDIDO.OBLIGATORIO;
     return errores;
 }
-
-// nombre del archivo en el bucket: unico en cada subida para no mostrar imagenes viejas en cache (D3)
-export function nombreImagenCatalogo(extension: string, ahora: number = Date.now(), aleatorio: number = Math.random()): string {
-    return `pastel-${ahora}-${aleatorio.toString(36).slice(2, 8)}.${extension}`;
-}
-
-// ruta dentro del bucket 'catalogo' de una URL publica; null si la imagen no es de ese bucket
-export function rutaDeUrlCatalogo(url: string | null): string | null {
-    const marca = '/storage/v1/object/public/catalogo/';
-    const indice = url?.indexOf(marca) ?? -1;
-    if (!url || indice < 0) return null;
-    return decodeURIComponent(url.slice(indice + marca.length).split('?')[0]) || null;
-}

@@ -1,11 +1,78 @@
-# ORNE — Backend (Supabase)
+# ORNE — Backend
 
-El backend de ORNE usa **Supabase** (backend-as-a-service): Postgres + Auth +
-Storage. No hay un servidor propio; el backend lo componen el **esquema de la
-base de datos, las políticas de seguridad (RLS) y la configuración de Storage**,
-versionados como migraciones SQL en esta carpeta.
+El backend de ORNE tiene dos partes:
 
-## Qué provee
+1. **API propia** (`src/`): Node + Express + TypeScript con **arquitectura en capas**.
+   La app le pide los datos a la API y la API aplica las reglas del negocio.
+2. **Supabase** (`supabase/`): Postgres + Auth + Storage. El esquema, las políticas
+   de seguridad (RLS) y los triggers están versionados como migraciones SQL.
+
+## API en capas
+
+```
+App (frontend) ──HTTP + token──► rutas → controladores → servicios → repositorios ──► Supabase
+```
+
+| Capa | Carpeta | Responsabilidad |
+|---|---|---|
+| Rutas | `src/routes/` | URLs y qué rol puede entrar a cada una |
+| Controladores | `src/controllers/` | Capa HTTP: lee la petición, la valida (`src/validators/`) y responde |
+| Servicios | `src/services/` | Reglas del negocio: paginación, imágenes, conflictos, permisos de negocio |
+| Repositorios | `src/repositories/` | Capa de datos: las consultas a Supabase (tablas, RPC y Storage) |
+| Middlewares | `src/middlewares/` | Sesión (`cargarSesion`, `requiereRol`) y formato único de errores |
+
+Cada capa solo llama a la de abajo. Otras carpetas: `config/` (variables de entorno y
+cliente de Supabase), `errors/` (`ApiError`), `constants/`, `types/` y `utils/`
+(funciones puras).
+
+**Seguridad.** La app manda el token de su sesión de Supabase Auth
+(`Authorization: Bearer <token>`). La API verifica el token, lee el rol de `perfiles`
+y consulta Supabase **con ese mismo token**, así que las políticas RLS siguen
+protegiendo los datos aunque la API tuviera un error. La API usa la llave `anon`,
+nunca la `service_role`.
+
+**Errores.** Todas las respuestas de error tienen la forma
+`{ "error": "mensaje para el usuario", "detalles"?: { "campo": "mensaje" } }`.
+
+### Endpoints
+
+| Método y ruta | Rol | Qué hace | Feature |
+|---|---|---|---|
+| `GET /salud` | — | Comprueba que la API está arriba | — |
+| `GET /catalogo?pagina&precio&panes&rellenos&tamanios&niveles&orden` | Cualquiera (con o sin cuenta) | Pasteles publicados, de 10 en 10, con filtros | F01, F07 M5, F09 |
+| `GET /catalogo/:id` | Cualquiera | Un pastel publicado | F01 |
+| `GET /admin/catalogo?pagina` | admin | Pasteles publicados y ocultos | F07 M4 |
+| `GET /admin/catalogo/:id` | admin | Un pastel (incluye `activo`) | F07 M4 |
+| `POST /admin/catalogo/imagenes` | admin | Sube una imagen (cuerpo: bytes; `Content-Type: image/jpeg|png|heic|heif`, máx. 5 MB) y devuelve su URL | F07 M4 |
+| `POST /admin/catalogo` | admin | Crea un pastel (409 si el nombre se repite) | F07 M4 |
+| `PUT /admin/catalogo/:id` | admin | Edita un pastel; borra la imagen anterior si cambió | F07 M4 |
+
+### Migración a la API (en curso)
+
+- [x] Estructura base: Express, configuración, sesión, roles y manejo de errores
+- [x] Catálogo (cliente y admin)
+- [ ] Perfil y datos del cliente
+- [ ] Pedidos del cliente
+- [ ] Panel del admin (pedidos y repartidores)
+- [ ] Repartidor
+
+### Correr la API
+
+```bash
+cd backend
+npm install
+cp .env.example .env     # llena SUPABASE_URL y SUPABASE_ANON_KEY (los mismos del frontend)
+npm run dev              # http://localhost:3000 (se reinicia al guardar)
+npm test                 # pruebas (no se conectan a Supabase)
+npm run typecheck
+```
+
+Para probar en el celular, el teléfono y la PC deben estar en la misma red Wi-Fi y
+`EXPO_PUBLIC_API_URL` del frontend debe apuntar a la IP de la PC
+(`http://<IP-de-tu-PC>:3000`). Si Windows pregunta, permite a Node.js en el firewall
+para redes privadas.
+
+## Supabase: qué provee
 | Servicio | Uso en ORNE |
 |---|---|
 | Auth | Registro e inicio de sesión con correo y contraseña (F00) |
@@ -60,8 +127,9 @@ El modelo completo, el ciclo de estados y los permisos por rol están en
      `supabase db push`.
 3. En **Authentication → Sign In / Providers → Email**, desactiva *Confirm email*
    mientras desarrollas (así el registro inicia sesión de inmediato).
-4. En **Project Settings → API**, copia la URL y la llave `anon` al `.env` del
-   frontend (ver [`../frontend/.env.example`](../frontend/.env.example)).
+4. En **Project Settings → API**, copia la URL y la llave `anon` al `.env` de la API
+   (ver [`.env.example`](.env.example)) y al del frontend
+   (ver [`../frontend/.env.example`](../frontend/.env.example)).
 
 ## Asignar roles
 
@@ -79,11 +147,15 @@ where id = (select id from auth.users where email = 'repartidor@ejemplo.com');
 Desde la app nadie puede cambiar su propio rol (la columna `rol` no tiene permiso de
 escritura para los usuarios).
 
-## Variables que necesita el frontend
+## Variables de entorno
 
-| Variable | Dónde se obtiene |
-|---|---|
-| `EXPO_PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API → `anon` public key |
+| Variable | Dónde va | Dónde se obtiene |
+|---|---|---|
+| `SUPABASE_URL` | `backend/.env` | Project Settings → API → Project URL |
+| `SUPABASE_ANON_KEY` | `backend/.env` | Project Settings → API → `anon` public key |
+| `PORT` | `backend/.env` | Puerto de la API (por defecto 3000) |
+| `EXPO_PUBLIC_API_URL` | `frontend/.env` | `http://<IP-de-tu-PC>:3000` |
+| `EXPO_PUBLIC_SUPABASE_URL` | `frontend/.env` | Project Settings → API → Project URL (inicio de sesión) |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | `frontend/.env` | Project Settings → API → `anon` public key |
 
 Nunca subas la llave `service_role` al repositorio ni a la app.

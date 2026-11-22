@@ -1,5 +1,5 @@
 import {
-    FORMULARIO_PASTEL_VACIO, formularioDePastel, MENSAJES_CATALOGO, nombreImagenCatalogo, rutaDeUrlCatalogo, validarPastel,
+    FORMULARIO_PASTEL_VACIO, formularioDePastel, MENSAJES_CATALOGO, validarPastel,
 } from "../catalogo";
 import { MENSAJES_PEDIDO } from "../pedido";
 import { FormularioPastel, PastelAdmin } from "../../types/pedido.types";
@@ -54,21 +54,5 @@ describe("formularioDePastel", () => {
             nombre: "Boda clásica", descripcion: "", tamanio: "30", niveles: 3, tipoPan: "vainilla",
             relleno: "cremapastelera", activo: false, imagenUrl: "https://x/catalogo/a.jpg", imagenLocal: null,
         });
-    });
-});
-
-describe("imagenes del catalogo", () => {
-    it("nombre de archivo unico por subida", () => {
-        expect(nombreImagenCatalogo("png", 1700000000000, 0.123456789)).toMatch(/^pastel-1700000000000-[a-z0-9]{1,6}\.png$/);
-    });
-
-    it("ruta del bucket a partir de la URL publica", () => {
-        expect(rutaDeUrlCatalogo("https://abc.supabase.co/storage/v1/object/public/catalogo/pastel-1-x.jpg")).toBe("pastel-1-x.jpg");
-    });
-
-    it("null si no hay URL o no es del bucket catalogo", () => {
-        expect(rutaDeUrlCatalogo(null)).toBeNull();
-        expect(rutaDeUrlCatalogo("https://otro.sitio/imagen.jpg")).toBeNull();
-        expect(rutaDeUrlCatalogo("https://abc.supabase.co/storage/v1/object/public/referencias-pasteles/a.jpg")).toBeNull();
     });
 });

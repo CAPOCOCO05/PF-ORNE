@@ -1,153 +1,74 @@
 import { listarCatalogo, obtenerPastel } from "../catalogoService";
 import { MENSAJES_DATOS } from "../erroresDatos";
-import { FILTROS_VACIOS } from "../../constants/filtrosCatalogo";
 import { supabase } from "../supabase";
-import { consultaSimulada } from "../../test-utils/consultaSupabase";
+import { FILTROS_VACIOS } from "../../constants/filtrosCatalogo";
+import { llamadaFetch, simularApi, simularSinConexion } from "../../test-utils/apiSimulada";
 
-jest.mock("../supabase", () => ({ supabase: { from: jest.fn() } }));
+// catalogo del cliente: peticiones a la API (backend/), que filtra y pagina
+jest.mock("../supabase", () => ({ supabase: { auth: { getSession: jest.fn() } } }));
 
-function pasteles(cantidad: number) {
-    return Array.from({ length: cantidad }, (_, i) => ({ id: `p${i}`, nombre: `Pastel ${i}` }));
-}
+const PASTEL = { id: "p1", nombre: "Clásico", precio_base: 380 };
+
+beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    (supabase.auth.getSession as jest.Mock).mockResolvedValue({ data: { session: null } });
+});
 
 describe("listarCatalogo", () => {
-    it("pide una pagina de 10 (mas uno para saber si hay mas), solo activos y por nombre", async () => {
-        const consulta = consultaSimulada({ data: pasteles(11), error: null });
-        (supabase.from as jest.Mock).mockReturnValue(consulta);
+    it("pide la pagina a la API y devuelve los pasteles", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { pasteles: [PASTEL], hayMas: true } });
 
         const resultado = await listarCatalogo(1);
 
-        expect(supabase.from).toHaveBeenCalledWith("catalogo_pasteles");
-        expect(consulta.eq).toHaveBeenCalledWith("activo", true);
-        expect(consulta.order).toHaveBeenCalledWith("nombre");
-        expect(consulta.range).toHaveBeenCalledWith(10, 20);
-        expect(resultado.pasteles).toHaveLength(10);
-        expect(resultado.hayMas).toBe(true);
-        expect(resultado.error).toBeNull();
+        const [url, opciones] = llamadaFetch(fetchMock);
+        expect(url).toBe("/catalogo?pagina=1&orden=nombre");
+        expect(opciones.method).toBe("GET");
+        expect(resultado).toEqual({ pasteles: [PASTEL], hayMas: true, error: null });
     });
 
-    it("ultima pagina: hayMas es false", async () => {
-        (supabase.from as jest.Mock).mockReturnValue(consultaSimulada({ data: pasteles(2), error: null }));
+    it("manda los filtros en el query string (M5)", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { pasteles: [], hayMas: false } });
 
-        const resultado = await listarCatalogo(1);
+        await listarCatalogo(0, { ...FILTROS_VACIOS, precio: "hasta500", panes: ["vainilla", "fresa"], niveles: [1, 2], orden: "precioAsc" });
 
-        expect(resultado.pasteles).toHaveLength(2);
-        expect(resultado.hayMas).toBe(false);
+        expect(llamadaFetch(fetchMock)[0]).toBe("/catalogo?pagina=0&precio=hasta500&panes=vainilla%2Cfresa&niveles=1%2C2&orden=precioAsc");
     });
 
-    it("error de conexion: lista vacia y mensaje", async () => {
-        (supabase.from as jest.Mock).mockReturnValue(
-            consultaSimulada({ data: null, error: { message: "TypeError: Network request failed", code: "" } })
-        );
+    it("sin sesion va como visitante; con sesion manda el token", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { pasteles: [], hayMas: false } });
+        await listarCatalogo(0);
+        (supabase.auth.getSession as jest.Mock).mockResolvedValue({ data: { session: { access_token: "tok" } } });
+        await listarCatalogo(0);
+
+        expect(llamadaFetch(fetchMock, 0)[1].headers).not.toHaveProperty("Authorization");
+        expect(llamadaFetch(fetchMock, 1)[1].headers).toHaveProperty("Authorization", "Bearer tok");
+    });
+
+    it("sin internet: lista vacia y mensaje de conexion", async () => {
+        simularSinConexion();
 
         expect(await listarCatalogo(0)).toEqual({ pasteles: [], hayMas: false, error: MENSAJES_DATOS.CONEXION });
     });
-});
 
-describe("listarCatalogo con filtros (F07 M5)", () => {
-    function consultaVacia() {
-        const consulta = consultaSimulada({ data: [], error: null });
-        (supabase.from as jest.Mock).mockReturnValue(consulta);
-        return consulta;
-    }
+    it("error de la API: muestra su mensaje", async () => {
+        simularApi({ status: 500, cuerpo: { error: MENSAJES_DATOS.GENERICO } });
 
-    it("sin filtros no agrega condiciones y ordena por nombre con id de desempate", async () => {
-        const consulta = consultaVacia();
-
-        await listarCatalogo(0);
-
-        expect(consulta.in).not.toHaveBeenCalled();
-        expect(consulta.gt).not.toHaveBeenCalled();
-        expect(consulta.lte).not.toHaveBeenCalled();
-        expect(consulta.order.mock.calls).toEqual([["nombre"], ["id"]]);
-    });
-
-    it("rango de precio: 'Hasta $500' incluye los $500", async () => {
-        const consulta = consultaVacia();
-
-        await listarCatalogo(0, { ...FILTROS_VACIOS, precio: "hasta500" });
-
-        expect(consulta.lte).toHaveBeenCalledWith("precio_base", 500);
-        expect(consulta.gt).not.toHaveBeenCalled();
-    });
-
-    it("rango de precio intermedio: mayor que el minimo y hasta el maximo", async () => {
-        const consulta = consultaVacia();
-
-        await listarCatalogo(0, { ...FILTROS_VACIOS, precio: "500a800" });
-
-        expect(consulta.gt).toHaveBeenCalledWith("precio_base", 500);
-        expect(consulta.lte).toHaveBeenCalledWith("precio_base", 800);
-    });
-
-    it("'Más de $1,200' no tiene tope", async () => {
-        const consulta = consultaVacia();
-
-        await listarCatalogo(0, { ...FILTROS_VACIOS, precio: "mas1200" });
-
-        expect(consulta.gt).toHaveBeenCalledWith("precio_base", 1200);
-        expect(consulta.lte).not.toHaveBeenCalled();
-    });
-
-    it("pan, relleno, tamaño y niveles se combinan; varias opciones de una seccion van en un solo .in()", async () => {
-        const consulta = consultaVacia();
-
-        await listarCatalogo(0, {
-            ...FILTROS_VACIOS,
-            panes: ["chocolate", "vainilla"],
-            rellenos: ["cajeta"],
-            tamanios: ["15", "20"],
-            niveles: [2],
-        });
-
-        expect(consulta.in).toHaveBeenCalledWith("tipo_pan", ["chocolate", "vainilla"]);
-        expect(consulta.in).toHaveBeenCalledWith("relleno", ["cajeta"]);
-        expect(consulta.in).toHaveBeenCalledWith("tamanio", ["15", "20"]);
-        expect(consulta.in).toHaveBeenCalledWith("niveles", [2]);
-        expect(consulta.eq).toHaveBeenCalledWith("activo", true);
-    });
-
-    it("precio menor a mayor con nombre e id como desempate", async () => {
-        const consulta = consultaVacia();
-
-        await listarCatalogo(0, { ...FILTROS_VACIOS, orden: "precioAsc" });
-
-        expect(consulta.order.mock.calls).toEqual([["precio_base", { ascending: true }], ["nombre"], ["id"]]);
-    });
-
-    it("precio mayor a menor", async () => {
-        const consulta = consultaVacia();
-
-        await listarCatalogo(0, { ...FILTROS_VACIOS, orden: "precioDesc" });
-
-        expect(consulta.order).toHaveBeenCalledWith("precio_base", { ascending: false });
-    });
-
-    it("con filtros la paginacion se mantiene de 10 en 10", async () => {
-        const consulta = consultaVacia();
-
-        await listarCatalogo(2, { ...FILTROS_VACIOS, panes: ["fresa"] });
-
-        expect(consulta.range).toHaveBeenCalledWith(20, 30);
-    });
-
-    it("convierte precio_base a numero", async () => {
-        (supabase.from as jest.Mock).mockReturnValue(
-            consultaSimulada({ data: [{ id: "p1", nombre: "A", precio_base: "530.00" }], error: null })
-        );
-
-        const resultado = await listarCatalogo(0);
-
-        expect(resultado.pasteles[0].precio_base).toBe(530);
+        expect(await listarCatalogo(0)).toEqual({ pasteles: [], hayMas: false, error: MENSAJES_DATOS.GENERICO });
     });
 });
 
 describe("obtenerPastel", () => {
-    it("busca el pastel por id", async () => {
-        const consulta = consultaSimulada({ data: { id: "p1" }, error: null });
-        (supabase.from as jest.Mock).mockReturnValue(consulta);
+    it("devuelve el pastel", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { pastel: PASTEL } });
 
-        expect(await obtenerPastel("p1")).toEqual({ pastel: { id: "p1" }, error: null });
-        expect(consulta.eq).toHaveBeenCalledWith("id", "p1");
+        expect(await obtenerPastel("p1")).toEqual({ pastel: PASTEL, error: null });
+        expect(llamadaFetch(fetchMock)[0]).toBe("/catalogo/p1");
+    });
+
+    it("404: pastel null sin error (ya no existe)", async () => {
+        simularApi({ status: 404, cuerpo: { error: "No encontramos este pastel" } });
+
+        expect(await obtenerPastel("x")).toEqual({ pastel: null, error: null });
     });
 });
