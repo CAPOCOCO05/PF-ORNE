@@ -68,7 +68,8 @@ regresa a `/`. Excepción (F09): la sección del cliente deja entrar sin sesión
 (`permitirInvitado`); ahí `pedidos`, `perfil`, `perfil/editar`, `pedido/[id]` y el
 wizard muestran "Inicia sesión o crea tu cuenta" (`RequiereCuenta`). "Pedir" sin
 sesión abre `/register?pedir=<id|nuevo>` y al terminar se continúa con el wizard. Así no se puede entrar escribiendo la URL o con un enlace profundo.
-(La seguridad real está en las políticas RLS; la guardia es solo de navegación.)
+(La seguridad real está en la API, que exige el rol en cada ruta, y en las políticas
+RLS de la base; la guardia es solo de navegación.)
 
 ## Encabezado y barra de navegación (F08 N1)
 
@@ -99,7 +100,7 @@ En lugar del menú lateral se usa una **barra de pestañas inferior** (`Tabs` de
   (requisito del cliente: "permitir regresar a pasos anteriores").
 - El estado del pedido en construcción vive en un **Context** (`PedidoContext`),
   montado en `pedido/nuevo/_layout.tsx`, para que sobreviva al ir y venir entre pasos.
-- **Guardar progreso**: el pedido se guarda en Supabase con `estado = 'borrador'` al
+- **Guardar progreso**: el pedido se guarda (por medio de la API) con `estado = 'borrador'` al
   completar el paso 1 y en cada paso siguiente; aparece en `pedidos.tsx` para
   retomarlo (botón "Continuar pedido"). Ver F01, D2.
 - Solo al confirmar en `confirmacion.tsx` el pedido pasa de `borrador` a `pendiente`.

@@ -104,6 +104,10 @@ Reglas:
 
 ## Permisos por rol (RLS)
 
+La app no consulta estas tablas: lo hace la API (F11), con el token del usuario. Por eso
+estos permisos se cumplen siempre, y además la API exige el rol en cada ruta antes de
+llegar a la base.
+
 | Tabla | Cliente | Admin | Repartidor |
 |---|---|---|---|
 | `perfiles` | Ver y editar su `nombre` (no su `rol`) | Ver todos | Ver el suyo y el nombre de los clientes de sus entregas en camino |

@@ -53,7 +53,8 @@ Pedido con `estado = 'pendiente'`, folio único asignado, registro en la tabla
 
 ### D1. Confirmación en el servidor (migración `008_entrega_y_confirmacion.sql`)
 Toda la confirmación ocurre en **una función SQL** `confirmar_pedido(pedido_id)`
-(`security definer`, una sola transacción), que la app llama con `supabase.rpc`:
+(`security definer`, una sola transacción). Hasta F10 la app la llamaba con
+`supabase.rpc`; desde F11 la llama la API (`POST /pedidos/:id/confirmar`):
 
 1. Verifica que el pedido sea del usuario y esté en `borrador`.
 2. Verifica que esté completo (detalle F01 + entrega F02), que los niveles sean

@@ -27,9 +27,23 @@ App móvil (Expo + React Native) donde el cliente arma su pastel paso a paso
 mapa o recolección en sucursal) y confirma el pedido, recibiendo un ID único de
 seguimiento. El admin da seguimiento al pedido y el repartidor lo entrega.
 
-Backend gestionado con Supabase (Postgres + Auth + Storage), **separado del proyecto
-móvil** dentro del mismo repositorio: `frontend/` (app) y `backend/` (migraciones
-SQL). Ver `backend/README.md`.
+## Arquitectura
+El frontend y el backend están **separados** dentro del mismo repositorio (F11):
+
+```
+frontend/ (app Expo) ──HTTP──► backend/src (API en capas) ──► Supabase (Postgres + Auth + Storage)
+```
+
+- `frontend/`: pantallas, navegación y estado de la app. Pide todos los datos a la API
+  (`src/services/`); usa Supabase directamente solo para iniciar sesión.
+- `backend/src/`: API propia (Node + Express + TypeScript) con arquitectura en capas:
+  rutas → controladores → servicios → repositorios. Valida los datos y aplica las
+  reglas del negocio.
+- `backend/supabase/`: esquema, políticas de seguridad (RLS), triggers y funciones,
+  como migraciones SQL. La API consulta la base con el token del usuario, así que RLS
+  sigue protegiendo los datos.
+
+Ver `backend/README.md` (endpoints y cómo correr la API) y F11.
 
 ## Diseño
 Pantallas, paleta de colores y elementos visuales en `specs/design/`. Toda pantalla
@@ -58,9 +72,10 @@ debe seguir la paleta:
 | F08 | Barra de navegación inferior (tabs) y aviso de privacidad | Todos | ✅ Completa |
 | F09 | Catálogo sin cuenta; la cuenta se pide al hacer el pedido | Visitante / Cliente | ✅ Completa |
 | F10 | Ajustes para la revisión (CLABE por pedido, regreso al pedido tras registrarse, teclado, doble toque, validaciones) | Todos | ✅ Completa |
+| F11 | Arquitectura en capas: API propia en `backend/` separada de la app | Todos | ✅ Completa (falta probar en dispositivo) |
 
 **Orden de implementación:** F00 → catálogo de F01 (pantalla de inicio) → resto de
-F01 → F02 → F03 → F04 → F06 → F07 → F08 → F09. F05 se aplica en cada una.
+F01 → F02 → F03 → F04 → F06 → F07 → F08 → F09 → F10 → F11. F05 se aplica en cada una.
 
 ## Reglas de negocio clave
 - Fecha mínima de entrega: hoy + 2 días (1 nivel), +7 días (2 niveles), +10 días
@@ -77,9 +92,8 @@ F01 → F02 → F03 → F04 → F06 → F07 → F08 → F09. F05 se aplica en ca
 
 ## Fuera de alcance del MVP
 - Asignar o cambiar roles desde la app (se hace en la base de datos).
-- Pagos automatizados en tiempo real (solo se mostrarán datos bancarios / simulación).
+- Pagos automatizados en tiempo real (solo se muestran los datos bancarios para transferencia).
 - Rastreo del repartidor en tiempo real.
 - Chat en tiempo real.
 - Facturación automática compleja.
-- Recuperación de contraseña ("Olvidé mi contraseña" se muestra, pero aún no
-  funciona; ver F00).
+- Recuperación de contraseña (el enlace "Olvidé mi contraseña" se quitó del login).
