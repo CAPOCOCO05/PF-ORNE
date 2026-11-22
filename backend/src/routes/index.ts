@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { adminRouter } from './admin.routes';
 import { adminCatalogoRouter, catalogoRouter } from './catalogo.routes';
 import { pedidosRouter } from './pedidos.routes';
 import { perfilRouter } from './perfil.routes';
@@ -12,5 +13,6 @@ rutas.get('/salud', (_req, res) => {
 
 rutas.use('/catalogo', catalogoRouter);
 rutas.use('/admin/catalogo', adminCatalogoRouter);
+rutas.use('/admin', adminRouter);
 rutas.use('/perfil', perfilRouter);
 rutas.use('/pedidos', pedidosRouter);

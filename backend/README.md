@@ -60,6 +60,11 @@ nunca la `service_role`.
 | `DELETE /pedidos/:id/imagen` | cliente | Quita la imagen de referencia | F01 D9 |
 | `POST /pedidos/:id/confirmar` | cliente | Confirma el pedido (folio); los errores traen `codigo` (p. ej. `FECHA_NO_DISPONIBLE`) | F03 |
 | `GET /pedidos/referencias/url?ruta=` | cliente, admin | URL temporal para ver una imagen de referencia (bucket privado) | F03, F04 |
+| `GET /admin/pedidos?pestania&estados&pagina` | admin | Pedidos por pestaña (`activos`, `entregado`, `cancelado`) y chips de estado, de 10 en 10 | F04, F07 M3 |
+| `GET /admin/pedidos/conteos` | admin | Pedidos por estado para los chips de "Activos" | F07 M3 |
+| `GET /admin/pedidos/:id` | admin | Detalle con cliente, repartidor y pago | F04 |
+| `PATCH /admin/pedidos/:id/estado` | admin | Cambia el estado si la transición es válida y el pedido sigue en `estadoActual` (409 `DESACTUALIZADO` si otro admin ya lo movió) | F04, F07 M2 |
+| `GET /admin/repartidores` | admin | Repartidores para asignar al enviar a reparto | F04 |
 
 ### Migración a la API (en curso)
 
@@ -67,7 +72,7 @@ nunca la `service_role`.
 - [x] Catálogo (cliente y admin)
 - [x] Perfil y datos del cliente
 - [x] Pedidos del cliente
-- [ ] Panel del admin (pedidos y repartidores)
+- [x] Panel del admin (pedidos y repartidores)
 - [ ] Repartidor
 
 ### Correr la API

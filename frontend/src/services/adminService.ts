@@ -1,15 +1,10 @@
-import { supabase } from "./supabase";
-import { esErrorDeConexion, MENSAJE_SIN_CONEXION, traducirErrorDatos } from "./erroresDatos";
-import { COLUMNAS_PEDIDO_COMPLETO, FilaPedidoCompleto, pedidoCompletoDeFila } from "./pedidosService";
+import { peticionApi } from "./api";
+import { MENSAJE_SIN_CONEXION, MENSAJES_DATOS } from "./erroresDatos";
 import { ConteoEstados, FiltroAdmin } from "../constants/estadosPedido";
-import { estadosDeFiltro, ordenAscendente } from "../utils/estados";
-import {
-    EstadoPedido, HoraBloque, PagoPedido, PedidoAdmin, PedidoAdminResumen, Repartidor, TipoEntrega,
-} from "../types/pedido.types";
+import { EstadoPedido, PedidoAdmin, PedidoAdminResumen, Repartidor } from "../types/pedido.types";
 
-// panel admin (F04): todos los pedidos menos borradores; RLS solo deja ver y cambiar al admin
-
-export const PEDIDOS_POR_PAGINA = 10;
+// panel admin (F04): la API (/admin) solo deja entrar al admin; filtra, pagina y valida
+// los cambios de estado. RLS y el trigger de la base lo vuelven a comprobar
 
 export const MENSAJES_ADMIN = {
     ACTUALIZAR: 'No se pudo actualizar el pedido, inténtalo de nuevo',
@@ -17,118 +12,34 @@ export const MENSAJES_ADMIN = {
     SIN_REPARTIDORES: 'No hay repartidores disponibles',
 } as const;
 
-// nombre del cliente y del repartidor desde perfiles; hay dos FK de pedidos a perfiles (007)
-const CLIENTE = 'cliente:perfiles!pedidos_usuario_perfil_fkey(nombre)';
-const REPARTIDOR = 'repartidor:perfiles!pedidos_repartidor_id_fkey(nombre)';
-
-type Nombre = {nombre: string} | {nombre: string}[] | null;
-
-interface FilaResumenAdmin {
-    id: string;
-    estado: EstadoPedido;
-    folio: string | null;
-    total: number | string;
-    tipo_entrega: TipoEntrega | null;
-    fecha_entrega: string | null;
-    hora_entrega: string | null;
-    cliente: Nombre;
-}
-
-interface FilaPago {
-    metodo_pago: string;
-    monto: number | string;
-    estado_pago: PagoPedido['estado'];
-}
-
-type FilaPedidoAdmin = FilaPedidoCompleto & {
-    cliente: Nombre;
-    repartidor: Nombre;
-    pagos: FilaPago | FilaPago[] | null;
-};
-
-// PostgREST devuelve la relacion como objeto o como arreglo
-function primero<T>(valor: T | T[] | null | undefined): T | null {
-    return Array.isArray(valor) ? valor[0] ?? null : valor ?? null;
-}
-
-function nombreDe(valor: Nombre): string {
-    return primero(valor)?.nombre.trim() || 'Sin nombre';
-}
-
 interface PaginaAdmin {
     pedidos: PedidoAdminResumen[];
     hayMas: boolean;
     error: string | null;
 }
 
-// pagina empieza en 0; se pide un registro de mas para saber si hay otra pagina (D4)
-export async function listarPedidosAdmin(filtro: FiltroAdmin, pagina: number, porPagina: number = PEDIDOS_POR_PAGINA): Promise<PaginaAdmin> {
-    const desde = pagina * porPagina;
-    const ascendente = ordenAscendente(filtro);
-    const {data, error} = await supabase
-        .from('pedidos')
-        .select(`id, estado, folio, total, tipo_entrega, fecha_entrega, hora_entrega, ${CLIENTE}`)
-        .in('estado', estadosDeFiltro(filtro))
-        .order('fecha_entrega', {ascending: ascendente})
-        .order('hora_entrega', {ascending: ascendente})
-        .order('id')    // desempate estable para que las paginas no repitan pedidos
-        .range(desde, desde + porPagina);
-    if (error) return {pedidos: [], hayMas: false, error: traducirErrorDatos(error)};
-
-    const filas = (data ?? []) as FilaResumenAdmin[];
-    const pedidos = filas.slice(0, porPagina).map((fila): PedidoAdminResumen => ({
-        id: fila.id,
-        estado: fila.estado,
-        folio: fila.folio,
-        total: Number(fila.total),
-        cliente: nombreDe(fila.cliente),
-        tipoEntrega: fila.tipo_entrega,
-        fechaEntrega: fila.fecha_entrega,
-        horaEntrega: fila.hora_entrega ? fila.hora_entrega.slice(0, 5) as HoraBloque : null,
-    }));
-    return {pedidos, hayMas: filas.length > porPagina, error: null};
+// pagina empieza en 0; la API decide estados y orden segun la pestaña y los chips (D3, D4)
+export async function listarPedidosAdmin(filtro: FiltroAdmin, pagina: number): Promise<PaginaAdmin> {
+    const {data, error} = await peticionApi<{pedidos: PedidoAdminResumen[]; hayMas: boolean}>('/admin/pedidos', {
+        query: {pestania: filtro.pestania, estados: filtro.estados, pagina},
+    });
+    if (error || !data) return {pedidos: [], hayMas: false, error: error ?? MENSAJES_DATOS.GENERICO};
+    return {pedidos: data.pedidos, hayMas: data.hayMas, error: null};
 }
 
-const CONTEO_VACIO: ConteoEstados = {
-    pendiente: 0, confirmado: 0, en_preparacion: 0, listo: 0,
-    en_camino: 0, entregado: 0, no_entregado: 0, cancelado: 0,
-};
-
-// pedidos por estado para los chips de "Activos" (F07 M3 D2); la funcion de 011
-// solo devuelve los estados que tienen pedidos, el resto queda en 0
+// pedidos por estado para los chips de "Activos" (F07 M3 D2)
 export async function contarPorEstado(): Promise<{conteos: ConteoEstados | null; error: string | null}> {
-    const {data, error} = await supabase.rpc('contar_pedidos_por_estado');
-    if (error) {
-        console.warn('contarPorEstado:', error.code, error.message);
-        return {conteos: null, error: traducirErrorDatos(error)};
-    }
-    const conteos = {...CONTEO_VACIO};
-    for (const fila of (data ?? []) as {estado: string; total: number | string}[]) {
-        if (fila.estado in conteos) conteos[fila.estado as keyof ConteoEstados] = Number(fila.total);
-    }
-    return {conteos, error: null};
+    const {data, error} = await peticionApi<{conteos: ConteoEstados}>('/admin/pedidos/conteos');
+    if (error || !data) return {conteos: null, error: error ?? MENSAJES_DATOS.GENERICO};
+    return {conteos: data.conteos, error: null};
 }
 
-// detalle completo: pastel, entrega, cliente, pago y repartidor (D5)
+// detalle completo: pastel, entrega, cliente, pago y repartidor (D5); null si no existe
 export async function obtenerPedidoAdmin(id: string): Promise<{pedido: PedidoAdmin | null; error: string | null}> {
-    const {data, error} = await supabase
-        .from('pedidos')
-        .select(`${COLUMNAS_PEDIDO_COMPLETO}, ${CLIENTE}, ${REPARTIDOR}, pagos(metodo_pago, monto, estado_pago)`)
-        .eq('id', id)
-        .maybeSingle<FilaPedidoAdmin>();
-    if (error) return {pedido: null, error: traducirErrorDatos(error)};
-    if (!data) return {pedido: null, error: null};
-
-    const pago = primero(data.pagos);
-    return {
-        pedido: {
-            ...pedidoCompletoDeFila(data),
-            cliente: nombreDe(data.cliente),
-            repartidor: primero(data.repartidor) ? nombreDe(data.repartidor) : null,
-            pago: pago ? {metodo: pago.metodo_pago, monto: Number(pago.monto), estado: pago.estado_pago} : null,
-        },
-        error: null,
-    };
+    const {data, error, status} = await peticionApi<{pedido: PedidoAdmin}>(`/admin/pedidos/${id}`);
+    if (status === 404) return {pedido: null, error: null};
+    if (error || !data) return {pedido: null, error};
+    return {pedido: data.pedido, error: null};
 }
 
 export type ResultadoCambio = 'ok' | 'desactualizado' | 'error';
@@ -138,36 +49,24 @@ interface CambioEstado {
     estadoActual: EstadoPedido;     // el que se esta mostrando (D6)
     destino: EstadoPedido;
     repartidorId?: string;          // solo al enviar a reparto (D7)
-    quitarRepartidor?: boolean;     // al reprogramar una entrega fallida (F07 M2)
+    quitarRepartidor?: boolean;     // al reprogramar una entrega fallida (F07 M2): lo decide la API
 }
 
-// el update solo aplica si el pedido sigue en el estado mostrado; si otro admin
-// ya lo movio no se actualiza ninguna fila (D6). El trigger valida la transicion
-export async function cambiarEstado({id, estadoActual, destino, repartidorId, quitarRepartidor}: CambioEstado): Promise<{resultado: ResultadoCambio; error: string | null}> {
-    const cambios = quitarRepartidor
-        ? {estado: destino, repartidor_id: null}
-        : repartidorId ? {estado: destino, repartidor_id: repartidorId} : {estado: destino};
-    const {data, error} = await supabase
-        .from('pedidos')
-        .update(cambios)
-        .eq('id', id)
-        .eq('estado', estadoActual)
-        .select('id');
-    if (error) {
-        console.warn('cambiarEstado:', error.code, error.message);
-        return {resultado: 'error', error: esErrorDeConexion(error) ? MENSAJE_SIN_CONEXION : MENSAJES_ADMIN.ACTUALIZAR};
-    }
-    if (!data || data.length === 0) return {resultado: 'desactualizado', error: MENSAJES_ADMIN.ACTUALIZADO};
-    return {resultado: 'ok', error: null};
+// la API solo aplica el cambio si el pedido sigue en el estado mostrado; si otro admin ya
+// lo movio responde DESACTUALIZADO (D6)
+export async function cambiarEstado({id, estadoActual, destino, repartidorId}: CambioEstado): Promise<{resultado: ResultadoCambio; error: string | null}> {
+    const {error, status, codigo} = await peticionApi(`/admin/pedidos/${id}/estado`, {
+        metodo: 'PATCH',
+        cuerpo: {estadoActual, destino, repartidorId: repartidorId ?? null},
+    });
+    if (!error) return {resultado: 'ok', error: null};
+    if (codigo === 'DESACTUALIZADO') return {resultado: 'desactualizado', error: MENSAJES_ADMIN.ACTUALIZADO};
+    console.warn('cambiarEstado:', status, error);
+    return {resultado: 'error', error: status === 0 ? MENSAJE_SIN_CONEXION : MENSAJES_ADMIN.ACTUALIZAR};
 }
 
 export async function listarRepartidores(): Promise<{repartidores: Repartidor[]; error: string | null}> {
-    const {data, error} = await supabase
-        .from('perfiles')
-        .select('id, nombre')
-        .eq('rol', 'repartidor')
-        .order('nombre');
-    if (error) return {repartidores: [], error: traducirErrorDatos(error)};
-    const repartidores = ((data ?? []) as Repartidor[]).map((r) => ({id: r.id, nombre: r.nombre.trim() || 'Sin nombre'}));
-    return {repartidores, error: null};
+    const {data, error} = await peticionApi<{repartidores: Repartidor[]}>('/admin/repartidores');
+    if (error || !data) return {repartidores: [], error: error ?? MENSAJES_DATOS.GENERICO};
+    return {repartidores: data.repartidores, error: null};
 }

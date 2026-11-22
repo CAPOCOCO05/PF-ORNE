@@ -2,8 +2,7 @@ import { peticionApi } from "./api";
 import { MENSAJES_DATOS, mensajeDeExcepcion } from "./erroresDatos";
 import { MENSAJES_PEDIDO, mimeImagen } from "../utils/pedido";
 import {
-    DatosEntrega, EstadoPedido, HoraBloque, ImagenLocal, Niveles, PasoPedido, PedidoCompleto, PedidoEnCurso, RellenoId,
-    ResumenPedido, SaborPanId, Tamanio, TipoEntrega,
+    DatosEntrega, HoraBloque, ImagenLocal, PasoPedido, PedidoCompleto, PedidoEnCurso, ResumenPedido, TipoEntrega,
 } from "../types/pedido.types";
 
 // pedidos del cliente: borradores de F01, "Mis pedidos", detalle y confirmacion (F03).
@@ -143,28 +142,8 @@ export async function urlReferencia(ruta: string): Promise<{url: string | null; 
 }
 
 // ---------------------------------------------------------------------------
-// TEMPORAL: conversion de filas que aun usan adminService y repartidorService mientras
-// consultan Supabase directamente. Se quita al migrar esos modulos a la API
-
-interface FilaDetalle {
-    tamanio: Tamanio | null;
-    niveles: Niveles | null;
-    tipo_pan: SaborPanId | null;
-    relleno: RellenoId | null;
-    decoracion_texto?: string | null;
-    imagen_referencia_url?: string | null;
-}
-
-interface FilaPedido {
-    id: string;
-    estado: EstadoPedido;
-    folio: string | null;
-    total: number;
-    paso_actual: PasoPedido;
-    created_at: string;
-    motivo_no_entrega?: string | null;
-    pedido_detalle: FilaDetalle | FilaDetalle[] | null;
-}
+// TEMPORAL: conversion de filas que aun usa repartidorService mientras consulta Supabase
+// directamente. Se quita al migrar ese modulo a la API
 
 export interface FilaEntrega {
     tipo_entrega: TipoEntrega | null;
@@ -197,29 +176,5 @@ export function entregaDeFila(fila: Partial<FilaEntrega>): DatosEntrega {
         ubicacion: tieneUbicacion ? {latitud: Number(fila.direccion_lat), longitud: Number(fila.direccion_lng)} : null,
         fechaEntrega: fila.fecha_entrega ?? null,
         horaEntrega: fila.hora_entrega ? fila.hora_entrega.slice(0, 5) as HoraBloque : null,
-    };
-}
-
-export const COLUMNAS_PEDIDO_COMPLETO = `id, estado, folio, total, paso_actual, created_at, motivo_no_entrega, ${COLUMNAS_ENTREGA}, `
-    + 'pedido_detalle(tamanio, niveles, tipo_pan, relleno, decoracion_texto, imagen_referencia_url)';
-
-export type FilaPedidoCompleto = FilaPedido & Partial<FilaEntrega>;
-
-export function pedidoCompletoDeFila(fila: FilaPedidoCompleto): PedidoCompleto {
-    const detalle = Array.isArray(fila.pedido_detalle) ? fila.pedido_detalle[0] ?? null : fila.pedido_detalle;
-    return {
-        id: fila.id,
-        estado: fila.estado,
-        folio: fila.folio,
-        total: Number(fila.total),
-        creadoEn: fila.created_at,
-        tamanio: detalle?.tamanio ?? null,
-        niveles: detalle?.niveles ?? null,
-        tipoPan: detalle?.tipo_pan ?? null,
-        relleno: detalle?.relleno ?? null,
-        mensaje: detalle?.decoracion_texto ?? '',
-        imagenRuta: detalle?.imagen_referencia_url ?? null,
-        entrega: entregaDeFila(fila),
-        motivoNoEntrega: fila.motivo_no_entrega ?? null,
     };
 }

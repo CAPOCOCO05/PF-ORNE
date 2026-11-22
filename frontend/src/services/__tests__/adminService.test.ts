@@ -1,238 +1,121 @@
 import { cambiarEstado, contarPorEstado, listarPedidosAdmin, listarRepartidores, MENSAJES_ADMIN, obtenerPedidoAdmin } from "../adminService";
-import { MENSAJES_DATOS } from "../erroresDatos";
+import { MENSAJE_SIN_CONEXION, MENSAJES_DATOS } from "../erroresDatos";
 import { supabase } from "../supabase";
-import { consultaSimulada } from "../../test-utils/consultaSupabase";
-import { ENTREGA_VACIA } from "../../utils/entrega";
+import { llamadaFetch, simularApi, simularSinConexion } from "../../test-utils/apiSimulada";
 
-jest.mock("../supabase", () => ({ supabase: { from: jest.fn(), rpc: jest.fn() } }));
+// panel admin (F04) por medio de la API (/admin)
+jest.mock("../supabase", () => ({ supabase: { auth: { getSession: jest.fn() } } }));
 
-const ERROR_RED = { message: "TypeError: Network request failed", code: "" };
-
-const FILA_RESUMEN = {
-    id: "ped1", estado: "pendiente", folio: "ORN-7K2QXM", total: "790.00", tipo_entrega: "domicilio",
-    fecha_entrega: "2026-10-26", hora_entrega: "12:00:00", cliente: { nombre: " Ana " },
-};
-
-function mockConsulta(respuesta: { data?: unknown; error: unknown }) {
-    const consulta = consultaSimulada(respuesta);
-    (supabase.from as jest.Mock).mockReturnValue(consulta);
-    return consulta;
-}
+const RESUMEN = { id: "p1", estado: "pendiente", folio: "ORN-1", total: 790, cliente: "Ana", tipoEntrega: "domicilio", fechaEntrega: "2026-10-26", horaEntrega: "12:00" };
 
 beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(console, "warn").mockImplementation(() => {});
+    (supabase.auth.getSession as jest.Mock).mockResolvedValue({ data: { session: { access_token: "tok-admin" } } });
 });
 
 describe("listarPedidosAdmin", () => {
-    it("activos: filtra los estados en curso y ordena por la entrega mas proxima", async () => {
-        const consulta = mockConsulta({ data: [FILA_RESUMEN], error: null });
+    it("manda pestaña, chips y pagina", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { pedidos: [RESUMEN], hayMas: true } });
 
-        const resultado = await listarPedidosAdmin({ pestania: "activos", estados: [] }, 0);
+        const resultado = await listarPedidosAdmin({ pestania: "activos", estados: ["pendiente", "listo"] }, 1);
 
-        expect(supabase.from).toHaveBeenCalledWith("pedidos");
-        expect(consulta.in).toHaveBeenCalledWith("estado", ["pendiente", "confirmado", "en_preparacion", "listo", "en_camino", "no_entregado"]);
-        expect(consulta.order).toHaveBeenCalledWith("fecha_entrega", { ascending: true });
-        expect(consulta.order).toHaveBeenCalledWith("hora_entrega", { ascending: true });
-        expect(consulta.range).toHaveBeenCalledWith(0, 10);
-        expect(resultado).toEqual({
-            pedidos: [{
-                id: "ped1", estado: "pendiente", folio: "ORN-7K2QXM", total: 790, cliente: "Ana",
-                tipoEntrega: "domicilio", fechaEntrega: "2026-10-26", horaEntrega: "12:00",
-            }],
-            hayMas: false,
-            error: null,
-        });
+        const [url, opciones] = llamadaFetch(fetchMock);
+        expect(url).toBe("/admin/pedidos?pestania=activos&estados=pendiente%2Clisto&pagina=1");
+        expect(opciones.headers).toHaveProperty("Authorization", "Bearer tok-admin");
+        expect(resultado).toEqual({ pedidos: [RESUMEN], hayMas: true, error: null });
     });
 
-    it("entregados: del mas reciente al mas antiguo, segunda pagina", async () => {
-        const consulta = mockConsulta({ data: [], error: null });
+    it("sin chips no manda estados", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { pedidos: [], hayMas: false } });
 
-        await listarPedidosAdmin({ pestania: "entregado", estados: [] }, 1);
+        await listarPedidosAdmin({ pestania: "entregado", estados: [] }, 0);
 
-        expect(consulta.in).toHaveBeenCalledWith("estado", ["entregado"]);
-        expect(consulta.order).toHaveBeenCalledWith("fecha_entrega", { ascending: false });
-        expect(consulta.range).toHaveBeenCalledWith(10, 20);
+        expect(llamadaFetch(fetchMock)[0]).toBe("/admin/pedidos?pestania=entregado&pagina=0");
     });
 
-    it("si llega un registro de mas, hay otra pagina y no se muestra", async () => {
-        const filas = Array.from({ length: 3 }, (_, i) => ({ ...FILA_RESUMEN, id: `ped${i}`, cliente: [{ nombre: "" }] }));
-        mockConsulta({ data: filas, error: null });
-
-        const resultado = await listarPedidosAdmin({ pestania: "activos", estados: ["pendiente"] }, 0, 2);
-
-        expect(resultado.hayMas).toBe(true);
-        expect(resultado.pedidos.map((p) => p.id)).toEqual(["ped0", "ped1"]);
-        expect(resultado.pedidos[0].cliente).toBe("Sin nombre");
-    });
-
-    it("error de conexion", async () => {
-        mockConsulta({ data: null, error: ERROR_RED });
+    it("sin internet", async () => {
+        simularSinConexion();
 
         expect(await listarPedidosAdmin({ pestania: "activos", estados: [] }, 0)).toEqual({ pedidos: [], hayMas: false, error: MENSAJES_DATOS.CONEXION });
     });
 });
 
-describe("listarPedidosAdmin con chips de Activos (F07 M3)", () => {
-    it("filtra solo los estados marcados y sigue ordenando por la entrega mas proxima", async () => {
-        const consulta = mockConsulta({ data: [], error: null });
-
-        await listarPedidosAdmin({ pestania: "activos", estados: ["en_camino", "listo"] }, 0);
-
-        expect(consulta.in).toHaveBeenCalledWith("estado", ["listo", "en_camino"]);
-        expect(consulta.order).toHaveBeenCalledWith("fecha_entrega", { ascending: true });
-    });
-});
-
 describe("contarPorEstado", () => {
-    it("convierte las filas en un conteo por estado y deja en 0 los que no vienen", async () => {
-        (supabase.rpc as jest.Mock).mockResolvedValue({
-            data: [{ estado: "pendiente", total: 3 }, { estado: "listo", total: "1" }, { estado: "no_entregado", total: 2 }],
-            error: null,
-        });
+    it("devuelve los conteos", async () => {
+        const conteos = { pendiente: 3, confirmado: 0, en_preparacion: 0, listo: 1, en_camino: 0, entregado: 0, no_entregado: 0, cancelado: 0 };
+        simularApi({ status: 200, cuerpo: { conteos } });
 
-        const resultado = await contarPorEstado();
-
-        expect(supabase.rpc).toHaveBeenCalledWith("contar_pedidos_por_estado");
-        expect(resultado).toEqual({
-            conteos: {
-                pendiente: 3, confirmado: 0, en_preparacion: 0, listo: 1,
-                en_camino: 0, entregado: 0, no_entregado: 2, cancelado: 0,
-            },
-            error: null,
-        });
+        expect(await contarPorEstado()).toEqual({ conteos, error: null });
     });
 
-    it("ignora estados que no se muestran (borrador)", async () => {
-        (supabase.rpc as jest.Mock).mockResolvedValue({ data: [{ estado: "borrador", total: 9 }], error: null });
-
-        const { conteos } = await contarPorEstado();
-
-        expect(conteos).not.toHaveProperty("borrador");
-    });
-
-    it("error de conexion: sin conteos y con mensaje", async () => {
-        (supabase.rpc as jest.Mock).mockResolvedValue({ data: null, error: ERROR_RED });
+    it("sin internet: sin conteos y con mensaje", async () => {
+        simularSinConexion();
 
         expect(await contarPorEstado()).toEqual({ conteos: null, error: MENSAJES_DATOS.CONEXION });
     });
 });
 
 describe("obtenerPedidoAdmin", () => {
-    it("devuelve el pedido con cliente, repartidor y pago", async () => {
-        mockConsulta({
-            data: {
-                id: "ped1", estado: "en_camino", folio: "ORN-7K2QXM", total: "790.00", paso_actual: 5, created_at: "2026-10-17",
-                tipo_entrega: "recoleccion", telefono_contacto: "6461234567", fecha_entrega: "2026-10-26", hora_entrega: "10:00:00",
-                calle: null, numero_exterior: null, numero_interior: null, colonia: null, direccion: null,
-                direccion_referencia: null, direccion_lat: null, direccion_lng: null,
-                pedido_detalle: { tamanio: "15", niveles: 2, tipo_pan: "fresa", relleno: "chocolate", decoracion_texto: null, imagen_referencia_url: null },
-                cliente: { nombre: "Ana" },
-                repartidor: { nombre: "Luis" },
-                pagos: [{ metodo_pago: "tarjeta", monto: "790.00", estado_pago: "pendiente" }],
-            },
-            error: null,
-        });
+    it("devuelve el pedido", async () => {
+        const pedido = { ...RESUMEN, repartidor: null, pago: { metodo: "tarjeta", monto: 790, estado: "pendiente" } };
+        const fetchMock = simularApi({ status: 200, cuerpo: { pedido } });
 
-        const { pedido, error } = await obtenerPedidoAdmin("ped1");
-
-        expect(error).toBeNull();
-        expect(pedido).toEqual({
-            id: "ped1", estado: "en_camino", folio: "ORN-7K2QXM", total: 790, creadoEn: "2026-10-17",
-            tamanio: "15", niveles: 2, tipoPan: "fresa", relleno: "chocolate", mensaje: "", imagenRuta: null,
-            entrega: { ...ENTREGA_VACIA, tipoEntrega: "recoleccion", telefono: "6461234567", fechaEntrega: "2026-10-26", horaEntrega: "10:00" },
-            motivoNoEntrega: null,
-            cliente: "Ana",
-            repartidor: "Luis",
-            pago: { metodo: "tarjeta", monto: 790, estado: "pendiente" },
-        });
+        expect(await obtenerPedidoAdmin("p1")).toEqual({ pedido, error: null });
+        expect(llamadaFetch(fetchMock)[0]).toBe("/admin/pedidos/p1");
     });
 
-    it("sin repartidor ni pago", async () => {
-        mockConsulta({
-            data: { id: "ped1", estado: "pendiente", folio: "X", total: 0, paso_actual: 5, created_at: "", pedido_detalle: null,
-                cliente: null, repartidor: null, pagos: [] },
-            error: null,
-        });
+    it("no encontrado (404): null sin error", async () => {
+        simularApi({ status: 404, cuerpo: { error: "No encontramos este pedido" } });
 
-        const { pedido } = await obtenerPedidoAdmin("ped1");
-
-        expect(pedido?.repartidor).toBeNull();
-        expect(pedido?.pago).toBeNull();
-        expect(pedido?.cliente).toBe("Sin nombre");
-    });
-
-    it("no encontrado", async () => {
-        mockConsulta({ data: null, error: null });
-
-        expect(await obtenerPedidoAdmin("ped1")).toEqual({ pedido: null, error: null });
+        expect(await obtenerPedidoAdmin("p1")).toEqual({ pedido: null, error: null });
     });
 });
 
 describe("cambiarEstado", () => {
-    it("actualiza solo si el pedido sigue en el estado mostrado", async () => {
-        const consulta = mockConsulta({ data: [{ id: "ped1" }], error: null });
+    it("manda el estado mostrado, el destino y el repartidor", async () => {
+        const fetchMock = simularApi({ status: 200, cuerpo: { resultado: "ok" } });
 
-        const resultado = await cambiarEstado({ id: "ped1", estadoActual: "pendiente", destino: "confirmado" });
+        const resultado = await cambiarEstado({ id: "p1", estadoActual: "listo", destino: "en_camino", repartidorId: "r1" });
 
-        expect(consulta.update).toHaveBeenCalledWith({ estado: "confirmado" });
-        expect(consulta.eq).toHaveBeenCalledWith("id", "ped1");
-        expect(consulta.eq).toHaveBeenCalledWith("estado", "pendiente");
+        const [url, opciones] = llamadaFetch(fetchMock);
+        expect(url).toBe("/admin/pedidos/p1/estado");
+        expect(opciones.method).toBe("PATCH");
+        expect(JSON.parse(opciones.body as string)).toEqual({ estadoActual: "listo", destino: "en_camino", repartidorId: "r1" });
         expect(resultado).toEqual({ resultado: "ok", error: null });
     });
 
-    it("enviar a reparto asigna el repartidor en el mismo update", async () => {
-        const consulta = mockConsulta({ data: [{ id: "ped1" }], error: null });
+    it("si otro admin ya lo movio: desactualizado", async () => {
+        simularApi({ status: 409, cuerpo: { error: "El pedido fue actualizado", codigo: "DESACTUALIZADO" } });
 
-        await cambiarEstado({ id: "ped1", estadoActual: "listo", destino: "en_camino", repartidorId: "rep1" });
-
-        expect(consulta.update).toHaveBeenCalledWith({ estado: "en_camino", repartidor_id: "rep1" });
-    });
-
-    it("reprogramar quita el repartidor en el mismo update (F07 M2)", async () => {
-        const consulta = mockConsulta({ data: [{ id: "ped1" }], error: null });
-
-        await cambiarEstado({ id: "ped1", estadoActual: "no_entregado", destino: "listo", quitarRepartidor: true });
-
-        expect(consulta.update).toHaveBeenCalledWith({ estado: "listo", repartidor_id: null });
-        expect(consulta.eq).toHaveBeenCalledWith("estado", "no_entregado");
-    });
-
-    it("si otro admin ya lo movio, no se actualiza ninguna fila", async () => {
-        mockConsulta({ data: [], error: null });
-
-        expect(await cambiarEstado({ id: "ped1", estadoActual: "pendiente", destino: "confirmado" }))
+        expect(await cambiarEstado({ id: "p1", estadoActual: "pendiente", destino: "confirmado" }))
             .toEqual({ resultado: "desactualizado", error: MENSAJES_ADMIN.ACTUALIZADO });
     });
 
-    it("error (transicion rechazada o red)", async () => {
-        mockConsulta({ data: null, error: { message: "Cambio de estado no permitido", code: "P0001" } });
+    it("transicion rechazada u otro error", async () => {
+        simularApi({ status: 409, cuerpo: { error: "Ese cambio de estado no está permitido" } });
 
-        expect(await cambiarEstado({ id: "ped1", estadoActual: "pendiente", destino: "listo" }))
+        expect(await cambiarEstado({ id: "p1", estadoActual: "pendiente", destino: "entregado" }))
             .toEqual({ resultado: "error", error: MENSAJES_ADMIN.ACTUALIZAR });
     });
 
     it("sin internet avisa que no hay conexion (F10 A7)", async () => {
-        mockConsulta({ data: null, error: { message: "Error: fetch failed: Unable to resolve host", code: "" } });
+        simularSinConexion();
 
-        expect(await cambiarEstado({ id: "ped1", estadoActual: "pendiente", destino: "confirmado" }))
-            .toEqual({ resultado: "error", error: MENSAJES_DATOS.CONEXION });
+        expect(await cambiarEstado({ id: "p1", estadoActual: "pendiente", destino: "confirmado" }))
+            .toEqual({ resultado: "error", error: MENSAJE_SIN_CONEXION });
     });
 });
 
 describe("listarRepartidores", () => {
-    it("solo perfiles con rol repartidor, por nombre", async () => {
-        const consulta = mockConsulta({ data: [{ id: "rep1", nombre: "Luis" }, { id: "rep2", nombre: " " }], error: null });
+    it("devuelve los repartidores", async () => {
+        simularApi({ status: 200, cuerpo: { repartidores: [{ id: "r1", nombre: "Luis" }] } });
 
-        const resultado = await listarRepartidores();
-
-        expect(supabase.from).toHaveBeenCalledWith("perfiles");
-        expect(consulta.eq).toHaveBeenCalledWith("rol", "repartidor");
-        expect(resultado).toEqual({ repartidores: [{ id: "rep1", nombre: "Luis" }, { id: "rep2", nombre: "Sin nombre" }], error: null });
+        expect(await listarRepartidores()).toEqual({ repartidores: [{ id: "r1", nombre: "Luis" }], error: null });
     });
 
-    it("error de conexion", async () => {
-        mockConsulta({ data: null, error: ERROR_RED });
+    it("sin internet", async () => {
+        simularSinConexion();
 
         expect(await listarRepartidores()).toEqual({ repartidores: [], error: MENSAJES_DATOS.CONEXION });
     });

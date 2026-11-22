@@ -1,5 +1,5 @@
 import { ACCIONES } from "../../constants/estadosPedido";
-import { accionesDisponibles, alternarEstado, estadosDeFiltro, MENSAJES_MOTIVO, motivoNoEntrega, ordenAscendente, preguntaAccion } from "../estados";
+import { accionesDisponibles, alternarEstado, MENSAJES_MOTIVO, motivoNoEntrega, preguntaAccion } from "../estados";
 
 describe("accionesDisponibles", () => {
     it.each([
@@ -32,29 +32,6 @@ describe("accionesDisponibles", () => {
 describe("preguntaAccion", () => {
     it("pone el folio en la pregunta", () => {
         expect(preguntaAccion(ACCIONES.listo, "ORN-7K2QXM")).toBe("¿Marcar el pedido ORN-7K2QXM como listo?");
-    });
-});
-
-describe("estadosDeFiltro y ordenAscendente", () => {
-    it("activos sin chips trae de pendiente a no entregado, sin borradores ni terminados", () => {
-        expect(estadosDeFiltro({ pestania: "activos", estados: [] })).toEqual(["pendiente", "confirmado", "en_preparacion", "listo", "en_camino", "no_entregado"]);
-    });
-
-    it("activos con chips trae solo los marcados, en el orden del ciclo", () => {
-        expect(estadosDeFiltro({ pestania: "activos", estados: ["en_camino", "pendiente", "listo"] })).toEqual(["pendiente", "listo", "en_camino"]);
-    });
-
-    it("entregados y cancelados traen solo ese estado e ignoran los chips", () => {
-        expect(estadosDeFiltro({ pestania: "entregado", estados: ["listo"] })).toEqual(["entregado"]);
-        expect(estadosDeFiltro({ pestania: "cancelado", estados: [] })).toEqual(["cancelado"]);
-    });
-
-    it.each([
-        ["activos", true],
-        ["entregado", false],
-        ["cancelado", false],
-    ] as const)("%s ascendente: %s", (pestania, esperado) => {
-        expect(ordenAscendente({ pestania, estados: [] })).toBe(esperado);
     });
 });
 
