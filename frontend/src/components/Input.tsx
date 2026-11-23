@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: COLORS.TITULO,
+        borderColor: COLORS.BOTON_PRINCIPAL,   // borde rosa de los campos (design_2/12.png)
         borderRadius: 12,
         backgroundColor: COLORS.BLANCO,
         paddingHorizontal: 12,

@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     },
     quitarTodos: {
         fontSize: 12,
-        color: COLORS.BOTON_PRINCIPAL,
+        color: COLORS.ACENTO,
         fontWeight: '600',
         textDecorationLine: 'underline',
     },

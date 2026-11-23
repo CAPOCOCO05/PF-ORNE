@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     },
     editar: {
         fontSize: 14,
-        color: COLORS.BOTON_PRINCIPAL,
+        color: COLORS.ACENTO,
         textDecorationLine: 'underline',
     },
     texto: {

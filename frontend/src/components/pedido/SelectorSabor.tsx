@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
         borderColor: 'transparent',
     },
     saborElegido: {
-        borderColor: COLORS.BOTON_PRINCIPAL,
+        borderColor: COLORS.ACENTO,
         backgroundColor: COLORS.BOTON_SECUNDARIO,
     },
     imagen: {

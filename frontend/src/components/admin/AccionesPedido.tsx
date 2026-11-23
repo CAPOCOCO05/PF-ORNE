@@ -77,7 +77,7 @@ interface SelectorRepartidorProps extends ReturnType<typeof useRepartidores> {
 }
 
 function SelectorRepartidor({repartidores, cargando, error, reintentar, seleccionado, onSeleccionar}: SelectorRepartidorProps) {
-    if (cargando) return <ActivityIndicator testID="repartidores-cargando" color={COLORS.BOTON_PRINCIPAL} style={styles.estado} />;
+    if (cargando) return <ActivityIndicator testID="repartidores-cargando" color={COLORS.ACENTO} style={styles.estado} />;
     if (error) {
         return (
             <View style={styles.estado}>

@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.BOTON_PRINCIPAL,
     },
     textoIniciar: {
-        color: COLORS.BLANCO,
+        color: COLORS.TITULO,
         fontSize: 14,
         fontWeight: '700',
     },

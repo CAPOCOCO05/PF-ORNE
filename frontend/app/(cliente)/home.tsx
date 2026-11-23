@@ -44,7 +44,7 @@ export default function Home() {
 
     // lista vacia: cargando la primera pagina, error, sin resultados con filtros o catalogo sin pasteles
     const vacio = cargando ? (
-        <ActivityIndicator testID="catalogo-cargando" color={COLORS.BOTON_PRINCIPAL} style={styles.estado} />
+        <ActivityIndicator testID="catalogo-cargando" color={COLORS.ACENTO} style={styles.estado} />
     ) : error ? (
         <AvisoError mensaje={error} onReintentar={reintentar} />
     ) : hayFiltros(filtros) ? (
@@ -63,7 +63,7 @@ export default function Home() {
 
     // pie: cargando la siguiente pagina o error al pedirla; al final de la lista no se pide nada mas
     const pie = primeraCarga ? undefined : cargando ? (
-        <ActivityIndicator testID="catalogo-cargando-mas" color={COLORS.BOTON_PRINCIPAL} style={styles.pie} />
+        <ActivityIndicator testID="catalogo-cargando-mas" color={COLORS.ACENTO} style={styles.pie} />
     ) : error ? (
         <AvisoError mensaje={error} onReintentar={reintentar} />
     ) : !hayMas ? (
@@ -81,7 +81,7 @@ export default function Home() {
             ListFooterComponent={pie}
             onEndReached={cargarMas}
             onEndReachedThreshold={0.5}
-            refreshControl={<RefreshControl refreshing={false} onRefresh={recargar} colors={[COLORS.BOTON_PRINCIPAL]} />}
+            refreshControl={<RefreshControl refreshing={false} onRefresh={recargar} colors={[COLORS.ACENTO]} />}
             contentContainerStyle={styles.lista}
             style={styles.fondo}
         />

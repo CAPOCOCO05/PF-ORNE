@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     opcionElegida: {
-        borderColor: COLORS.BOTON_PRINCIPAL,
+        borderColor: COLORS.ACENTO,
         backgroundColor: COLORS.BOTON_SECUNDARIO,
     },
     opcionDeshabilitada: {

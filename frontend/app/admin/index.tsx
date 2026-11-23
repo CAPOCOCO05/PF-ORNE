@@ -35,7 +35,7 @@ export default function AdminPedidos() {
 
     // lista vacia: cargando la primera pagina, error o sin pedidos en el filtro
     const vacio = cargando ? (
-        <ActivityIndicator testID="admin-cargando" color={COLORS.BOTON_PRINCIPAL} style={styles.estado} />
+        <ActivityIndicator testID="admin-cargando" color={COLORS.ACENTO} style={styles.estado} />
     ) : error ? (
         <AvisoError mensaje={error} onReintentar={reintentar} />
     ) : (
@@ -44,7 +44,7 @@ export default function AdminPedidos() {
 
     // pie: cargando la siguiente pagina o error al pedirla
     const pie = primeraCarga ? undefined : cargando ? (
-        <ActivityIndicator testID="admin-cargando-mas" color={COLORS.BOTON_PRINCIPAL} style={styles.pie} />
+        <ActivityIndicator testID="admin-cargando-mas" color={COLORS.ACENTO} style={styles.pie} />
     ) : error ? (
         <AvisoError mensaje={error} onReintentar={reintentar} />
     ) : undefined;
@@ -59,7 +59,7 @@ export default function AdminPedidos() {
             ListFooterComponent={pie}
             onEndReached={cargarMas}
             onEndReachedThreshold={0.5}
-            refreshControl={<RefreshControl refreshing={false} onRefresh={recargar} colors={[COLORS.BOTON_PRINCIPAL]} />}
+            refreshControl={<RefreshControl refreshing={false} onRefresh={recargar} colors={[COLORS.ACENTO]} />}
             contentContainerStyle={styles.lista}
             style={styles.fondo}
         />

@@ -21,7 +21,7 @@ export default function FondoOndas() {
     return (
         <View style={styles.contenedor} testID="fondo-ondas">
             <Svg width="100%" height="100%" viewBox="0 0 300 170" preserveAspectRatio="none">
-                <Path d={ONDA_CLARA} fill={COLORS.FONDO} />
+                <Path d={ONDA_CLARA} fill={COLORS.DECORACION_CLARA} />
                 <Path d={ONDA_OSCURA} fill={COLORS.DECORACION} />
             </Svg>
         </View>

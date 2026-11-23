@@ -37,15 +37,15 @@ export default function MapaEntrega({centro, ubicacion, onFijar}: MapaEntregaPro
                 <Circle
                     center={aLatLng(SUCURSAL.coordenadas)}
                     radius={RADIO_ENTREGA_KM * 1000}
-                    strokeColor={COLORS.DECORACION}
-                    fillColor="rgba(178, 24, 29, 0.06)"
+                    strokeColor={COLORS.ACENTO}
+                    fillColor="rgba(247, 175, 191, 0.18)"
                 />
                 {ubicacion ? (
                     <Marker
                         coordinate={aLatLng(ubicacion)}
                         draggable
                         onDragEnd={(e: MarkerDragStartEndEvent) => onFijar(aCoordenadas(e.nativeEvent.coordinate))}
-                        pinColor={COLORS.BOTON_PRINCIPAL}
+                        pinColor={COLORS.ACENTO}
                     />
                 ) : null}
             </MapView>

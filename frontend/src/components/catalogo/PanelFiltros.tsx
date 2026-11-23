@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     },
     limpiar: {
         fontSize: 14,
-        color: COLORS.BOTON_PRINCIPAL,
+        color: COLORS.ACENTO,
         fontWeight: '600',
         textDecorationLine: 'underline',
     },

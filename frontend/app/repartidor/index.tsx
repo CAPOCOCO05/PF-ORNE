@@ -17,7 +17,7 @@ export default function RepartidorEntregas() {
 
     // lista vacia: cargando, error o sin entregas
     const vacio = cargando ? (
-        <ActivityIndicator testID="entregas-cargando" color={COLORS.BOTON_PRINCIPAL} style={styles.estado} />
+        <ActivityIndicator testID="entregas-cargando" color={COLORS.ACENTO} style={styles.estado} />
     ) : error ? (
         <View style={styles.estado}>
             <Text style={[styles.textoEstado, styles.textoError]}>{error}</Text>
@@ -34,7 +34,7 @@ export default function RepartidorEntregas() {
             renderItem={({item}) => <TarjetaEntrega entrega={item} onVer={ver} />}
             ListHeaderComponent={<Text style={styles.titulo}>Mis entregas</Text>}
             ListEmptyComponent={vacio}
-            refreshControl={<RefreshControl refreshing={false} onRefresh={recargar} colors={[COLORS.BOTON_PRINCIPAL]} />}
+            refreshControl={<RefreshControl refreshing={false} onRefresh={recargar} colors={[COLORS.ACENTO]} />}
             contentContainerStyle={styles.lista}
             style={styles.fondo}
         />

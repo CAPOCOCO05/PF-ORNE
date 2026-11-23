@@ -147,7 +147,7 @@ function EstadoCarga({cargando, error, onReintentar}: {cargando: boolean; error:
     return (
         <View style={[styles.fondo, styles.estado]}>
             {cargando || !error ? (
-                <ActivityIndicator testID="editar-cargando" color={COLORS.BOTON_PRINCIPAL} />
+                <ActivityIndicator testID="editar-cargando" color={COLORS.ACENTO} />
             ) : (
                 <>
                     <Text style={styles.error}>{error}</Text>
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     textoQuitar: {
         fontSize: 14,
         fontWeight: '600',
-        color: COLORS.BOTON_PRINCIPAL,
+        color: COLORS.ACENTO,
         textDecorationLine: 'underline',
     },
     boton: {

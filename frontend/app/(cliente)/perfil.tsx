@@ -49,7 +49,7 @@ function Perfil() {
                     <Boton titulo="Editar datos" onPress={() => router.push('/perfil/editar')} style={styles.boton} />
                 </>
             ) : cargando ? (
-                <ActivityIndicator testID="perfil-cargando" color={COLORS.BOTON_PRINCIPAL} style={styles.estado} />
+                <ActivityIndicator testID="perfil-cargando" color={COLORS.ACENTO} style={styles.estado} />
             ) : error ? (
                 <View style={styles.estado}>
                     <Text style={styles.error}>{error}</Text>

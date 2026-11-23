@@ -22,7 +22,7 @@ export default function Comprobante({id, titulo, acciones}: ComprobanteProps) {
 
     let contenido: React.ReactNode;
     if (cargando) {
-        contenido = <ActivityIndicator testID="comprobante-cargando" color={COLORS.BOTON_PRINCIPAL} style={styles.estado} />;
+        contenido = <ActivityIndicator testID="comprobante-cargando" color={COLORS.ACENTO} style={styles.estado} />;
     } else if (error || !pedido) {
         contenido = (
             <View style={styles.estado}>
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         borderRadius: 12,
         borderWidth: 1.5,
-        borderColor: COLORS.BOTON_PRINCIPAL,
+        borderColor: COLORS.ACENTO,
         backgroundColor: COLORS.FONDO,
         gap: 4,
     },

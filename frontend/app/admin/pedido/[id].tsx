@@ -24,7 +24,7 @@ export default function AdminDetallePedido() {
 
     let contenido: React.ReactNode;
     if (cargando && !pedido) {
-        contenido = <ActivityIndicator testID="admin-detalle-cargando" color={COLORS.BOTON_PRINCIPAL} style={styles.estado} />;
+        contenido = <ActivityIndicator testID="admin-detalle-cargando" color={COLORS.ACENTO} style={styles.estado} />;
     } else if (error || !pedido) {
         contenido = (
             <View style={styles.estado}>

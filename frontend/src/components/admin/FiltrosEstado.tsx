@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
         color: COLORS.TEXTO,
     },
     textoPestaniaElegida: {
-        color: COLORS.BLANCO,
+        color: COLORS.TITULO,
         fontWeight: '700',
     },
     fila: {
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.FONDO,
     },
     chipMarcado: {
-        borderColor: COLORS.BOTON_PRINCIPAL,
+        borderColor: COLORS.ACENTO,
         backgroundColor: COLORS.BOTON_SECUNDARIO,
     },
     chipVacio: {
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     },
     textoLimpiar: {
         fontSize: 14,
-        color: COLORS.BOTON_PRINCIPAL,
+        color: COLORS.ACENTO,
         fontWeight: '600',
         textDecorationLine: 'underline',
     },

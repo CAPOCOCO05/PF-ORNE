@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.FONDO,
     },
     chipMarcado: {
-        borderColor: COLORS.BOTON_PRINCIPAL,
+        borderColor: COLORS.ACENTO,
         backgroundColor: COLORS.BOTON_SECUNDARIO,
     },
     texto: {

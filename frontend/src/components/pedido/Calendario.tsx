@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     },
     textoFlecha: {
         fontSize: 26,
-        color: COLORS.BOTON_PRINCIPAL,
+        color: COLORS.ACENTO,
     },
     textoFlechaInactiva: {
         color: COLORS.TEXTO_SUAVE,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
         opacity: 0.4,
     },
     numeroElegido: {
-        color: COLORS.BLANCO,
+        color: COLORS.TITULO,
         fontWeight: '700',
     },
 });

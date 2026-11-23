@@ -81,7 +81,7 @@ export default function AdminPastel() {
             <ScrollView style={styles.fondo} contentContainerStyle={styles.contenido}>
                 <Text style={styles.titulo}>Editar pastel</Text>
                 {pastel.cargando ? (
-                    <ActivityIndicator testID="pastel-cargando" color={COLORS.BOTON_PRINCIPAL} style={styles.estado} />
+                    <ActivityIndicator testID="pastel-cargando" color={COLORS.ACENTO} style={styles.estado} />
                 ) : (
                     <View style={styles.estado}>
                         <Text style={styles.error}>{pastel.error}</Text>
@@ -177,7 +177,7 @@ export default function AdminPastel() {
                     onValueChange={(activo) => actualizar({activo})}
                     accessibilityLabel="Publicado"
                     trackColor={{false: COLORS.FONDO, true: COLORS.BOTON_SECUNDARIO}}
-                    thumbColor={formulario.activo ? COLORS.BOTON_PRINCIPAL : COLORS.TEXTO_SUAVE}
+                    thumbColor={formulario.activo ? COLORS.ACENTO : COLORS.TEXTO_SUAVE}
                 />
             </View>
 
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     enlace: {
         fontSize: 15,
         fontWeight: '600',
-        color: COLORS.BOTON_PRINCIPAL,
+        color: COLORS.ACENTO,
         textDecorationLine: 'underline',
     },
     aviso: {

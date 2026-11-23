@@ -11,7 +11,7 @@ export default function MapaDestino({ubicacion}: {ubicacion: Coordenadas}) {
     return (
         <View style={styles.contenedor}>
             <MapView style={styles.mapa} initialRegion={{...coordenada, ...ZOOM}} testID="mapa-destino">
-                <Marker coordinate={coordenada} pinColor={COLORS.BOTON_PRINCIPAL} />
+                <Marker coordinate={coordenada} pinColor={COLORS.ACENTO} />
             </MapView>
         </View>
     );

@@ -15,7 +15,7 @@ export const ETIQUETA_ESTADO: Record<EstadoPedido, string> = {
 
 // color de la etiqueta de cada estado en el panel admin (F04 D2)
 export const COLOR_ESTADO: Record<EstadoPedido, {fondo: string; texto: string}> = {
-    borrador: {fondo: '#ffdadd', texto: '#5b0e17'},
+    borrador: {fondo: '#ffdadd', texto: '#4a2c2a'},
     pendiente: {fondo: '#fff1c7', texto: '#7a5600'},
     confirmado: {fondo: '#dceafe', texto: '#1d4f91'},
     en_preparacion: {fondo: '#ece2fb', texto: '#5b3a8c'},

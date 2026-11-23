@@ -25,7 +25,7 @@ export default function AdminCatalogo() {
     );
 
     const vacio = cargando ? (
-        <ActivityIndicator testID="catalogo-admin-cargando" color={COLORS.BOTON_PRINCIPAL} style={styles.estado} />
+        <ActivityIndicator testID="catalogo-admin-cargando" color={COLORS.ACENTO} style={styles.estado} />
     ) : error ? (
         <AvisoError mensaje={error} onReintentar={reintentar} />
     ) : (
@@ -33,7 +33,7 @@ export default function AdminCatalogo() {
     );
 
     const pie = primeraCarga ? undefined : cargando ? (
-        <ActivityIndicator testID="catalogo-admin-cargando-mas" color={COLORS.BOTON_PRINCIPAL} style={styles.pie} />
+        <ActivityIndicator testID="catalogo-admin-cargando-mas" color={COLORS.ACENTO} style={styles.pie} />
     ) : error ? (
         <AvisoError mensaje={error} onReintentar={reintentar} />
     ) : undefined;
@@ -48,7 +48,7 @@ export default function AdminCatalogo() {
             ListFooterComponent={pie}
             onEndReached={cargarMas}
             onEndReachedThreshold={0.5}
-            refreshControl={<RefreshControl refreshing={false} onRefresh={recargar} colors={[COLORS.BOTON_PRINCIPAL]} />}
+            refreshControl={<RefreshControl refreshing={false} onRefresh={recargar} colors={[COLORS.ACENTO]} />}
             contentContainerStyle={styles.lista}
             style={styles.fondo}
         />

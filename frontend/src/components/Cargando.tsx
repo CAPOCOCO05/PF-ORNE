@@ -5,7 +5,7 @@ import { COLORS } from "../theme/colors";
 export default function Cargando() {
     return (
         <View style={styles.container}>
-            <ActivityIndicator testID="cargando" color={COLORS.BOTON_PRINCIPAL} />
+            <ActivityIndicator testID="cargando" color={COLORS.ACENTO} />
         </View>
     );
 }

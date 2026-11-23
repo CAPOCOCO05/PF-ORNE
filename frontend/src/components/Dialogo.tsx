@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.BOTON_PRINCIPAL,
     },
     exclamacion: {
-        color: COLORS.BLANCO,
+        color: COLORS.TITULO,
         fontSize: 30,
         fontWeight: '800',
     },
@@ -147,9 +147,9 @@ const styles = StyleSheet.create({
         gap: 10,
         marginTop: 20,
     },
-    // destructiva: vino oscuro de la paleta, distinto del rojo del boton principal
+    // destructiva: rosa fuerte, distinto del rosa del boton principal; el texto sigue en cafe
     destructiva: {
-        backgroundColor: COLORS.TITULO,
+        backgroundColor: COLORS.BOTON_DESTRUCTIVO,
     },
 });
 

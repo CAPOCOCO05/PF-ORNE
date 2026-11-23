@@ -16,7 +16,8 @@ interface BotonProps {
 
 export default function Boton({titulo, onPress, variante = 'principal', cargando = false, deshabilitado = false, style, testID}: BotonProps) {
     const esPrincipal = variante === 'principal';
-    const colorTexto = esPrincipal ? COLORS.BLANCO : COLORS.TITULO;
+    // el texto va en cafe sobre los dos rosas de la paleta (blanco no se lee sobre el rosa)
+    const colorTexto = COLORS.TITULO;
     const bloqueado = cargando || deshabilitado;
     const ultimoToque = useRef<{momento: number; accion: () => void} | null>(null);
 

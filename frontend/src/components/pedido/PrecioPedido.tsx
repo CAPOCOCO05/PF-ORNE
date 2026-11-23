@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         paddingVertical: 4,
         borderRadius: 10,
-        backgroundColor: COLORS.BOTON_SECUNDARIO,
+        backgroundColor: COLORS.PRECIO,
     },
     monto: {
         fontSize: 16,

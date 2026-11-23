@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.FONDO,
     },
     desplegableActivo: {
-        borderColor: COLORS.BOTON_PRINCIPAL,
+        borderColor: COLORS.ACENTO,
     },
     textoDesplegable: {
         flexShrink: 1,

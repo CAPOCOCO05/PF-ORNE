@@ -64,7 +64,7 @@ function Barra({state, emitter, navigateToTab, insets, opciones, ocultas}: Barra
         <View style={[styles.barra, {paddingBottom: Math.max(insets.bottom, 8)}]} accessibilityRole="tablist">
             {opciones.map(({ruta, titulo, Icono}) => {
                 const seleccionada = ruta === activa;
-                const color = seleccionada ? COLORS.BOTON_PRINCIPAL : COLORS.TITULO;
+                const color = seleccionada ? COLORS.ACENTO : COLORS.TITULO;
                 return (
                     <Pressable
                         key={ruta}

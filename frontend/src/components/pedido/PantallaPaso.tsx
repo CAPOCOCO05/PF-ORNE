@@ -26,7 +26,7 @@ export default function PantallaPaso({paso, children, textoAtras, onAtras, texto
 
     let contenido: React.ReactNode;
     if (cargando) {
-        contenido = <ActivityIndicator testID="pedido-cargando" color={COLORS.BOTON_PRINCIPAL} style={styles.estado} />;
+        contenido = <ActivityIndicator testID="pedido-cargando" color={COLORS.ACENTO} style={styles.estado} />;
     } else if (errorCarga) {
         contenido = (
             <View style={styles.estado}>

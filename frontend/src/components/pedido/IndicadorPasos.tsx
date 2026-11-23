@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.BLANCO,
     },
     circuloHecho: {
-        borderColor: COLORS.BOTON_PRINCIPAL,
+        borderColor: COLORS.ACENTO,
         backgroundColor: COLORS.BOTON_PRINCIPAL,
     },
     numero: {
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
         color: COLORS.TITULO,
     },
     numeroHecho: {
-        color: COLORS.BLANCO,
+        color: COLORS.TITULO,
     },
     titulo: {
         marginTop: 4,

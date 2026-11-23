@@ -40,7 +40,7 @@ function Pedidos() {
 
     // la lista vacia muestra la carga, el error o la invitacion a pedir
     const vacio = cargando ? (
-        <ActivityIndicator testID="pedidos-cargando" color={COLORS.BOTON_PRINCIPAL} style={styles.estado} />
+        <ActivityIndicator testID="pedidos-cargando" color={COLORS.ACENTO} style={styles.estado} />
     ) : error ? (
         <View style={styles.estado}>
             <Text style={[styles.textoEstado, styles.textoError]}>{error}</Text>
@@ -70,7 +70,7 @@ function Pedidos() {
             ListEmptyComponent={vacio}
             // con pedidos ya cargados, un error al recargar se avisa al final de la lista
             ListFooterComponent={pedidos.length > 0 && error ? <Text style={[styles.textoEstado, styles.textoError]}>{error}</Text> : undefined}
-            refreshControl={<RefreshControl refreshing={cargando && pedidos.length > 0} onRefresh={recargar} colors={[COLORS.BOTON_PRINCIPAL]} />}
+            refreshControl={<RefreshControl refreshing={cargando && pedidos.length > 0} onRefresh={recargar} colors={[COLORS.ACENTO]} />}
             contentContainerStyle={styles.lista}
             style={styles.fondo}
         />
