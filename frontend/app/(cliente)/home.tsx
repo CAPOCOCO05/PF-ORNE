@@ -1,4 +1,4 @@
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import Boton from "../../src/components/Boton";
@@ -15,9 +15,16 @@ import { PEDIDO_NUEVO } from "../../src/utils/rutas";
 const MENSAJE_CATALOGO_VACIO = 'Aún no hay pasteles en el catálogo';
 const MENSAJE_SIN_RESULTADOS = 'No hay pasteles con esos filtros';
 
-// F01: catalogo base paginado — pantalla de inicio del cliente (design/pantalla_principal_catalogo.png)
+// cuadricula de 2 columnas (design_2/12.png)
+const MARGEN_LISTA = 20;
+const ESPACIO_TARJETAS = 14;
+
+// F01: catalogo base paginado — pantalla de inicio del cliente (design_2/12.png)
 export default function Home() {
     const router = useRouter();
+    // ancho fijo por columna: si el ultimo renglon tiene un solo pastel no se estira a todo el ancho
+    const {width} = useWindowDimensions();
+    const anchoTarjeta = (width - MARGEN_LISTA * 2 - ESPACIO_TARJETAS) / 2;
     const {session} = useAuth();
     // F07 M5 D4: la pantalla sigue montada al ir al wizard (Drawer), asi los filtros se
     // conservan; al cerrar sesion se desmonta la seccion y se reinician
@@ -74,8 +81,9 @@ export default function Home() {
         <FlatList
             data={pasteles}
             keyExtractor={(pastel) => pastel.id}
-            renderItem={({item}) => <TarjetaPastel pastel={item} onPedir={pedir} />}
+            renderItem={({item}) => <TarjetaPastel pastel={item} onPedir={pedir} style={{flex: 0, width: anchoTarjeta}} />}
             numColumns={2}
+            columnWrapperStyle={styles.fila}
             ListHeaderComponent={encabezado}
             ListEmptyComponent={vacio}
             ListFooterComponent={pie}
@@ -102,13 +110,17 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.BLANCO,
     },
     lista: {
-        paddingHorizontal: 16,
+        paddingHorizontal: MARGEN_LISTA,
         paddingBottom: 24,
+    },
+    fila: {
+        gap: ESPACIO_TARJETAS,
+        marginBottom: ESPACIO_TARJETAS,
     },
     encabezado: {
         alignItems: 'center',
         paddingTop: 24,
-        paddingBottom: 16,
+        paddingBottom: 20,
     },
     titulo: {
         fontSize: 24,
@@ -120,7 +132,6 @@ const styles = StyleSheet.create({
     botonCrear: {
         marginTop: 16,
         alignSelf: 'stretch',
-        marginHorizontal: 8,
     },
     estado: {
         marginTop: 32,

@@ -1,4 +1,4 @@
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { formatearPrecio } from "../constants/precios";
 import { COLORS } from "../theme/colors";
 import { PastelCatalogo } from "../types/pedido.types";
@@ -9,12 +9,14 @@ type DatosTarjeta = Pick<PastelCatalogo, 'nombre' | 'descripcion' | 'imagen_url'
 interface TarjetaPastelProps<P extends DatosTarjeta> {
     pastel: P;
     onPedir?: (pastel: P) => void;  // sin onPedir no se muestra el boton (vista previa)
+    style?: StyleProp<ViewStyle>;   // p. ej. el ancho de la columna en el catalogo
 }
 
-// tarjeta del catalogo: imagen, precio, detalles y "Pedir" (design/pantalla_principal_catalogo.png)
-export default function TarjetaPastel<P extends DatosTarjeta>({pastel, onPedir}: TarjetaPastelProps<P>) {
+// tarjeta del catalogo: card gris claro con la imagen en un cuadro blanco, precio, detalles
+// y "Pedir" (design_2/12.png, "Pantalla principal: catálogo")
+export default function TarjetaPastel<P extends DatosTarjeta>({pastel, onPedir, style}: TarjetaPastelProps<P>) {
     return (
-        <View style={styles.tarjeta}>
+        <View style={[styles.tarjeta, style]}>
             <View style={styles.marcoImagen}>
                 {pastel.imagen_url ? (
                     <Image source={{uri: pastel.imagen_url}} style={styles.imagen} resizeMode="cover" accessibilityLabel={pastel.nombre} />
@@ -28,10 +30,13 @@ export default function TarjetaPastel<P extends DatosTarjeta>({pastel, onPedir}:
             {pastel.descripcion ? (
                 <Text style={styles.descripcion} numberOfLines={2}>{pastel.descripcion}</Text>
             ) : null}
+            {/* empuja "Pedir" al pie: las tarjetas de una fila miden lo mismo */}
+            <View style={styles.espacio} />
             {onPedir ? <Pressable
                 onPress={() => onPedir(pastel)}
                 accessibilityRole="button"
                 accessibilityLabel={`Pedir ${pastel.nombre}`}
+                hitSlop={8}
                 style={({pressed}) => [styles.botonPedir, pressed && styles.presionado]}
             >
                 <Text style={styles.textoPedir}>Pedir</Text>
@@ -44,13 +49,15 @@ const styles = StyleSheet.create({
     tarjeta: {
         flex: 1,
         alignItems: 'center',
-        marginHorizontal: 8,
-        marginBottom: 24,
+        padding: 10,
+        borderRadius: 16,
+        backgroundColor: COLORS.FONDO,
     },
     marcoImagen: {
         width: '100%',
         aspectRatio: 1.15,
-        backgroundColor: COLORS.FONDO,
+        borderRadius: 4,
+        backgroundColor: COLORS.BLANCO,
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
@@ -65,7 +72,7 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
     precio: {
-        marginTop: 8,
+        marginTop: 10,
         fontSize: 14,
         fontWeight: '700',
         color: COLORS.TEXTO,
@@ -83,12 +90,15 @@ const styles = StyleSheet.create({
         color: COLORS.TEXTO,
         textAlign: 'center',
     },
+    espacio: {
+        flexGrow: 1,
+        minHeight: 8,
+    },
+    // pastilla pequeña al pie de la tarjeta
     botonPedir: {
-        marginTop: 6,
-        minWidth: 72,
-        minHeight: 28,
-        paddingHorizontal: 16,
-        borderRadius: 10,
+        width: '55%',
+        minHeight: 26,
+        borderRadius: 13,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: COLORS.BOTON_SECUNDARIO,
