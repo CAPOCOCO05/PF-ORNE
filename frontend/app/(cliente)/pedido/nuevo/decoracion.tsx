@@ -1,48 +1,30 @@
 import { useEffect, useState } from "react";
-import { Image, Linking, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
 import PantallaPaso from "../../../../src/components/pedido/PantallaPaso";
-import { useDialogo } from "../../../../src/context/DialogoContext";
 import { usePedido } from "../../../../src/context/PedidoContext";
+import { useElegirImagen } from "../../../../src/hooks/useElegirImagen";
 import { RUTA_PASO, usePasoPedido } from "../../../../src/hooks/usePasoPedido";
 import { urlReferencia } from "../../../../src/services/pedidosService";
 import { COLORS } from "../../../../src/theme/colors";
 import { ImagenLocal } from "../../../../src/types/pedido.types";
-import { MAX_MENSAJE, contarCaracteres, limitarMensaje, validarImagen } from "../../../../src/utils/pedido";
-
-const MENSAJE_PERMISO_GALERIA = 'Necesitamos acceso a tu galería';
+import { MAX_MENSAJE, contarCaracteres, limitarMensaje } from "../../../../src/utils/pedido";
 
 // F01 paso 3: mensaje de decoracion e imagen de referencia, ambos opcionales (D8, D9)
 export default function PasoDecoracion() {
     const router = useRouter();
     const {pedido, actualizar} = usePedido();
     const {guardando, siguiente} = usePasoPedido(3);
-    const {confirmar} = useDialogo();
     const [errorImagen, setErrorImagen] = useState<string | null>(null);
     const vistaPrevia = useVistaPrevia(pedido.imagenLocal, pedido.imagenRuta);
+    const elegirDeGaleria = useElegirImagen('Permite el acceso a tus fotos para adjuntar una imagen de referencia.');
 
+    // permiso, formato y tamaño los revisa useElegirImagen (D9); cancelar no cambia nada
     const elegirImagen = async () => {
-        const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (!permiso.granted) {
-            const abrirAjustes = await confirmar({
-                titulo: MENSAJE_PERMISO_GALERIA,
-                mensaje: 'Permite el acceso a tus fotos para adjuntar una imagen de referencia.',
-                textoConfirmar: 'Abrir Ajustes',
-            });
-            if (abrirAjustes) await Linking.openSettings();
-            return;
-        }
-
-        // quality 0.8: en iOS convierte HEIC a JPG (D9)
-        const resultado = await ImagePicker.launchImageLibraryAsync({mediaTypes: ['images'], quality: 0.8});
-        if (resultado.canceled) return;
-
-        const {uri, mimeType, fileName, fileSize} = resultado.assets[0];
-        const imagen: ImagenLocal = {uri, mimeType, fileName, fileSize};
-        const error = validarImagen(imagen);
-        setErrorImagen(error ?? null);
-        if (!error) actualizar({imagenLocal: imagen});
+        const {imagen, error} = await elegirDeGaleria();
+        if (!imagen && !error) return;
+        setErrorImagen(error);
+        if (imagen) actualizar({imagenLocal: imagen});
     };
 
     const quitarImagen = () => {

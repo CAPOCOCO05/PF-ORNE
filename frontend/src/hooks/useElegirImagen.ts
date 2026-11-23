@@ -6,13 +6,15 @@ import { ImagenLocal } from "../types/pedido.types";
 import { validarImagen } from "../utils/pedido";
 
 export const MENSAJE_PERMISO_GALERIA = 'Necesitamos acceso a tu galería';
+export const MENSAJE_ERROR_GALERIA = 'No se pudo abrir la galería, inténtalo de nuevo';
 
 // elige una imagen de la galeria con la validacion de F01 D9 (formato y 5 MB).
-// Devuelve la imagen o el error a mostrar; null en ambos si se cancelo
+// Devuelve la imagen o el error a mostrar; null en ambos si se cancelo. Si la galeria falla
+// (p. ej. en iOS con acceso limitado a fotos) se devuelve un mensaje en lugar de dejar el error suelto
 export function useElegirImagen(motivoPermiso: string) {
     const {confirmar} = useDialogo();
 
-    return useCallback(async (): Promise<{imagen: ImagenLocal | null; error: string | null}> => {
+    const elegir = useCallback(async (): Promise<{imagen: ImagenLocal | null; error: string | null}> => {
         const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permiso.granted) {
             const abrirAjustes = await confirmar({
@@ -33,4 +35,13 @@ export function useElegirImagen(motivoPermiso: string) {
         const error = validarImagen(imagen);
         return error ? {imagen: null, error} : {imagen, error: null};
     }, [confirmar, motivoPermiso]);
+
+    return useCallback(async (): Promise<{imagen: ImagenLocal | null; error: string | null}> => {
+        try {
+            return await elegir();
+        } catch (e) {
+            console.warn('useElegirImagen:', e);
+            return {imagen: null, error: MENSAJE_ERROR_GALERIA};
+        }
+    }, [elegir]);
 }
