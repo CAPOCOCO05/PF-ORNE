@@ -1,8 +1,12 @@
 import BannerConexion from "../src/components/BannerConexion";
+import PantallaError from "../src/components/PantallaError";
 import { AuthProvider } from "../src/context/AuthContext";
 import { DialogoProvider } from "../src/context/DialogoContext";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+
+// si una pantalla falla al dibujarse se muestra un aviso con "Reintentar" en lugar de la pantalla roja
+export const ErrorBoundary = PantallaError;
 
 export default function RootLayout(){ // root layout para proveer el contexto de autenticacion a toda la app
     return(
