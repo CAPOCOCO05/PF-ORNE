@@ -1,10 +1,10 @@
 import { supabase } from "./supabase";
 import { MENSAJES_DATOS, mensajeDeExcepcion } from "./erroresDatos";
+import { API_URL } from "./apiUrl";
+import { marcarRespuestaApi } from "../utils/eventosRed";
 
 // cliente HTTP de la API de ORNE (backend/). Manda el token de la sesion de Supabase Auth
 // para que la API sepa quien es el usuario; sin sesion la peticion va como visitante
-
-const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/+$/, '');
 
 type ValorQuery = string | number | null | undefined | (string | number)[];
 
@@ -66,8 +66,11 @@ export async function peticionApi<T>(ruta: string, opciones: OpcionesApi = {}): 
     } catch (e) {
         console.warn(`API ${ruta}:`, e);
         const mensaje = mensajeDeExcepcion(e, MENSAJES_DATOS.GENERICO);
+        // sin respuesta de la API: el banner de conexion lo muestra (F10 A8)
+        if (mensaje === MENSAJES_DATOS.CONEXION) marcarRespuestaApi(false);
         return {data: null, error: mensaje === MENSAJES_DATOS.CONEXION ? opciones.mensajeConexion ?? mensaje : mensaje, status: 0};
     }
+    marcarRespuestaApi(true);
     const json = await leerJson(respuesta);
     if (respuesta.ok) return {data: json as T, error: null, status: respuesta.status};
     const error = typeof json?.error === 'string' ? json.error : MENSAJES_DATOS.GENERICO;

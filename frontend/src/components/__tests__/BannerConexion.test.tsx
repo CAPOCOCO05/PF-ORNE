@@ -1,15 +1,16 @@
 import { act, render, screen } from "@testing-library/react-native";
-import { useNetworkState } from "expo-network";
+import { useSinConexion } from "../../hooks/useEstadoRed";
 import BannerConexion, { DURACION_RESTABLECIDA_MS, TEXTO_CONEXION_RESTABLECIDA, TEXTO_SIN_CONEXION } from "../BannerConexion";
 
-jest.mock("expo-network", () => ({ useNetworkState: jest.fn() }));
+jest.mock("../../hooks/useEstadoRed", () => ({ useSinConexion: jest.fn() }));
 jest.mock("react-native-safe-area-context", () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 
-const CON_INTERNET = { isConnected: true, isInternetReachable: true };
-const MODO_AVION = { isConnected: false, isInternetReachable: false };
+// useSinConexion junta lo que reporta el sistema y si la API responde (se prueba en useEstadoRed.test)
+const CON_INTERNET = false;
+const MODO_AVION = true;
 
-function mockRed(estado: object) {
-    (useNetworkState as jest.Mock).mockReturnValue(estado);
+function mockRed(sinConexion: boolean) {
+    (useSinConexion as jest.Mock).mockReturnValue(sinConexion);
 }
 
 describe("BannerConexion (F10 A8)", () => {

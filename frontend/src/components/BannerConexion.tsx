@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, StyleSheet, Text, View } from "react-native";
-import { useNetworkState } from "expo-network";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSinConexion } from "../hooks/useEstadoRed";
 import { COLORS } from "../theme/colors";
-import { estaSinConexion } from "../utils/conexion";
 
 export const TEXTO_SIN_CONEXION = 'Sin conexión a internet';
 export const TEXTO_CONEXION_RESTABLECIDA = 'Conexión restablecida';
@@ -12,15 +11,17 @@ export const DURACION_RESTABLECIDA_MS = 2500;
 type Aviso = 'sinConexion' | 'restablecida' | null;
 
 // F10 A8: aviso flotante en toda la app en cuanto se pierde el internet (p. ej. modo
-// avion), sin esperar a que falle una accion; al volver la conexion lo confirma un momento.
+// avion) o la API deja de responder; al volver la conexion lo confirma un momento.
 // No bloquea toques: las pantallas siguen mostrando su propio error con "Reintentar"
 export default function BannerConexion() {
-    const sinConexion = estaSinConexion(useNetworkState());
+    const sinConexion = useSinConexion();
     const aviso = useAvisoConexion(sinConexion);
-    const {top} = useSafeAreaInsets();
+    return aviso ? <Pastilla restablecida={aviso === 'restablecida'} /> : null;
+}
 
-    if (!aviso) return null;
-    const restablecida = aviso === 'restablecida';
+// los margenes de pantalla solo se piden cuando hay aviso (el banner tambien vive dentro de los dialogos)
+function Pastilla({restablecida}: {restablecida: boolean}) {
+    const {top} = useSafeAreaInsets();
     return (
         <View pointerEvents="none" style={[styles.contenedor, {top: top + 8}]}>
             <View
@@ -80,6 +81,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 6,
         shadowOffset: {width: 0, height: 2},
+        elevation: 6,        // sombra en Android
     },
     bannerRestablecida: {
         backgroundColor: COLORS.BOTON_SECUNDARIO,

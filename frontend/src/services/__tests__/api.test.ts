@@ -1,7 +1,8 @@
 import { armarQuery, peticionApi } from "../api";
 import { MENSAJES_DATOS } from "../erroresDatos";
 import { supabase } from "../supabase";
-import { llamadaFetch, simularApi } from "../../test-utils/apiSimulada";
+import { llamadaFetch, simularApi, simularSinConexion } from "../../test-utils/apiSimulada";
+import { apiSinRespuesta, marcarRespuestaApi } from "../../utils/eventosRed";
 
 jest.mock("../supabase", () => ({ supabase: { auth: { getSession: jest.fn() } } }));
 
@@ -43,5 +44,23 @@ describe("peticionApi", () => {
         simularApi({ status: 400, cuerpo: { error: "Revisa", detalles: { nombre: "Obligatorio" } } });
 
         expect(await peticionApi("/x")).toEqual({ data: null, error: "Revisa", status: 400, detalles: { nombre: "Obligatorio" } });
+    });
+
+    it("sin respuesta de la API lo marca para el banner de conexion (F10 A8)", async () => {
+        jest.spyOn(console, "warn").mockImplementation(() => {});
+        marcarRespuestaApi(true);
+        simularSinConexion();
+
+        expect(await peticionApi("/x")).toEqual({ data: null, error: MENSAJES_DATOS.CONEXION, status: 0 });
+        expect(apiSinRespuesta()).toBe(true);
+    });
+
+    it("cualquier respuesta, aunque sea un error del servidor, quita la marca", async () => {
+        marcarRespuestaApi(false);
+        simularApi({ status: 500, cuerpo: { error: "x" } });
+
+        await peticionApi("/x");
+
+        expect(apiSinRespuesta()).toBe(false);
     });
 });

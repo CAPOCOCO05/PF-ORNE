@@ -4,6 +4,7 @@ import type { OpcionesDialogo, RespuestaDialogo } from "../context/DialogoContex
 import { COLORS } from "../theme/colors";
 import Boton from "./Boton";
 import VistaTeclado from "./VistaTeclado";
+import BannerConexion from "./BannerConexion";
 
 interface DialogoProps {
     opciones: OpcionesDialogo | null; // null = cerrado
@@ -71,6 +72,8 @@ export function MarcoDialogo({titulo, mensaje, alerta = false, cerrarAlTocarFuer
                 </View>
             </Pressable>
             </VistaTeclado>
+            {/* el Modal abre su propia ventana y tapa el banner de la app: se repite aqui (F10 A8) */}
+            <BannerConexion />
         </Modal>
     );
 }
