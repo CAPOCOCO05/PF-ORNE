@@ -77,6 +77,23 @@ una acción.
 
 - [x] `estaSinConexion` (utils) y `BannerConexion` con pruebas; montado en `app/_layout.tsx`.
 
+- **D7 (iPhone, F11).** En modo avión salía el mensaje "Sin conexión" en la pantalla pero
+  no el banner: el banner dependía solo de que el sistema avisara el cambio de red, y en el
+  iPhone ese aviso no llegaba. Ahora:
+  - **El banner también se basa en las peticiones.** Si una petición a la API no recibe
+    respuesta, `api.ts` lo marca (`eventosRed`) y el banner aparece aunque el sistema diga que
+    hay red. Mientras está visible prueba `GET /salud` cada 4 s (`saludApi`, límite de 3 s);
+    cuando responde muestra "Conexión restablecida". Cualquier respuesta de la API quita el aviso.
+  - El estado del sistema (`expo-network`) se sigue usando, y se vuelve a consultar cuando la
+    app regresa al frente (al usar el centro de control el aviso del cambio se puede perder).
+  - Los diálogos (`Modal`) abren su propia ventana y tapan el banner: cada diálogo lo muestra
+    también dentro.
+  - Efecto: si la API está apagada o la PC está en otra red, también aparece el banner (la
+    app no puede hacer nada sin la API).
+
+- [x] `useSinConexion` / `useEstadoRed`, `eventosRed` y `saludApi` con pruebas; `BannerConexion` los usa.
+- [ ] Probar en el dispositivo: modo avión desde el centro de control, y con un diálogo abierto.
+
 ## Lista de revisión del profesor
 | Prueba | Cómo responde la app |
 |---|---|
