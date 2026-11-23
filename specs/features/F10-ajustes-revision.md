@@ -97,12 +97,14 @@ una acción.
 ## Lista de revisión del profesor
 | Prueba | Cómo responde la app |
 |---|---|
-| Modo avión | Banner "Sin conexión a internet" al instante (A8); cada pantalla con datos muestra "Sin conexión a internet…" con "Reintentar" (A7); el borrador del pedido no se pierde (F05) |
+| Modo avión | Banner "Sin conexión a internet" (A8: por el aviso del sistema o en cuanto una petición a la API no recibe respuesta, también encima de los diálogos) y "Conexión restablecida" al volver; cada pantalla con datos muestra "Sin conexión a internet…" con "Reintentar" (A7); el borrador del pedido no se pierde (F05) |
 | Formulario vacío | Errores junto a cada campo y no avanza (F00, F01–F03, F07) |
 | Texto donde va número / negativo | Teléfono exige 10 dígitos; número exterior valida formato (A6); tamaños y niveles se eligen, no se escriben |
 | Texto muy largo | `maxLength` en todos los campos: nombre 80, dirección 100, referencias 200, decoración con contador, correo 254, contraseña 72 |
 | Guardar dos veces | `Boton` se bloquea con `cargando` y con A5 |
 | Horizontal | La app está fija en vertical (`"orientation": "portrait"` en `app.json`) |
 | Salir y volver | La sesión se guarda (AsyncStorage); el pedido se guarda como borrador en cada paso y se retoma desde "Mis pedidos" |
-| Negar permiso | Ubicación: el mapa abre en la sucursal y queda la búsqueda por texto. Galería: aviso con opción "Abrir ajustes" |
+| Negar permiso | Ubicación: el mapa abre en la sucursal y queda la búsqueda por texto. Galería: aviso con opción "Abrir ajustes"; si la galería falla al abrir, mensaje en lugar de error (`useElegirImagen`). La app no usa la cámara |
 | Lista vacía | Catálogo, Mis pedidos, panel admin, catálogo admin y entregas muestran un mensaje de lista vacía |
+| Error inesperado al dibujar una pantalla | `ErrorBoundary` en `app/_layout.tsx` (`PantallaError`): "Algo salió mal" con "Reintentar" en lugar de la pantalla roja |
+| Datos inválidos que lleguen a pesar de la app | La API valida cada campo y responde el error (F11 D6); la app lo muestra |
