@@ -78,7 +78,7 @@ spinner, pin del mapa o pestaña activa usa el token de apoyo `ACENTO` (el mismo
 | F08 | Barra de navegación inferior (tabs) y aviso de privacidad | Todos | ✅ Completa |
 | F09 | Catálogo sin cuenta; la cuenta se pide al hacer el pedido | Visitante / Cliente | ✅ Completa |
 | F10 | Ajustes para la revisión (CLABE por pedido, regreso al pedido tras registrarse, teclado, doble toque, validaciones) | Todos | ✅ Completa |
-| F11 | Arquitectura en capas: API propia en `backend/` separada de la app | Todos | ✅ Completa (falta probar en dispositivo) |
+| F11 | Arquitectura en capas: API propia en `backend/` separada de la app | Todos | ✅ Completa |
 
 **Orden de implementación:** F00 → catálogo de F01 (pantalla de inicio) → resto de
 F01 → F02 → F03 → F04 → F06 → F07 → F08 → F09 → F10 → F11. F05 se aplica en cada una.

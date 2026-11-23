@@ -92,7 +92,7 @@ una acción.
     app no puede hacer nada sin la API).
 
 - [x] `useSinConexion` / `useEstadoRed`, `eventosRed` y `saludApi` con pruebas; `BannerConexion` los usa.
-- [ ] Probar en el dispositivo: modo avión desde el centro de control, y con un diálogo abierto.
+- [x] Probar en el dispositivo (iPhone): modo avión desde el centro de control, y con un diálogo abierto.
 
 ## Lista de revisión del profesor
 | Prueba | Cómo responde la app |

@@ -91,7 +91,7 @@ La tabla completa (método, ruta, rol y feature) está en
 - [x] Los datos inválidos se rechazan en la API con el error de cada campo.
 - [x] Las pantallas se comportan igual que antes (pruebas del frontend sin cambios de
       comportamiento).
-- [ ] Probado en el dispositivo con los tres roles.
+- [x] Probado en el dispositivo con los tres roles.
 
 ## Plan de implementación (checklist)
 
@@ -108,4 +108,4 @@ La tabla completa (método, ruta, rol y feature) está en
 - [x] Quitar del frontend la lógica que pasó al backend (filtros del admin, conversión
       de filas, nombres de archivo de imágenes).
 - [x] Documentar en `backend/README.md`, `README.md` y specs.
-- [ ] Probar en el dispositivo con los tres roles.
+- [x] Probar en el dispositivo con los tres roles.
