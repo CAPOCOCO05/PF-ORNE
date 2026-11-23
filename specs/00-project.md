@@ -46,17 +46,23 @@ frontend/ (app Expo) ──HTTP──► backend/src (API en capas) ──► Su
 Ver `backend/README.md` (endpoints y cómo correr la API) y F11.
 
 ## Diseño
-Pantallas, paleta de colores y elementos visuales en `specs/design/`. Toda pantalla
-debe seguir la paleta:
+Pantallas, paleta de colores y elementos visuales en `specs/design_2/` (paleta actual).
+`specs/design/` es el diseño anterior (rojo), solo como referencia. Toda pantalla debe
+seguir la paleta (`frontend/src/theme/colors.ts`):
 
-| Uso | Color |
-|---|---|
-| Fondo | `#f6f4f3` |
-| Letras del logo | `#a50e16` |
-| Títulos | `#5b0e17` |
-| Figuras decorativas | `#88131d` |
-| Botón principal | `#b2181d` |
-| Botón secundario | `#ffdadd` |
+| Uso | Color | Token |
+|---|---|---|
+| Fondo | `#f6f4f3` | `FONDO` |
+| Títulos, letras del logo, íconos (perfil, pastel) | `#4a2c2a` | `TITULO`, `LOGO` |
+| Botón principal | `#f7afbf` | `BOTON_PRINCIPAL` |
+| Botón secundario y figura decorativa de atrás | `#ffdadd` | `BOTON_SECUNDARIO`, `DECORACION_CLARA` |
+| Figura decorativa de enfrente | `#f9c6d3` | `DECORACION` |
+| Pastilla del precio | `#c5ede7` | `PRECIO` |
+| Botón de acciones que no se deshacen (salir del pedido, eliminar, cancelar) | `#ec7c9b` | `BOTON_DESTRUCTIVO` (apoyo, no está en la paleta) |
+
+Los rosas son claros, así que se usan solo como **relleno**: el texto encima va en café
+(`#4a2c2a`), nunca en blanco. Lo que antes usaba el rojo como texto, borde de lo elegido,
+spinner, pin del mapa o pestaña activa usa el token de apoyo `ACENTO` (el mismo café).
 
 ## MVP (features)
 | Feature | Descripción | Rol | Estado |
